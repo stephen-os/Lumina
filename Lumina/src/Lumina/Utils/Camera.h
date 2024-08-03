@@ -15,6 +15,8 @@ public:
     void Pitch(float degrees);
     void Yaw(float degrees);
 
+    void SetProjectionMatrix(float fov, float aspect, float near, float far);
+
     const glm::mat4& GetProjectionMatrix() const;
     const glm::mat4& GetViewMatrix() const;
 

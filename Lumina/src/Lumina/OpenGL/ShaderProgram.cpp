@@ -59,11 +59,6 @@ namespace GL
         Unbind();
     }
 
-    ShaderProgram::~ShaderProgram()
-    {
-        Destroy();
-    }
-
     void ShaderProgram::Destroy()
     {
         glDeleteShader(m_VertexShader);

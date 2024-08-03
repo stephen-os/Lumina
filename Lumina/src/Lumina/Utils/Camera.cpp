@@ -35,6 +35,12 @@ Camera::Camera(float fov, float aspect, float near, float far)
     UpdateViewMatrix();
 }
 
+void Camera::SetProjectionMatrix(float fov, float aspect, float near, float far)
+{
+    m_ProjectionMatrix = glm::mat4(glm::perspective(glm::radians(fov), aspect, near, far));
+    UpdateViewMatrix();
+}
+
 void Camera::SetPosition(const glm::vec3& position)
 {
     m_Position = position;

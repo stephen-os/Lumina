@@ -18,6 +18,7 @@ namespace GL
             }
             else 
             {
+                std::cout << attribute.GetName() << ": " << attribute.GetBuffer() << std::endl;
                 glBindBuffer(GL_ARRAY_BUFFER, attribute.GetBuffer());
                 glVertexAttribPointer(location, attribute.GetComponents(), GL_FLOAT, GL_FALSE, 0, nullptr);
                 glEnableVertexAttribArray(location);

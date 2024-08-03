@@ -11,7 +11,8 @@ namespace GL
 
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) 
+        {
             std::cerr << "Error: Framebuffer is not complete!" << std::endl;
         }
     }
