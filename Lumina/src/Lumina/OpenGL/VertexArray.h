@@ -12,11 +12,10 @@ namespace GL
     {
     public:
         VertexArray(ShaderProgram& program, VertexAttributes& attributes);
-        ~VertexArray() { Destroy(); };
+        ~VertexArray();
 
         void Bind();
         void Unbind();
-        void Destroy();
 
         void DrawSequence(GLenum mode);
         void DrawIndexed(GLenum mode);

@@ -1,7 +1,7 @@
 #include "ShaderProgram.h"
+#include "GLUtils.h"
 
 #include <iostream>
-
 #include <glm/gtc/type_ptr.hpp>
 
 namespace GL
@@ -15,40 +15,41 @@ namespace GL
         m_FragmentShader = CompileSource(GL_FRAGMENT_SHADER, fragmentSource);
 
         // Link program
-        m_Program = glCreateProgram();
-        glAttachShader(m_Program, m_VertexShader);
-        glAttachShader(m_Program, m_FragmentShader);
-        glLinkProgram(m_Program);
+        GLCALL(m_Program = glCreateProgram());
+        GLCALL(glAttachShader(m_Program, m_VertexShader));
+        GLCALL(glAttachShader(m_Program, m_FragmentShader));
+        GLCALL(glLinkProgram(m_Program));
 
         GLint isOkay;
-        glGetProgramiv(m_Program, GL_LINK_STATUS, &isOkay);
+        GLCALL(glGetProgramiv(m_Program, GL_LINK_STATUS, &isOkay));
         if (!isOkay)
         {
             GLchar message[512];
-            glGetProgramInfoLog(m_Program, 512, nullptr, message);
-            glDeleteProgram(m_Program);
+            GLCALL(glGetProgramInfoLog(m_Program, 512, nullptr, message));
+            GLCALL(glDeleteProgram(m_Program));
 
             std::cerr << "Shader compilation error: " << message << std::endl;
         }
 
         // Query uniforms
         GLint nuniforms;
-        glGetProgramiv(m_Program, GL_ACTIVE_UNIFORMS, &nuniforms);
+        GLCALL(glGetProgramiv(m_Program, GL_ACTIVE_UNIFORMS, &nuniforms));
         for (GLint i = 0; i < nuniforms; ++i)
         {
             GLchar name[256];
             GLsizei length;
             GLint size;
             GLenum type;
-            glGetActiveUniform(m_Program, i, 256, &length, &size, &type, name);
-            GLint location = glGetUniformLocation(m_Program, name);
+            GLCALL(glGetActiveUniform(m_Program, i, 256, &length, &size, &type, name));
+            GLint location;
+            GLCALL(location = glGetUniformLocation(m_Program, name));
             m_Uniforms[name] = location;
 
             // If uniform is an array, find locations of other elements
             for (GLint elementIndex = 1; elementIndex < size; ++elementIndex)
             {
                 std::string elementName = std::string(name).substr(0, length - 3) + "[" + std::to_string(elementIndex) + "]";
-                location = glGetUniformLocation(m_Program, elementName.c_str());
+                GLCALL(location = glGetUniformLocation(m_Program, elementName.c_str()));
                 if (location != -1)
                 {
                     m_Uniforms[elementName] = location;
@@ -61,24 +62,26 @@ namespace GL
 
     void ShaderProgram::Destroy()
     {
-        glDeleteShader(m_VertexShader);
-        glDeleteShader(m_FragmentShader);
-        glDeleteProgram(m_Program);
+        GLCALL(glDeleteShader(m_VertexShader));
+        GLCALL(glDeleteShader(m_FragmentShader));
+        GLCALL(glDeleteProgram(m_Program));
     }
 
     GLuint ShaderProgram::CompileSource(GLenum type, const std::string& source)
     {
-        GLuint shader = glCreateShader(type);
+        GLuint shader;
+        GLCALL(shader = glCreateShader(type));
         const char* src = source.c_str();
-        glShaderSource(shader, 1, &src, nullptr);
-        glCompileShader(shader);
+        GLCALL(glShaderSource(shader, 1, &src, nullptr));
+        GLCALL(glCompileShader(shader));
 
         GLint isOkay;
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &isOkay);
-        if (!isOkay) {
+        GLCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &isOkay));
+        if (!isOkay)
+        {
             GLchar message[512];
-            glGetShaderInfoLog(shader, 512, nullptr, message);
-            glDeleteShader(shader);
+            GLCALL(glGetShaderInfoLog(shader, 512, nullptr, message));
+            GLCALL(glDeleteShader(shader));
 
             std::cerr << "Shader compilation error: " << message << std::endl;
         }
@@ -88,18 +91,20 @@ namespace GL
 
     GLint ShaderProgram::GetAttributeLocation(const std::string& name)
     {
-        return glGetAttribLocation(m_Program, name.c_str());
+        GLint location;
+        GLCALL(location = glGetAttribLocation(m_Program, name.c_str()));
+        return location;
     }
 
     void ShaderProgram::Bind()
     {
-        glUseProgram(m_Program);
+        GLCALL(glUseProgram(m_Program));
         m_IsBound = true;
     }
 
     void ShaderProgram::Unbind()
     {
-        glUseProgram(0);
+        GLCALL(glUseProgram(0));
         m_IsBound = false;
     }
 
@@ -114,36 +119,36 @@ namespace GL
     void ShaderProgram::SetUniform1i(const std::string& name, int value)
     {
         AssertUniform(name);
-        glUniform1i(m_Uniforms[name], value);
+        GLCALL(glUniform1i(m_Uniforms[name], value));
     }
 
     void ShaderProgram::SetUniform1f(const std::string& name, float value)
     {
         AssertUniform(name);
-        glUniform1f(m_Uniforms[name], value);
+        GLCALL(glUniform1f(m_Uniforms[name], value));
     }
 
     void ShaderProgram::SetUniform2f(const std::string& name, float a, float b)
     {
         AssertUniform(name);
-        glUniform2f(m_Uniforms[name], a, b);
+        GLCALL(glUniform2f(m_Uniforms[name], a, b));
     }
 
     void ShaderProgram::SetUniform2fv(const std::string& name, glm::vec2 value)
     {
         AssertUniform(name);
-        glUniform2fv(m_Uniforms[name], 1, glm::value_ptr(value));
+        GLCALL(glUniform2fv(m_Uniforms[name], 1, glm::value_ptr(value)));
     }
 
     void ShaderProgram::SetUniform3f(const std::string& name, float a, float b, float c)
     {
         AssertUniform(name);
-        glUniform3f(m_Uniforms[name], a, b, c);
+        GLCALL(glUniform3f(m_Uniforms[name], a, b, c));
     }
 
     void ShaderProgram::SetUniformMatrix4fv(const std::string& name, const glm::mat4& matrix)
     {
         AssertUniform(name);
-        glUniformMatrix4fv(m_Uniforms[name], 1, GL_FALSE, glm::value_ptr(matrix));
+        GLCALL(glUniformMatrix4fv(m_Uniforms[name], 1, GL_FALSE, glm::value_ptr(matrix)));
     }
 }

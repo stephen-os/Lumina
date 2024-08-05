@@ -5,33 +5,50 @@
 #include <vector>
 #include <stdexcept>
 
-#include "VertexAttribute.h"
+#include "VertexBuffer.h"
+#include "IndexBuffer.h"
 
 #include <glad/glad.h>
+
+#include <iostream>
+#include <memory>
 
 namespace GL
 {
     class VertexAttributes
     {
     public:
-        VertexAttributes() : m_Vertices(-1), m_IndexBuffer(0), m_IndexCount(0) {}
-        ~VertexAttributes() { Destroy(); };
-        VertexAttribute& AddAttribute(const std::string& name, int vertices, int components, const std::vector<float>& floats, GLenum usage = GL_STATIC_DRAW);
-        void AddIndices(const std::vector<unsigned int>& ints, GLenum usage = GL_STATIC_DRAW);
-        void Destroy();
+        VertexAttributes() : m_VertexCount(-1) {};
+        ~VertexAttributes() {};
+        void AddVertices(const std::string& name, int count, int components, const float* floats, GLenum usage = GL_STATIC_DRAW);
+        void AddIndices(const unsigned int* indices, unsigned int count, GLenum usage = GL_STATIC_DRAW);
 
-        std::vector<VertexAttribute>::iterator begin() { return m_Attributes.begin(); }
-        std::vector<VertexAttribute>::iterator end() { return m_Attributes.end(); }
+        std::vector<std::unique_ptr<VertexBuffer>>::iterator begin() { return m_Attributes.begin(); }
+        std::vector<std::unique_ptr<VertexBuffer>>::iterator end() { return m_Attributes.end(); }
 
-        int VertexCount() const { return m_Vertices; }
-        size_t IndexCount() const { return m_IndexCount; }
+        void BindVertices()
+        {
+            for (auto& attribute : m_Attributes)
+            {
+                attribute->Bind();
+                std::cout << attribute->GetBufferID() << std::endl;
+                glEnableVertexAttribArray(attribute->GetBufferID() - 1);
+                glVertexAttribPointer(attribute->GetBufferID() - 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
+            }
+        }
 
-        GLuint GetIndexBuffer() { return m_IndexBuffer; };
+        void BindIndices()
+        {
+            m_IndexBuffer->Bind();
+        }
+
+        int GetVertexCount() const { return m_VertexCount; };
+        unsigned int GetIndexCount() const { return m_IndexBuffer->GetIndexCount(); }
+        GLuint GetIndexBufferID() const { return m_IndexBuffer->GetIndexBufferID(); };
     private:
-        int m_Vertices;
-        GLuint m_IndexBuffer;
-        std::vector<VertexAttribute> m_Attributes;
-        size_t m_IndexCount;
+        int m_VertexCount; 
+        IndexBuffer* m_IndexBuffer = nullptr;
+        std::vector<std::unique_ptr<VertexBuffer>> m_Attributes;
     };
 }
 

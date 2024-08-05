@@ -2,7 +2,6 @@
 
 namespace GL
 {
-
     VertexArray::VertexArray(ShaderProgram& program, VertexAttributes& attributes)
         : m_Attributes(attributes), m_IsBound(false)
     {
@@ -11,23 +10,27 @@ namespace GL
 
         for (auto& attribute : m_Attributes)
         {
-            GLint location = program.GetAttributeLocation(attribute.GetName());
-            if (location < 0) 
+            GLint location = program.GetAttributeLocation(attribute->GetBufferName());
+            if (location < 0)
             {
-                std::cout << attribute.GetName() << " is not used in the shader." << std::endl;
+                std::cout << attribute->GetBufferName() << " is not used in the shader." << std::endl;
             }
-            else 
+            else
             {
-                std::cout << attribute.GetName() << ": " << attribute.GetBuffer() << std::endl;
-                glBindBuffer(GL_ARRAY_BUFFER, attribute.GetBuffer());
-                glVertexAttribPointer(location, attribute.GetComponents(), GL_FLOAT, GL_FALSE, 0, nullptr);
+                attribute->Bind(); 
+                glVertexAttribPointer(location, attribute->GetStride(), GL_FLOAT, GL_FALSE, attribute->GetStride() * sizeof(float), nullptr);
                 glEnableVertexAttribArray(location);
             }
         }
 
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBuffer());
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
 
         Unbind();
+    }
+
+    VertexArray::~VertexArray()
+    {
+        glDeleteVertexArrays(1, &m_VertexArray);
     }
 
     void VertexArray::Bind()
@@ -42,28 +45,23 @@ namespace GL
         m_IsBound = false;
     }
 
-    void VertexArray::Destroy()
-    {
-        glDeleteVertexArrays(1, &m_VertexArray);
-    }
-
     void VertexArray::DrawSequence(GLenum mode)
     {
         if (m_IsBound)
         {
-            glDrawArrays(mode, 0, m_Attributes.VertexCount()); 
+            glDrawArrays(mode, 0, m_Attributes.GetVertexCount());
         }
         else
         {
-            std::cerr << "Vertex array is not bound!"; 
+            std::cerr << "Vertex array is not bound!";
         }
     }
 
-    void VertexArray::DrawIndexed(GLenum mode) 
+    void VertexArray::DrawIndexed(GLenum mode)
     {
         if (m_IsBound)
         {
-            glDrawElements(mode, (GLint)m_Attributes.IndexCount(), GL_UNSIGNED_INT, 0);
+            glDrawElements(mode, (GLint)m_Attributes.GetIndexCount(), GL_UNSIGNED_INT, 0);
         }
         else
         {

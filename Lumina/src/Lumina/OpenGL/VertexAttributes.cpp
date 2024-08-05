@@ -2,34 +2,18 @@
 
 namespace GL
 {
-    VertexAttribute& VertexAttributes::AddAttribute(const std::string& name, int vertices, int components, const std::vector<float>& floats, GLenum usage)
+    void VertexAttributes::AddVertices(const std::string& name, int count, int components, const float* floats, GLenum usage)
     {
-        if (this->m_Vertices >= 0 && vertices != this->m_Vertices)
+        if (m_VertexCount >= 0 && count != this->m_VertexCount)
         {
             throw std::runtime_error("Attributes must have same number of vertices.");
         }
-        this->m_Vertices = vertices;
-        m_Attributes.emplace_back(VertexAttribute{ name, vertices, components, floats, usage });
+        m_VertexCount = count; 
+        m_Attributes.emplace_back(std::make_unique<VertexBuffer>(name, count, components, floats, usage));
     }
 
-    void VertexAttributes::AddIndices(const std::vector<unsigned int>& ints, GLenum usage)
+    void VertexAttributes::AddIndices(const unsigned int* indices, const unsigned int count, GLenum usage)
     {
-        m_IndexCount = ints.size();
-        glGenBuffers(1, &m_IndexBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_IndexBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, ints.size() * sizeof(unsigned int), ints.data(), usage);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-    }
-
-    void VertexAttributes::Destroy()
-    {
-        for (auto& attribute : m_Attributes)
-        {
-            attribute.Destroy();
-        }
-        if (m_IndexBuffer)
-        {
-            glDeleteBuffers(1, &m_IndexBuffer);
-        }
+        m_IndexBuffer = new IndexBuffer(indices, count, usage);
     }
 }

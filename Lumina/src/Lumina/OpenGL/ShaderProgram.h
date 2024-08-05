@@ -14,7 +14,7 @@ namespace GL
 {
     class ShaderProgram
     {
-    public:
+    public: 
         ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
         ~ShaderProgram() { Destroy(); };
 

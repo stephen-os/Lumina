@@ -15,7 +15,7 @@ namespace GL
 
 		void Bind(unsigned int slot = 0) const;
 		void Unbind() const;
-		void SetData(int width, int height);
+		void SetData(float width, float height);
 
 		unsigned int GetID() { return m_TextureID; };
 	private:
