@@ -9,9 +9,7 @@ namespace GL
 	{
 	public:
 		Texture();
-		~Texture() { Destroy(); };
-
-		void Destroy();
+		~Texture();
 
 		void Bind(unsigned int slot = 0) const;
 		void Unbind() const;

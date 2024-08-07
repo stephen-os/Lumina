@@ -39,6 +39,7 @@ public:
         m_Height = viewportSize.y;
 
         // Texture
+        m_Texture->Bind(); 
         m_Texture->SetData(m_Width, m_Height);
 
         // Frame Buffer
@@ -60,11 +61,12 @@ public:
         m_VertexArray->DrawIndexed(GL_TRIANGLES);
         m_VertexArray->Unbind();
 
-        // Cleanup
-        m_FrameBuffer->Unbind();
-
         ImGui::Image((void*)(intptr_t)m_Texture->GetID(), ImVec2(m_Width, m_Height));
         ImGui::End();
+
+        // Cleanup
+        m_Texture->Unbind();
+        m_FrameBuffer->Unbind();
     }
 
     virtual void OnAttach() override

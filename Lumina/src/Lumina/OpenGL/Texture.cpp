@@ -11,12 +11,14 @@ namespace GL
         GLCALL(glBindTexture(GL_TEXTURE_2D, m_TextureID));
         GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
         GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+        GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
     }
 
-    void Texture::Destroy()
+    Texture::~Texture()
     {
         GLCALL(glDeleteTextures(1, &m_TextureID));
     }
+
 
     void Texture::Bind(unsigned int slot) const
     {
