@@ -1,8 +1,8 @@
 #include "Lumina/Application.h"
 #include "Lumina/EntryPoint.h"
 
-#include "Demo.h"
-#include "Cube.h"
+#include "Examples/Demo.h"
+#include "Examples/Cube.h"
 
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
 {
