@@ -4,8 +4,6 @@
 #include "Demo.h"
 #include "Cube.h"
 
-#include "Terrain/TerrainGenerator.h"
-
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
 {
     Lumina::ApplicationSpecification spec;
