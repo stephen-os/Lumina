@@ -20,9 +20,11 @@ namespace GL
         {
             std::cerr << "Error: Framebuffer is not complete!!!" << std::endl;
         }
+
+        GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
 
-    void FrameBuffer::Destroy()
+    FrameBuffer::~FrameBuffer()
     {
         GLCALL(glDeleteFramebuffers(1, &m_FrameBufferID));
     }
