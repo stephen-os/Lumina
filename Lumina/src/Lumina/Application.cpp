@@ -11,6 +11,20 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+static void glfw_window_focus_callback(GLFWwindow* window, int focused)
+{
+    if (focused)
+    {
+        std::cout << "Hidden" << std::endl;
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Lock the mouse
+    }
+    else
+    {
+        std::cout << "Visible" << std::endl; 
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Unlock the mouse
+    }
+}
+
 Lumina::Application::Application(const ApplicationSpecification& applicationSpecification)
 {
     // Set specs
@@ -78,6 +92,9 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
 
     const char* glsl_version = "#version 130";
     ImGui_ImplOpenGL3_Init(glsl_version);
+
+    // glfwSetWindowFocusCallback(m_Window, glfw_window_focus_callback);
+    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 Lumina::Application::~Application()
@@ -96,6 +113,9 @@ void Lumina::Application::Run()
     // Main loop
     while (!glfwWindowShouldClose(m_Window))
     {
+        for (auto& layer : m_LayerStack)
+            layer->OnUpdate(m_TimeStep);
+
         glfwPollEvents();
 
         // ImGui new frame

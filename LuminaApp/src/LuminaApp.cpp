@@ -3,6 +3,7 @@
 
 #include "Examples/Demo.h"
 #include "Examples/Cube.h"
+#include "Examples/CameraMovement.h"
 
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
 {
@@ -12,7 +13,7 @@ Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
     spec.Height = 900;
 
     Lumina::Application* app = new Lumina::Application(spec);
-    app->PushLayer<Demo>(); 
+    app->PushLayer<CameraMovement>(); 
     
     return app;
 }

@@ -115,6 +115,7 @@ public:
         m_Texture = new GL::Texture();
         m_FrameBuffer = new GL::FrameBuffer();
     }
+
 private:
     std::string ReadFile(const std::string& filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);

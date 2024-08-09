@@ -32,6 +32,7 @@ Camera::Camera(float fov, float aspect, float near, float far)
     m_Front(0.0f, 0.0f, -1.0f),
     m_Up(0.0f, 1.0f, 0.0f)
 {
+    m_Right = glm::normalize(glm::cross(m_Front, m_Up));  // Initialize m_Right
     UpdateViewMatrix();
 }
 
@@ -53,6 +54,7 @@ void Camera::SetRotation(float pitch, float yaw)
     m_Front.y = sin(glm::radians(pitch));
     m_Front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     m_Front = glm::normalize(m_Front);
+    m_Right = glm::normalize(glm::cross(m_Front, m_Up));  // Update m_Right
     UpdateViewMatrix();
 }
 
@@ -62,6 +64,7 @@ void Camera::Pitch(float degrees)
     glm::vec3 right = glm::normalize(glm::cross(m_Front, m_Up));
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), radians, right);
     m_Front = glm::normalize(glm::vec3(rotation * glm::vec4(m_Front, 0.0f)));
+    m_Right = glm::normalize(glm::cross(m_Front, m_Up));  // Update m_Right
     UpdateViewMatrix();
 }
 
@@ -70,6 +73,19 @@ void Camera::Yaw(float degrees)
     float radians = glm::radians(degrees);
     glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), radians, m_Up);
     m_Front = glm::normalize(glm::vec3(rotation * glm::vec4(m_Front, 0.0f)));
+    m_Right = glm::normalize(glm::cross(m_Front, m_Up));  // Update m_Right
+    UpdateViewMatrix();
+}
+
+void Camera::Strafe(float distance)
+{
+    m_Position += m_Right * distance;
+    UpdateViewMatrix();
+}
+
+void Camera::Advance(float distance)
+{
+    m_Position += m_Front * distance;
     UpdateViewMatrix();
 }
 

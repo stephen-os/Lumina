@@ -12,6 +12,9 @@ public:
 
     void SetPosition(const glm::vec3& position);
     void SetRotation(float pitch, float yaw);
+
+    void Strafe(float distance);
+    void Advance(float distance);
     void Pitch(float degrees);
     void Yaw(float degrees);
 
@@ -32,4 +35,5 @@ private:
     glm::vec3 m_Position;
     glm::vec3 m_Front;
     glm::vec3 m_Up;
+    glm::vec3 m_Right;  // Add this member variable
 };

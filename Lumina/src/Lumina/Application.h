@@ -39,11 +39,15 @@ namespace Lumina
 			static_assert(std::is_base_of<Layer, T>::value, "Pushed type is not subclass of Layer!");
 			m_LayerStack.emplace_back(std::make_shared<T>())->OnAttach();
 		}
+
+		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
 		GLFWwindow* m_Window;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		ApplicationSpecification m_Specifications;
+
+		float m_TimeStep = 0.0f; 
 	};
 
 	// Implemented by CLIENT
