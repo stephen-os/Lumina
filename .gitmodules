@@ -10,3 +10,6 @@
 [submodule "Dependencies/glm"]
 	path = Dependencies/glm
 	url = https://github.com/g-truc/glm.git
+[submodule "Dependencies/tinygltf"]
+	path = Dependencies/tinygltf
+	url = https://github.com/Resetss/tinygltf.git
