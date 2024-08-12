@@ -13,7 +13,7 @@ Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
     spec.Height = 900;
 
     Lumina::Application* app = new Lumina::Application(spec);
-    app->PushLayer<CameraMovement>(); 
+    app->PushLayer<CameraMovement>();
     
     return app;
 }

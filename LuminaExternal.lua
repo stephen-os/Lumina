@@ -10,6 +10,7 @@ group "Dependencies"
    include "Dependencies/imgui"
    include "Dependencies/glfw"
    include "Dependencies/glad"
+   include "Dependencies/tinygltf"
 group ""
 
 group "Core"

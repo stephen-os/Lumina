@@ -5,7 +5,7 @@
 
 namespace GL
 {
-    class FrameBuffer 
+    class FrameBuffer
     {
     public:
         FrameBuffer();
@@ -14,9 +14,11 @@ namespace GL
         void Bind() const;
         void Unbind() const;
         void AttachTexture(unsigned int textureID);
+        void AttachDepthBuffer(float width, float height);
 
     private:
         unsigned int m_FrameBufferID;
+        unsigned int m_DepthBufferID;
     };
 }
 

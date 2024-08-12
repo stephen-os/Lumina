@@ -7,6 +7,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Lumina/Utils/Camera.h"
+#include "Lumina/Utils/Timer.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
 
@@ -15,6 +16,9 @@
 #include "Lumina/OpenGL/Texture.h"
 #include "Lumina/OpenGL/VertexAttributes.h"
 #include "Lumina/OpenGL/VertexArray.h"
+
+#include "Lumina/Renderer/GLTFLoader.h"
+#include "Lumina/Renderer/Mesh.h"
 
 #define KEY_W GLFW_KEY_W
 #define KEY_S GLFW_KEY_S
@@ -28,7 +32,7 @@ class CameraMovement : public Lumina::Layer
 {
 public:
     CameraMovement()
-        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f)
+        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 20.0f)
     {
         m_Camera.SetPosition(glm::vec3(-3.0f, -3.0f, 3.0f));
         m_Camera.Yaw(-45.0f);
@@ -66,6 +70,10 @@ public:
             m_Camera.Strafe(0.1f);
         if (m_Left)
             m_Camera.Strafe(-0.1f);
+
+        float elapsedTime = m_FrameTimer.Elapsed();
+        m_FPS = 1.0f / elapsedTime;
+        m_FrameTimer.Reset();
     }
 
     virtual void OnUIRender() override
@@ -119,6 +127,7 @@ public:
         auto viewportSize = ImGui::GetContentRegionAvail();
         m_Width = viewportSize.x;
         m_Height = viewportSize.y;
+        m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 20.0f);
 
         // Texture
         m_Texture->Bind();
@@ -129,21 +138,30 @@ public:
         m_FrameBuffer->AttachTexture(m_Texture->GetID());
 
         GLCALL(glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height));
-        GLCALL(glClearColor(0.2f, 0.3f, 0.3f, 1.0f));
+        GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
         GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GLCALL(glEnable(GL_DEPTH_TEST));
         GLCALL(glEnable(GL_CULL_FACE));
+
+        GLCALL(glEnable(GL_DEPTH_TEST));
+        glDepthFunc(GL_LEQUAL);
+
 
         // Shader
         m_ShaderProgram->Bind();
         m_ShaderProgram->SetUniformMatrix4fv("u_MVP", mvp);
+        // m_Mesh2.Draw();
+        m_ShaderProgram->Unbind();
 
-        // Vertex Array
-        m_VertexArray->Bind();
-        m_VertexArray->DrawIndexed(GL_TRIANGLES);
-        m_VertexArray->Unbind();
+        m_ShaderProgram->Bind();
+        m_ShaderProgram->SetUniformMatrix4fv("u_MVP", mvp);
+        m_Mesh1.Draw();
+        m_ShaderProgram->Unbind();
 
         ImGui::Image((void*)(intptr_t)m_Texture->GetID(), ImVec2(m_Width, m_Height));
+        ImGui::End();
+
+        ImGui::Begin("FPS Counter");
+        ImGui::Text("FPS: %.1f", m_FPS);
         ImGui::End();
 
         // Cleanup
@@ -153,123 +171,16 @@ public:
 
     virtual void OnAttach() override
     {
-        float positions[72]{
-            // Front face
-            -0.5f, -0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-
-            // Back face
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-
-            // Left face
-            -0.5f, -0.5f, -0.5f,
-            -0.5f, -0.5f, 0.5f,
-            -0.5f, 0.5f, 0.5f,
-            -0.5f, 0.5f, -0.5f,
-
-            // Right face
-            0.5f, -0.5f, -0.5f,
-            0.5f, 0.5f, -0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, -0.5f, 0.5f,
-
-            // Top face
-            -0.5f, 0.5f, -0.5f,
-            -0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, 0.5f,
-            0.5f, 0.5f, -0.5f,
-
-            // Bottom face
-            -0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, -0.5f,
-            0.5f, -0.5f, 0.5f,
-            -0.5f, -0.5f, 0.5f
-        };
-
-        float normals[72]{
-            // Front face
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-            0.0f, 0.0f, 1.0f,
-
-            // Back face
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-            0.0f, 0.0f, -1.0f,
-
-            // Left face
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-            -1.0f, 0.0f, 0.0f,
-
-            // Right face
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-            1.0f, 0.0f, 0.0f,
-
-            // Top face
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-            0.0f, 1.0f, 0.0f,
-
-            // Bottom face
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f,
-            0.0f, -1.0f, 0.0f
-        };
-
-        unsigned int indices[36]{
-            // Front face
-            0, 1, 2,
-            2, 3, 0,
-
-            // Back face
-            4, 5, 6,
-            6, 7, 4,
-
-            // Left face
-            8, 9, 10,
-            10, 11, 8,
-
-            // Right face
-            12, 13, 14,
-            14, 15, 12,
-
-            // Top face
-            16, 17, 18,
-            18, 19, 16,
-
-            // Bottom face
-            20, 21, 22,
-            22, 23, 20
-        };
-
-        int stride = 3;
-        m_VertexAttributes = new GL::VertexAttributes();
-        m_VertexAttributes->AddVertices("a_Position", 72, stride, positions);
-        m_VertexAttributes->AddVertices("a_Normal", 72, stride, normals);
-        m_VertexAttributes->AddIndices(indices, 36);
-
         std::string vertexShader = ReadFile("res/shaders/lighting.vert");
         std::string fragmentShader = ReadFile("res/shaders/lighting.frag");
 
         m_ShaderProgram = new GL::ShaderProgram(vertexShader, fragmentShader);
-
-        m_VertexArray = new GL::VertexArray(*m_ShaderProgram, *m_VertexAttributes);
+        m_Mesh1.AttachShader(*m_ShaderProgram);
+        m_Mesh2.AttachShader(*m_ShaderProgram);
 
         m_Texture = new GL::Texture();
         m_FrameBuffer = new GL::FrameBuffer();
+        m_FrameBuffer->AttachDepthBuffer(m_Width, m_Height);
     }
 private:
     std::string ReadFile(const std::string& filename) {
@@ -294,8 +205,6 @@ private:
     GL::ShaderProgram* m_ShaderProgram = nullptr; 
     GL::FrameBuffer* m_FrameBuffer = nullptr;
     GL::Texture* m_Texture = nullptr;
-    GL::VertexAttributes* m_VertexAttributes = nullptr;
-    GL::VertexArray* m_VertexArray = nullptr;
 
     // Input Control 
     bool m_Forward = false; 
@@ -306,5 +215,12 @@ private:
     float m_Width = 900;
     float m_Height = 900;
 
+    // Timer
+    Lumina::Timer m_FrameTimer;
+    float m_FPS;
+
     Camera m_Camera;
+
+    Mesh m_Mesh1 = GLTFLoader::loadFromFile("res/gltf/suzan.gltf");
+    Mesh m_Mesh2 = GLTFLoader::loadFromFile("res/gltf/box.gltf");
 };

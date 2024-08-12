@@ -94,7 +94,7 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
     ImGui_ImplOpenGL3_Init(glsl_version);
 
     // glfwSetWindowFocusCallback(m_Window, glfw_window_focus_callback);
-    glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 Lumina::Application::~Application()
