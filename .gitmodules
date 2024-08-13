@@ -10,6 +10,3 @@
 [submodule "Dependencies/tinygltf"]
 	path = Dependencies/tinygltf
 	url = https://github.com/Resetss/tinygltf.git
-[submodule "imgui"]
-	path = imgui
-	url = https://github.com/Resetss/imgui.git
