@@ -148,3 +148,45 @@ void Camera::HandleKeyInput(const float& distance)
     if (m_MoveLeft)
         Strafe(-distance);
 }
+
+void Camera::HandleMouseInput(const float& sensitivity)
+{
+    ImGuiIO& io = ImGui::GetIO();
+
+    static bool firstMouse = true;
+    static float lastX = io.MousePos.x;
+    static float lastY = io.MousePos.y;
+
+    bool isWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+
+    if (isWindowFocused)
+    {
+        io.MouseDrawCursor = false;
+    }
+    else
+    {
+        io.MouseDrawCursor = true;
+    }
+
+    if (isWindowFocused)
+    {
+        if (firstMouse)
+        {
+            lastX = io.MousePos.x;
+            lastY = io.MousePos.y;
+            firstMouse = false;
+        }
+
+        float xOffset = io.MousePos.x - lastX;
+        float yOffset = lastY - io.MousePos.y;
+
+        lastX = io.MousePos.x;
+        lastY = io.MousePos.y;
+
+        xOffset *= sensitivity;
+        yOffset *= sensitivity;
+
+        Yaw(-xOffset);
+        Pitch(-yOffset);
+    }
+}

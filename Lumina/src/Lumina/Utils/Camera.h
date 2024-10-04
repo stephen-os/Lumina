@@ -29,7 +29,7 @@ public:
     glm::vec3 GetPosition() { return m_Position; }
 
     void HandleKeyInput(const float& distance); 
-    void HandleMouseInput(const float& speed);
+    void HandleMouseInput(const float& sensitivity);
 
 private:
     void UpdateViewMatrix();

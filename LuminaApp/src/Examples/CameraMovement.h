@@ -54,47 +54,7 @@ public:
 
         ImGui::Begin("Side Window");
         
-        // Camera Mouse
-        ImGuiIO& io = ImGui::GetIO();
-
-        static bool firstMouse = true;
-        static float lastX = io.MousePos.x;
-        static float lastY = io.MousePos.y;
-
-        bool isWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-
-        if (isWindowFocused)
-        {
-            io.MouseDrawCursor = false;
-        }
-        else
-        {
-            io.MouseDrawCursor = true;
-        }
-
-        if (isWindowFocused)
-        {
-            if (firstMouse)
-            {
-                lastX = io.MousePos.x;
-                lastY = io.MousePos.y;
-                firstMouse = false;
-            }
-
-            float xOffset = io.MousePos.x - lastX;
-            float yOffset = lastY - io.MousePos.y;
-
-            lastX = io.MousePos.x;
-            lastY = io.MousePos.y;
-
-            float sensitivity = 0.1f;
-            xOffset *= sensitivity;
-            yOffset *= sensitivity;
-
-            m_Camera.Yaw(-xOffset);
-            m_Camera.Pitch(-yOffset);
-        }
-        // End Camera Mouse
+        m_Camera.HandleMouseInput(0.1f); 
 
         auto viewportSize = ImGui::GetContentRegionAvail();
         m_Width = viewportSize.x;
