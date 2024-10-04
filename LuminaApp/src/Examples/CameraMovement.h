@@ -41,35 +41,7 @@ public:
 
     virtual void OnUpdate(float timestep) override
     {
-        if (ImGui::IsKeyPressed((ImGuiKey)KEY_W))
-            m_Forward = true;
-        if (ImGui::IsKeyPressed((ImGuiKey)KEY_S))
-            m_Backward = true; 
-        if (ImGui::IsKeyPressed((ImGuiKey)KEY_D))
-            m_Right = true;
-        if (ImGui::IsKeyPressed((ImGuiKey)KEY_A))
-            m_Left = true;
-
-        if (ImGui::IsKeyPressed((ImGuiKey)KEY_ESC))
-            glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
-        
-        if (ImGui::IsKeyReleased((ImGuiKey)KEY_W))
-            m_Forward = false;
-        if (ImGui::IsKeyReleased((ImGuiKey)KEY_S))
-            m_Backward = false;
-        if (ImGui::IsKeyReleased((ImGuiKey)KEY_D))
-            m_Right = false;
-        if (ImGui::IsKeyReleased((ImGuiKey)KEY_A))
-            m_Left = false;
-
-        if (m_Forward)
-            m_Camera.Advance(0.1f);
-        if (m_Backward)
-            m_Camera.Advance(-0.1f);
-        if (m_Right)
-            m_Camera.Strafe(0.1f);
-        if (m_Left)
-            m_Camera.Strafe(-0.1f);
+        m_Camera.HandleKeyInput(0.1f); 
 
         float elapsedTime = m_FrameTimer.Elapsed();
         m_FPS = 1.0f / elapsedTime;

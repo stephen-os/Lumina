@@ -3,6 +3,17 @@
 #include <sstream>
 #include <iomanip>
 
+#include <imgui.h>
+#include <GLFW/glfw3.h>
+
+#define KEY_W GLFW_KEY_W
+#define KEY_S GLFW_KEY_S
+
+#define KEY_D GLFW_KEY_D
+#define KEY_A GLFW_KEY_A
+
+#define KEY_ESC GLFW_KEY_ESCAPE
+
 std::string MatrixToString(const std::string& name, const glm::mat4& matrix) {
     std::ostringstream oss;
     const float* ptr = glm::value_ptr(matrix);
@@ -32,7 +43,7 @@ Camera::Camera(float fov, float aspect, float near, float far)
     m_Front(0.0f, 0.0f, -1.0f),
     m_Up(0.0f, 1.0f, 0.0f)
 {
-    m_Right = glm::normalize(glm::cross(m_Front, m_Up));  // Initialize m_Right
+    m_Right = glm::normalize(glm::cross(m_Front, m_Up));
     UpdateViewMatrix();
 }
 
@@ -103,4 +114,37 @@ std::string Camera::GetViewMatrixString() const {
 void Camera::UpdateViewMatrix()
 {
     m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
+}
+
+void Camera::HandleKeyInput(const float& distance)
+{
+    if (ImGui::IsKeyPressed((ImGuiKey)KEY_W))
+        m_MoveForward = true;
+    if (ImGui::IsKeyPressed((ImGuiKey)KEY_S))
+        m_MoveBackward = true;
+    if (ImGui::IsKeyPressed((ImGuiKey)KEY_D))
+        m_MoveRight = true;
+    if (ImGui::IsKeyPressed((ImGuiKey)KEY_A))
+        m_MoveLeft = true;
+
+    if (ImGui::IsKeyPressed((ImGuiKey)KEY_ESC))
+        glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
+
+    if (ImGui::IsKeyReleased((ImGuiKey)KEY_W))
+        m_MoveForward = false;
+    if (ImGui::IsKeyReleased((ImGuiKey)KEY_S))
+        m_MoveBackward = false;
+    if (ImGui::IsKeyReleased((ImGuiKey)KEY_D))
+        m_MoveRight = false;
+    if (ImGui::IsKeyReleased((ImGuiKey)KEY_A))
+        m_MoveLeft = false;
+
+    if (m_MoveForward)
+        Advance(distance);
+    if (m_MoveBackward)
+        Advance(-distance);
+    if (m_MoveRight)
+        Strafe(distance);
+    if (m_MoveLeft)
+        Strafe(-distance);
 }
