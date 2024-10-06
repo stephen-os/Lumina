@@ -17,7 +17,6 @@
 #include "Lumina/OpenGL/VertexAttributes.h"
 #include "Lumina/OpenGL/VertexArray.h"
 
-#include "Lumina/Renderer/GLTFLoader.h"
 #include "Lumina/Renderer/Mesh.h"
 
 #define KEY_W GLFW_KEY_W
@@ -78,15 +77,9 @@ public:
         glDepthFunc(GL_LEQUAL);
 
 
-        // Shader
         m_ShaderProgram->Bind();
         m_ShaderProgram->SetUniformMatrix4fv("u_MVP", mvp);
-        // m_Mesh2.Draw();
-        m_ShaderProgram->Unbind();
-
-        m_ShaderProgram->Bind();
-        m_ShaderProgram->SetUniformMatrix4fv("u_MVP", mvp);
-        m_Mesh1.Draw();
+        m_Mesh.Draw();
         m_ShaderProgram->Unbind();
 
         ImGui::Image((void*)(intptr_t)m_Texture->GetID(), ImVec2(m_Width, m_Height));
@@ -107,8 +100,7 @@ public:
         std::string fragmentShader = ReadFile("res/shaders/lighting.frag");
 
         m_ShaderProgram = new GL::ShaderProgram(vertexShader, fragmentShader);
-        m_Mesh1.AttachShader(*m_ShaderProgram);
-        m_Mesh2.AttachShader(*m_ShaderProgram);
+        m_Mesh.AttachShader(*m_ShaderProgram);
 
         m_Texture = new GL::Texture();
         m_FrameBuffer = new GL::FrameBuffer();
@@ -147,6 +139,5 @@ private:
 
     Camera m_Camera;
 
-    Mesh m_Mesh1 = GLTFLoader::loadFromFile("res/gltf/suzan.gltf");
-    Mesh m_Mesh2 = GLTFLoader::loadFromFile("res/gltf/box.gltf");
+    Mesh m_Mesh = Mesh("res/gltf/suzan.gltf");
 };
