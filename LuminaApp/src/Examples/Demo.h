@@ -100,7 +100,7 @@ public:
         };
 
         int stride = 3;
-        m_VertexAttributes = new GL::VertexAttributes();
+        m_VertexAttributes = new GL::VertexAttributes(2);
         m_VertexAttributes->AddVertices("a_Position", 12, stride, positions);
         m_VertexAttributes->AddVertices("a_Color", 12, stride, colors);
         m_VertexAttributes->AddIndices(indices, 6);

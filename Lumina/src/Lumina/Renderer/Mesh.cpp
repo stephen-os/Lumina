@@ -33,7 +33,7 @@ void Mesh::AttachShader(GL::ShaderProgram& shader)
 	delete m_Attributes;
 	delete m_VertexArray;
 
-	m_Attributes = new GL::VertexAttributes(); 
+	m_Attributes = new GL::VertexAttributes(2); 
 	m_Attributes->AddVertices("a_Position", m_VertexCount * 3, 3, m_Vertices);
 	m_Attributes->AddVertices("a_Normal", m_VertexCount * 3, 3, m_Normals);
 	m_Attributes->AddIndices(m_Indices, m_IndexCount);

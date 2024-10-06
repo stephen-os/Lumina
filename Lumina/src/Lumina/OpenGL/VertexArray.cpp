@@ -10,15 +10,15 @@ namespace GL
 
         for (auto& attribute : m_Attributes)
         {
-            GLint location = program.GetAttributeLocation(attribute->GetBufferName());
+            GLint location = program.GetAttributeLocation(attribute.GetBufferName());
             if (location < 0)
             {
-                std::cout << attribute->GetBufferName() << " is not used in the shader." << std::endl;
+                std::cout << attribute.GetBufferName() << " is not used in the shader." << std::endl;
             }
             else
             {
-                attribute->Bind(); 
-                glVertexAttribPointer(location, attribute->GetStride(), GL_FLOAT, GL_FALSE, attribute->GetStride() * sizeof(float), nullptr);
+                attribute.Bind(); 
+                glVertexAttribPointer(location, attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
                 glEnableVertexAttribArray(location);
             }
         }

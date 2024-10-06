@@ -178,7 +178,7 @@ public:
         };
 
         int stride = 3;
-        m_VertexAttributes = new GL::VertexAttributes();
+        m_VertexAttributes = new GL::VertexAttributes(2);
         m_VertexAttributes->AddVertices("a_Position", 72, stride, positions);
         m_VertexAttributes->AddVertices("a_Normal", 72, stride, normals);
         m_VertexAttributes->AddIndices(indices, 36);

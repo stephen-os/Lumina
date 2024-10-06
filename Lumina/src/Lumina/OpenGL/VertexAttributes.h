@@ -2,8 +2,8 @@
 #define VERTEX_ATTRIBUTES_H
 
 #include <string>
-#include <vector>
 #include <stdexcept>
+#include <vector>
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
@@ -13,42 +13,34 @@
 #include <iostream>
 #include <memory>
 
+#include <optional>
+
 namespace GL
 {
     class VertexAttributes
     {
     public:
-        VertexAttributes() : m_VertexCount(-1) {};
+        VertexAttributes(const unsigned int& maxAttributeCount) : m_VertexCount(-1), m_MaxAttributeCount(maxAttributeCount), m_AttributeCount(0)
+        { 
+            m_Attributes.reserve(m_MaxAttributeCount); 
+        };
         ~VertexAttributes() {};
         void AddVertices(const std::string& name, int count, int components, const float* floats, GLenum usage = GL_STATIC_DRAW);
         void AddIndices(const unsigned int* indices, unsigned int count, GLenum usage = GL_STATIC_DRAW);
 
-        std::vector<std::unique_ptr<VertexBuffer>>::iterator begin() { return m_Attributes.begin(); }
-        std::vector<std::unique_ptr<VertexBuffer>>::iterator end() { return m_Attributes.end(); }
-
-        void BindVertices()
-        {
-            for (auto& attribute : m_Attributes)
-            {
-                attribute->Bind();
-                std::cout << attribute->GetBufferID() << std::endl;
-                glEnableVertexAttribArray(attribute->GetBufferID() - 1);
-                glVertexAttribPointer(attribute->GetBufferID() - 1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), 0);
-            }
-        }
-
-        void BindIndices()
-        {
-            m_IndexBuffer->Bind();
-        }
+        std::vector<VertexBuffer>::iterator begin() { return m_Attributes.begin(); }
+        std::vector<VertexBuffer>::iterator end() { return m_Attributes.end(); }
 
         int GetVertexCount() const { return m_VertexCount; };
         unsigned int GetIndexCount() const { return m_IndexBuffer->GetIndexCount(); }
         GLuint GetIndexBufferID() const { return m_IndexBuffer->GetIndexBufferID(); };
     private:
-        int m_VertexCount; 
-        IndexBuffer* m_IndexBuffer = nullptr;
-        std::vector<std::unique_ptr<VertexBuffer>> m_Attributes;
+        int m_VertexCount;
+        unsigned int m_MaxAttributeCount; 
+        unsigned int m_AttributeCount;
+        
+        std::optional<IndexBuffer> m_IndexBuffer;
+        std::vector<VertexBuffer> m_Attributes;
     };
 }
 
