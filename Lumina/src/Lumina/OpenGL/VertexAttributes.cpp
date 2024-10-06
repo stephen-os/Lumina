@@ -1,17 +1,25 @@
 #include "VertexAttributes.h"
 
+#include <iostream>
+
 namespace GL
 {
     void VertexAttributes::AddVertices(const std::string& name, int count, int components, const float* floats, GLenum usage)
     {
         if (m_VertexCount >= 0 && count != m_VertexCount)
         {
-            throw std::runtime_error("Attributes must have same number of vertices.");
+            std::cerr << "[ERROR] Failed to add vertices for attribute \"" << name << "\".\n";
+            std::cerr << "Expected vertex count: " << m_VertexCount << ", but received: " << count << ".\n";
+            std::cerr << "Ensure all attributes have the same number of vertices.\n";
+            return; 
         }
 
-        if (m_AttributeCount == m_MaxAttributeCount)
+        if (m_Attributes.size() >= m_MaxAttributeCount)
         {
-            throw std::runtime_error("Vertex buffer (" + name + ") exceeds the allowed number of buffers for this attributes container.");
+            std::cerr << "[ERROR] Failed to add vertex buffer \"" << name << "\".\n";
+            std::cerr << "Exceeded maximum number of allowed buffers (" << m_MaxAttributeCount << ").\n";
+            std::cerr << "Current buffer count: " << m_Attributes.size() << ".\n";
+            return;
         }
 
         m_VertexCount = count; 
