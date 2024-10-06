@@ -136,13 +136,7 @@ private:
 private:
     GL::ShaderProgram* m_ShaderProgram = nullptr; 
     GL::FrameBuffer* m_FrameBuffer = nullptr;
-    GL::Texture* m_Texture = nullptr;
-
-    // Input Control 
-    bool m_Forward = false; 
-    bool m_Backward = false;
-    bool m_Left = false;
-    bool m_Right = false;
+    GL::Texture* m_Texture = nullptr;;
 
     float m_Width = 900;
     float m_Height = 900;
