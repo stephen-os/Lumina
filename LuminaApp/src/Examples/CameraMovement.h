@@ -31,11 +31,10 @@ class CameraMovement : public Lumina::Layer
 {
 public:
     CameraMovement()
-        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 20.0f)
+        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f)
     {
-        m_Camera.SetPosition(glm::vec3(-3.0f, -3.0f, 3.0f));
-        m_Camera.Yaw(-45.0f);
-        m_Camera.Pitch(35.0f);
+        m_Camera.SetPosition(glm::vec3(0.0f, 25.0f, 0.0f));
+        m_Camera.Pitch(-90.0f); 
     }
 
     virtual void OnUpdate(float timestep) override
@@ -49,8 +48,6 @@ public:
 
     virtual void OnUIRender() override
     {
-        glm::mat4 mvp = m_Camera.GetProjectionMatrix() * m_Camera.GetViewMatrix() * glm::mat4(1.0f);
-
         ImGui::Begin("Side Window");
         
         m_Camera.HandleMouseInput(0.1f); 
@@ -58,7 +55,7 @@ public:
         auto viewportSize = ImGui::GetContentRegionAvail();
         m_Width = viewportSize.x;
         m_Height = viewportSize.y;
-        m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 20.0f);
+        m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 100.0f);
 
         // Texture
         m_Texture->Bind();
@@ -76,11 +73,9 @@ public:
         GLCALL(glEnable(GL_DEPTH_TEST));
         glDepthFunc(GL_LEQUAL);
 
-
-        m_ShaderProgram->Bind();
-        m_ShaderProgram->SetUniformMatrix4fv("u_MVP", mvp);
-        m_Mesh.Draw();
-        m_ShaderProgram->Unbind();
+        m_Mesh.AttachProjection(m_Camera.GetProjectionMatrix()); 
+        m_Mesh.AttachView(m_Camera.GetViewMatrix());
+        m_Mesh.Draw(*m_ShaderProgram);
 
         ImGui::Image((void*)(intptr_t)m_Texture->GetID(), ImVec2(m_Width, m_Height));
         ImGui::End();
@@ -96,8 +91,8 @@ public:
 
     virtual void OnAttach() override
     {
-        std::string vertexShader = ReadFile("res/shaders/lighting.vert");
-        std::string fragmentShader = ReadFile("res/shaders/lighting.frag");
+        std::string vertexShader = ReadFile("res/shaders/normal.vert");
+        std::string fragmentShader = ReadFile("res/shaders/normal.frag");
 
         m_ShaderProgram = new GL::ShaderProgram(vertexShader, fragmentShader);
         m_Mesh.AttachShader(*m_ShaderProgram);
@@ -139,5 +134,5 @@ private:
 
     Camera m_Camera;
 
-    Mesh m_Mesh = Mesh("res/gltf/suzan.gltf");
+    Mesh m_Mesh = Mesh("res/gltf/multiple_boxes.gltf");
 };
