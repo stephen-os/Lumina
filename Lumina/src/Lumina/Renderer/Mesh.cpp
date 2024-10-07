@@ -1,14 +1,17 @@
 #include "Mesh.h"
 
 #include "tiny_gltf.h"
+#include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
-Mesh::Mesh(float* vertices, float* normals, unsigned int* indices, size_t vertexCount, size_t indicesCount) :
-	m_VertexCount(vertexCount),
-	m_IndexCount(indicesCount)
+Mesh::Mesh(float* vertices, float* normals, unsigned int* indices, size_t vertexCount, size_t indicesCount)
 {
-	m_Attributes.AddVertices("a_Position", m_VertexCount * 3, 3, vertices);
-	m_Attributes.AddVertices("a_Normal", m_VertexCount * 3, 3, normals);
-	m_Attributes.AddIndices(indices, m_IndexCount);
+    // For now assume one. 
+    m_Attributes.reserve(1); 
+    m_Attributes.emplace_back(1); 
+    m_Attributes[0].AddVertices("a_Position", vertexCount * 3, 3, vertices);
+    m_Attributes[0].AddVertices("a_Normal", vertexCount * 3, 3, normals);
+    m_Attributes[0].AddIndices(indices, indicesCount);
 }
 
 Mesh::Mesh(const std::string& filename)
@@ -16,16 +19,28 @@ Mesh::Mesh(const std::string& filename)
 	LoadGLTF(filename);
 }
 
-void Mesh::Draw()
+void Mesh::Draw(GL::ShaderProgram& shader)
 {
-	m_VertexArray->Bind();
-	m_VertexArray->DrawIndexed(GL_TRIANGLES);
-	m_VertexArray->Unbind();
+    for (size_t i = 0; i < m_VertexArrays.size(); i++)
+    {
+        shader.Bind();
+        shader.SetUniformMatrix4fv("u_MVP", m_Projection * m_View * m_Transforms[i].GetTransformMatrix());
+
+        m_VertexArrays[i].Bind();
+        m_VertexArrays[i].DrawIndexed(GL_TRIANGLES);
+        m_VertexArrays[i].Unbind();
+
+        shader.Unbind(); 
+    }
 }
 
 void Mesh::AttachShader(GL::ShaderProgram& shader)
 {
-	m_VertexArray.emplace(shader, m_Attributes);
+    m_VertexArrays.reserve(m_Attributes.size());
+    for (auto& attributes : m_Attributes)
+    { 
+	    m_VertexArrays.emplace_back(shader, attributes);
+    }
 }
 
 void Mesh::LoadGLTF(const std::string& filename)
@@ -37,71 +52,117 @@ void Mesh::LoadGLTF(const std::string& filename)
 
     bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, filename);
 
-    if (!warn.empty()) {
+    if (!warn.empty()) 
+    {
         std::cout << "GLTF Warning: " << warn << std::endl;
     }
 
-    if (!err.empty()) {
+    if (!err.empty()) 
+    {
         std::cerr << "GLTF Error: " << err << std::endl;
         return;
     }
 
-    if (!ret) {
+    if (!ret) 
+    {
         std::cerr << "Failed to load glTF file: " << filename << std::endl;
         return;
     }
 
-    if (model.meshes.empty()) {
+    if (model.meshes.empty()) 
+    {
         std::cerr << "No meshes found in the glTF file." << std::endl;
         return;
     }
 
-    const tinygltf::Mesh& mesh = model.meshes[0];
-    for (const auto& primitive : mesh.primitives) {
-        const auto& posAccessor = model.accessors[primitive.attributes.at("POSITION")];
-        const auto& posBufferView = model.bufferViews[posAccessor.bufferView];
-        const auto& posBuffer = model.buffers[posBufferView.buffer];
+    m_Attributes.reserve(model.meshes.size());
+    for (size_t i = 0; i < model.meshes.size(); ++i) 
+    {
+        m_Attributes.emplace_back(2);
+    }
+    m_Transforms.reserve(model.meshes.size());
 
-        m_VertexCount = posAccessor.count;
-        float* vertices = new float[m_VertexCount * 3];
-        memcpy(vertices, &posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset], m_VertexCount * 3 * sizeof(float));
+    size_t index = 0;
 
-        float* normals = nullptr;
-        if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) {
-            const auto& normalAccessor = model.accessors[primitive.attributes.at("NORMAL")];
-            const auto& normalBufferView = model.bufferViews[normalAccessor.bufferView];
-            const auto& normalBuffer = model.buffers[normalBufferView.buffer];
+    for (const auto& mesh : model.meshes)
+    {
+        Transform transform;
+        const auto& node = model.nodes[index];
 
-            normals = new float[m_VertexCount * 3];
-            memcpy(normals, &normalBuffer.data[normalBufferView.byteOffset + normalAccessor.byteOffset], m_VertexCount * 3 * sizeof(float));
+        if (node.translation.size() == 3) 
+        {
+            transform.SetPosition(glm::vec3(node.translation[0], node.translation[1], node.translation[2]));
         }
 
-        unsigned int* indices = nullptr;
-        const auto& indicesAccessor = model.accessors[primitive.indices];
-        const auto& indicesBufferView = model.bufferViews[indicesAccessor.bufferView];
-        const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
+        if (node.rotation.size() == 4) 
+        {
+            glm::quat quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+            glm::vec3 euler = glm::eulerAngles(quat);
+            transform.SetRotation(glm::degrees(euler));
+        }
 
-        m_IndexCount = indicesAccessor.count;
-        indices = new unsigned int[m_IndexCount];
+        if (node.scale.size() == 3) 
+        {
+            transform.SetScale(glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
+        }
+        
+        std::cout << transform.ToString();
 
-        if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) {
-            const uint16_t* indicesData = reinterpret_cast<const uint16_t*>(&indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset]);
-            for (size_t i = 0; i < m_IndexCount; ++i) {
-                indices[i] = static_cast<unsigned int>(indicesData[i]);
+        m_Transforms.push_back(transform);
+
+        for (const auto& primitive : mesh.primitives) 
+        {
+            const auto& posAccessor = model.accessors[primitive.attributes.at("POSITION")];
+            const auto& posBufferView = model.bufferViews[posAccessor.bufferView];
+            const auto& posBuffer = model.buffers[posBufferView.buffer];
+
+            size_t vertexCount = posAccessor.count;
+            float* vertices = new float[vertexCount * 3];
+            memcpy(vertices, &posBuffer.data[posBufferView.byteOffset + posAccessor.byteOffset], vertexCount * 3 * sizeof(float));
+
+            float* normals = nullptr;
+            if (primitive.attributes.find("NORMAL") != primitive.attributes.end()) 
+            {
+                const auto& normalAccessor = model.accessors[primitive.attributes.at("NORMAL")];
+                const auto& normalBufferView = model.bufferViews[normalAccessor.bufferView];
+                const auto& normalBuffer = model.buffers[normalBufferView.buffer];
+
+                normals = new float[vertexCount * 3];
+                memcpy(normals, &normalBuffer.data[normalBufferView.byteOffset + normalAccessor.byteOffset], vertexCount * 3 * sizeof(float));
             }
+
+            unsigned int* indices = nullptr;
+            const auto& indicesAccessor = model.accessors[primitive.indices];
+            const auto& indicesBufferView = model.bufferViews[indicesAccessor.bufferView];
+            const auto& indicesBuffer = model.buffers[indicesBufferView.buffer];
+
+            size_t indexCount = indicesAccessor.count;
+            indices = new unsigned int[indexCount];
+
+            if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT) 
+            {
+                const uint16_t* indicesData = reinterpret_cast<const uint16_t*>(&indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset]);
+                for (size_t i = 0; i < indexCount; ++i) 
+                {
+                    indices[i] = static_cast<unsigned int>(indicesData[i]);
+                }
+            }
+            else
+            {
+                if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
+                {
+                    memcpy(indices, &indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset], indexCount * sizeof(unsigned int));
+                }
+            }
+
+            m_Attributes[index].AddVertices("a_Position", vertexCount * 3, 3, vertices);
+            m_Attributes[index].AddVertices("a_Normal", vertexCount * 3, 3, normals);
+            m_Attributes[index].AddIndices(indices, indexCount);
+            
+            delete[] vertices;
+            delete[] normals;
+            delete[] indices;
         }
-        else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT) {
-            memcpy(indices, &indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset], m_IndexCount * sizeof(unsigned int));
-        }
-
-        m_Attributes.AddVertices("a_Position", m_VertexCount * 3, 3, vertices);
-        m_Attributes.AddVertices("a_Normal", m_VertexCount * 3, 3, normals);
-        m_Attributes.AddIndices(indices, m_IndexCount);
-
-        delete[] vertices;
-        if (normals) delete[] normals;
-        delete[] indices;
-
-        break;
+        index++;
     }
 }
