@@ -23,15 +23,16 @@ public:
     const glm::mat4& GetProjectionMatrix() const;
     const glm::mat4& GetViewMatrix() const;
 
-    std::string GetProjectionMatrixString() const;
-    std::string GetViewMatrixString() const;
+    std::string GetProjMatrixToString() const;
+    std::string GetViewMatrixToString() const;
 
     glm::vec3 GetPosition() { return m_Position; }
 
     void HandleKeyInput(const float& distance); 
     void HandleMouseInput(const float& sensitivity);
-
+ 
 private:
+    std::string MatrixToString(const std::string& name, const glm::mat4& matrix) const;
     void UpdateViewMatrix();
 
     glm::mat4 m_ProjectionMatrix;

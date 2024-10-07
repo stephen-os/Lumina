@@ -14,32 +14,10 @@
 
 #define KEY_ESC GLFW_KEY_ESCAPE
 
-std::string MatrixToString(const std::string& name, const glm::mat4& matrix) {
-    std::ostringstream oss;
-    const float* ptr = glm::value_ptr(matrix);
-
-    // Set the precision for floating-point numbers
-    oss << std::fixed << std::setprecision(4);
-
-    oss << name << ":\n";
-
-    // Format the matrix as a 4x4 grid
-    for (int i = 0; i < 16; ++i) {
-        if (i % 4 == 0 && i != 0) {
-            oss << "\n"; // Newline for each row
-        }
-        oss << ptr[i] << " ";
-    }
-
-    oss << "\n";
-
-    return oss.str();
-}
-
 Camera::Camera(float fov, float aspect, float near, float far)
     : m_ProjectionMatrix(glm::perspective(glm::radians(fov), aspect, near, far)),
     m_ViewMatrix(1.0f),
-    m_Position(0.0f, 0.0f, 3.0f),
+    m_Position(0.0f, 0.0f, 0.0f),
     m_Front(0.0f, 0.0f, -1.0f),
     m_Up(0.0f, 1.0f, 0.0f)
 {
@@ -103,12 +81,39 @@ void Camera::Advance(float distance)
 const glm::mat4& Camera::GetProjectionMatrix() const { return m_ProjectionMatrix; }
 const glm::mat4& Camera::GetViewMatrix() const { return m_ViewMatrix; }
 
-std::string Camera::GetProjectionMatrixString() const {
+std::string Camera::GetProjMatrixToString() const {
     return MatrixToString("Projection Matrix", m_ProjectionMatrix);
 }
 
-std::string Camera::GetViewMatrixString() const {
+std::string Camera::GetViewMatrixToString() const {
     return MatrixToString("View Matrix", m_ViewMatrix);
+}
+
+std::string Camera::MatrixToString(const std::string& name, const glm::mat4& matrix) const
+{
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(3);
+
+    ss << name << "\n"; 
+    ss << "|-----------------------------|\n";
+
+    for (int i = 0; i < 4; ++i) {
+        ss << "| ";
+        for (int j = 0; j < 4; ++j) {
+            float value = matrix[j][i];
+            if (value < 0) {
+                ss << "-" << std::abs(value) << " ";
+            }
+            else {
+                ss << " " << value << " ";
+            }
+        }
+        ss << "|\n";
+    }
+
+    ss << "|-----------------------------|\n";
+
+    return ss.str();
 }
 
 void Camera::UpdateViewMatrix()
