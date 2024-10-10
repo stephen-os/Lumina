@@ -146,6 +146,12 @@ namespace GL
         GLCALL(glUniform3f(m_Uniforms[name], a, b, c));
     }
 
+    void ShaderProgram::SetUniform3fv(const std::string& name, const glm::vec3 value)
+    {
+        AssertUniform(name);
+        GLCALL(glUniform3fv(m_Uniforms[name], 1, glm::value_ptr(value)));
+    }
+
     void ShaderProgram::SetUniformMatrix4fv(const std::string& name, const glm::mat4& matrix)
     {
         AssertUniform(name);

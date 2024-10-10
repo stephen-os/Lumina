@@ -75,7 +75,7 @@ public:
 
         m_Mesh.AttachProjection(m_Camera.GetProjectionMatrix()); 
         m_Mesh.AttachView(m_Camera.GetViewMatrix());
-        m_Mesh.Draw(*m_ShaderProgram);
+        m_Mesh.Draw(*m_ShaderProgram, m_Camera);
 
         ImGui::Image((void*)(intptr_t)m_Texture->GetID(), ImVec2(m_Width, m_Height));
         ImGui::End();
@@ -91,8 +91,8 @@ public:
 
     virtual void OnAttach() override
     {
-        std::string vertexShader = ReadFile("res/shaders/normal.vert");
-        std::string fragmentShader = ReadFile("res/shaders/normal.frag");
+        std::string vertexShader = ReadFile("res/shaders/lighting.vert");
+        std::string fragmentShader = ReadFile("res/shaders/lighting.frag");
 
         m_ShaderProgram = new GL::ShaderProgram(vertexShader, fragmentShader);
         m_Mesh.AttachShader(*m_ShaderProgram);

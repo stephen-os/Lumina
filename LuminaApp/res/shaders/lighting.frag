@@ -2,13 +2,13 @@
 
 in vec3 v_Normal;
 in vec3 v_Position; 
+in vec3 v_CameraPosition; 
 
 out vec4 FragColor;
 
-uniform vec3 lightPos = vec3(0.0, 0.0, 1.0);
+uniform vec3 lightPos = vec3(0.0, 10.0, 0.0);
 uniform vec3 lightColor = vec3(1.0, 1.0, 1.0);
 uniform vec3 objectColor = vec3(1.0, 0.0, 0.0);
-uniform vec3 viewPos; // Position of the camera/viewer
 
 void main()
 {
@@ -24,7 +24,7 @@ void main()
 
     // Specular lighting
     float specularStrength = 0.5;
-    vec3 viewDir = normalize(viewPos - v_Position);
+    vec3 viewDir = normalize(v_CameraPosition - v_Position);
     vec3 reflectDir = reflect(-lightDir, norm);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32); // 32 is the shininess factor
     vec3 specular = specularStrength * spec * lightColor;  

@@ -19,12 +19,17 @@ Mesh::Mesh(const std::string& filename)
 	LoadGLTF(filename);
 }
 
-void Mesh::Draw(GL::ShaderProgram& shader)
+void Mesh::Draw(GL::ShaderProgram& shader, Camera& camera)
 {
     for (size_t i = 0; i < m_VertexArrays.size(); i++)
     {
         shader.Bind();
-        shader.SetUniformMatrix4fv("u_MVP", m_Projection * m_View * m_Transforms[i].GetTransformMatrix());
+        // Lights, Colors, UV maps, Textures
+        shader.SetUniformMatrix4fv("u_Model", m_Transforms[i].GetTransformMatrix());
+        shader.SetUniformMatrix4fv("u_View", m_View);
+        shader.SetUniformMatrix4fv("u_Projection", m_Projection);
+
+        shader.SetUniform3fv("u_CameraPosition", camera.GetPosition());
 
         m_VertexArrays[i].Bind();
         m_VertexArrays[i].DrawIndexed(GL_TRIANGLES);
@@ -105,8 +110,8 @@ void Mesh::LoadGLTF(const std::string& filename)
         {
             transform.SetScale(glm::vec3(node.scale[0], node.scale[1], node.scale[2]));
         }
-        
-        std::cout << transform.ToString();
+
+        std::cout << transform.ToString(); 
 
         m_Transforms.push_back(transform);
 

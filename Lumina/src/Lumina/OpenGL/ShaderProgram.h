@@ -29,6 +29,7 @@ namespace GL
         void SetUniform2f(const std::string& name, float a, float b);
         void SetUniform2fv(const std::string& name, glm::vec2 value);
         void SetUniform3f(const std::string& name, float a, float b, float c);
+        void SetUniform3fv(const std::string& name, const glm::vec3 value);
         void SetUniformMatrix4fv(const std::string& name, const glm::mat4& matrix);
     private:
         GLuint CompileSource(GLenum type, const std::string& source);

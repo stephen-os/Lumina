@@ -8,6 +8,7 @@
 #include "../OpenGL/VertexArray.h"
 
 #include "Transform.h"
+#include "../Utils/Camera.h" 
 
 #include <optional>
 #include <string>
@@ -20,7 +21,7 @@ public:
     Mesh(const std::string& filename); 
     ~Mesh() {};
 
-    void Draw(GL::ShaderProgram& shader);
+    void Draw(GL::ShaderProgram& shader, Camera& camera);
     void AttachShader(GL::ShaderProgram& shader);
 
     void AttachProjection(glm::mat4 projection) { m_Projection = projection; };
