@@ -156,42 +156,42 @@ void Camera::HandleKeyInput(const float& distance)
 
 void Camera::HandleMouseInput(const float& sensitivity)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    double x, y;
 
-    static bool firstMouse = true;
-    static float lastX = io.MousePos.x;
-    static float lastY = io.MousePos.y;
-
-    bool isWindowFocused = ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
-
-    if (isWindowFocused)
+    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
     {
-        io.MouseDrawCursor = false;
-    }
-    else
-    {
-        io.MouseDrawCursor = true;
-    }
-
-    if (isWindowFocused)
-    {
-        if (firstMouse)
+        if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
         {
-            lastX = io.MousePos.x;
-            lastY = io.MousePos.y;
-            firstMouse = false;
+            ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+
+            if (!m_IsMouseDown)
+            {
+                glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
+
+                m_OriginalMousePos = glm::vec2(x, y);
+                m_CurrentMousePos = glm::vec2(x, y);
+                m_IsMouseDown = true;
+            }
+
+            glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
+            float xOffset = x - m_CurrentMousePos.x;
+            float yOffset = m_CurrentMousePos.y - y;
+
+            xOffset *= sensitivity;
+            yOffset *= sensitivity;
+
+            Yaw(-xOffset);
+            Pitch(-yOffset);
+
+            glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
+            m_CurrentMousePos = glm::vec2(x, y);
         }
-
-        float xOffset = io.MousePos.x - lastX;
-        float yOffset = lastY - io.MousePos.y;
-
-        lastX = io.MousePos.x;
-        lastY = io.MousePos.y;
-
-        xOffset *= sensitivity;
-        yOffset *= sensitivity;
-
-        Yaw(-xOffset);
-        Pitch(-yOffset);
+        else if (m_IsMouseDown)
+        {
+            glfwSetCursorPos(glfwGetCurrentContext(), m_OriginalMousePos.x, m_OriginalMousePos.y);
+            m_IsMouseDown = false;
+            m_IsFirstMouse = true;
+            ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
+        }
     }
 }

@@ -41,10 +41,16 @@ private:
     glm::vec3 m_Front;
     glm::vec3 m_Up;
     glm::vec3 m_Right;
-
-    // Camera Input Controls
+    
+    // Keyboard
     bool m_MoveForward = false;
     bool m_MoveBackward = false;
     bool m_MoveLeft = false;
     bool m_MoveRight = false;
+
+    // Mouse
+    glm::vec2 m_CurrentMousePos = glm::vec2(0.0f, 0.0f);
+    glm::vec2 m_OriginalMousePos = glm::vec2(0.0f, 0.0f);
+    bool m_IsMouseDown = false;
+    bool m_IsFirstMouse = true;
 };
