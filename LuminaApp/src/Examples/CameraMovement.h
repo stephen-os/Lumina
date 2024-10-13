@@ -46,6 +46,10 @@ public:
         m_FrameTimer.Reset();
     }
 
+    virtual void OnRender()
+    { 
+    }
+
     virtual void OnUIRender() override
     {
         ImGui::Begin("Side Window");

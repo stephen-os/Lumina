@@ -11,20 +11,6 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
-static void glfw_window_focus_callback(GLFWwindow* window, int focused)
-{
-    if (focused)
-    {
-        std::cout << "Hidden" << std::endl;
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Lock the mouse
-    }
-    else
-    {
-        std::cout << "Visible" << std::endl; 
-        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL); // Unlock the mouse
-    }
-}
-
 Lumina::Application::Application(const ApplicationSpecification& applicationSpecification)
 {
     // Set specs
