@@ -4,6 +4,10 @@
 
 #include "../OpenGL/Framebuffer.h"
 #include "../OpenGL/Texture.h"
+#include "../OpenGL/ShaderProgram.h"
+
+#include "Camera.h"
+#include "Model.h"
 
 #include <vector>
 
@@ -11,11 +15,16 @@ class Renderer
 {
 public: 
 	Renderer(); 
-	~Renderer(); 
+	~Renderer() = default; 
 
-	void Render(const std::vector<Mesh>& meshes) const;
+	void Render(Camera& camera, std::vector<Model>& models, GL::ShaderProgram& program);
+	void SetViewportSize(const float width, const float height); 
 
+	unsigned int GetRendererID() { return m_Texture.GetID(); }
 private:
 	GL::FrameBuffer m_FrameBuffer;
 	GL::Texture m_Texture;
+
+	float m_Width = 1920;
+	float m_Height = 1080;
 };

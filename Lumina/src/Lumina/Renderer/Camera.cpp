@@ -2,6 +2,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 
 #include <imgui.h>
 #include <GLFW/glfw3.h>

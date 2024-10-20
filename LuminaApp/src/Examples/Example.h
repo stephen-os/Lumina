@@ -6,7 +6,6 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Lumina/Utils/Camera.h"
 #include "Lumina/Utils/Timer.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
@@ -17,7 +16,9 @@
 #include "Lumina/OpenGL/VertexAttributes.h"
 #include "Lumina/OpenGL/VertexArray.h"
 
-#include "Lumina/Renderer/Mesh.h"
+#include "Lumina/Renderer/Camera.h"
+#include "Lumina/Renderer/Renderer.h"
+#include "Lumina/Renderer/Model.h"
 
 #define KEY_W GLFW_KEY_W
 #define KEY_S GLFW_KEY_S
@@ -27,27 +28,28 @@
 
 #define KEY_ESC GLFW_KEY_ESCAPE
 
-class CameraMovement : public Lumina::Layer
+class Example : public Lumina::Layer
 {
 public:
-    CameraMovement()
-        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f)
+    Example()
+        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f),
+          m_ShaderProgram(ReadFile("res/shaders/lighting.vert"), ReadFile("res/shaders/lighting.frag"))
     {
-        m_Camera.SetPosition(glm::vec3(0.0f, 25.0f, 0.0f));
-        m_Camera.Pitch(-90.0f); 
+        m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
     }
 
     virtual void OnUpdate(float timestep) override
     {
-        m_Camera.HandleKeyInput(0.1f); 
+        m_Camera.HandleKeyInput(0.1f);
+
+        for (auto& model : m_Models)
+        {
+            model.GetTransform().RotateY(1.0);
+        }
 
         float elapsedTime = m_FrameTimer.Elapsed();
         m_FPS = 1.0f / elapsedTime;
         m_FrameTimer.Reset();
-    }
-
-    virtual void OnRender()
-    { 
     }
 
     virtual void OnUIRender() override
@@ -61,49 +63,44 @@ public:
         m_Height = viewportSize.y;
         m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 100.0f);
 
-        // Texture
-        m_Texture->Bind();
-        m_Texture->SetData(m_Width, m_Height);
+        m_Renderer.Render(m_Camera, m_Models, m_ShaderProgram);
 
-        // Frame Buffer
-        m_FrameBuffer->Bind();
-        m_FrameBuffer->AttachTexture(m_Texture->GetID());
-
-        GLCALL(glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height));
-        GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 1.0f));
-        GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GLCALL(glEnable(GL_CULL_FACE));
-
-        GLCALL(glEnable(GL_DEPTH_TEST));
-        glDepthFunc(GL_LEQUAL);
-
-        m_Mesh.AttachProjection(m_Camera.GetProjectionMatrix()); 
-        m_Mesh.AttachView(m_Camera.GetViewMatrix());
-        m_Mesh.Draw(*m_ShaderProgram, m_Camera);
-
-        ImGui::Image((void*)(intptr_t)m_Texture->GetID(), ImVec2(m_Width, m_Height));
+        ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(m_Width, m_Height));
         ImGui::End();
+
+        for (auto& model : m_Models)
+        {
+            ImGui::Begin("Transforms");
+            model.Settings(); 
+            ImGui::End();
+        }
 
         ImGui::Begin("FPS Counter");
         ImGui::Text("FPS: %.1f", m_FPS);
-        ImGui::End();
-
-        // Cleanup
-        m_Texture->Unbind();
-        m_FrameBuffer->Unbind();
+        ImGui::End(); 
     }
 
     virtual void OnAttach() override
+    {   
+        for(size_t i = 0; i < 11; i++)
+        {
+            Model model = Model("Model " + std::to_string(i), "res/gltf/multiple_boxes.gltf", m_ShaderProgram);
+
+            glm::vec3 position = glm::vec3(0.0, -5.0 + i, 0.0);
+            glm::vec3 rotation = glm::vec3(0.0, i * 5, 0.0);
+            model.SetPosition(position);
+            model.SetRotation(rotation);
+
+            m_Models.push_back(model);
+        }
+    }
+
+    virtual void OnDetach() override
     {
-        std::string vertexShader = ReadFile("res/shaders/lighting.vert");
-        std::string fragmentShader = ReadFile("res/shaders/lighting.frag");
-
-        m_ShaderProgram = new GL::ShaderProgram(vertexShader, fragmentShader);
-        m_Mesh.AttachShader(*m_ShaderProgram);
-
-        m_Texture = new GL::Texture();
-        m_FrameBuffer = new GL::FrameBuffer();
-        m_FrameBuffer->AttachDepthBuffer(m_Width, m_Height);
+        for (auto& model : m_Models)
+        {
+            model.Destroy(); 
+        }
     }
 private:
     std::string ReadFile(const std::string& filename) {
@@ -125,18 +122,17 @@ private:
         return buffer;
     }
 private:
-    GL::ShaderProgram* m_ShaderProgram = nullptr; 
-    GL::FrameBuffer* m_FrameBuffer = nullptr;
-    GL::Texture* m_Texture = nullptr;;
+    Renderer m_Renderer;
+
+    GL::ShaderProgram m_ShaderProgram; 
+
+    std::vector<Model> m_Models; 
 
     float m_Width = 900;
     float m_Height = 900;
 
-    // Timer
     Lumina::Timer m_FrameTimer;
     float m_FPS;
 
     Camera m_Camera;
-
-    Mesh m_Mesh = Mesh("res/gltf/multiple_boxes.gltf");
 };

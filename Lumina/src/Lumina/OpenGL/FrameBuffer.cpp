@@ -11,7 +11,6 @@ namespace GL
         GLCALL(glGenFramebuffers(1, &m_FrameBufferID));
         GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferID));
 
-        // Unbind to ensure no accidental changes
         Unbind();
 
         GLenum status;
@@ -24,11 +23,14 @@ namespace GL
         GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
 
-    FrameBuffer::~FrameBuffer()
+    void FrameBuffer::Destroy()
     {
+        GLDESTROY("FrameBuffer", m_FrameBufferID);
         GLCALL(glDeleteFramebuffers(1, &m_FrameBufferID));
+
         if (m_DepthBufferID)
         {
+            GLDESTROY("DepthBuffer", m_DepthBufferID);
             GLCALL(glDeleteRenderbuffers(1, &m_DepthBufferID));
         }
     }

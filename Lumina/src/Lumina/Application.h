@@ -42,7 +42,7 @@ namespace Lumina
 
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
-		GLFWwindow* m_Window;
+		GLFWwindow* m_Window = nullptr;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		ApplicationSpecification m_Specifications;

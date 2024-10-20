@@ -1,47 +1,49 @@
+#pragma once
+
 #include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
 #include <sstream>
 #include <iomanip>
 #include <string>
 
-class Transform {
+class Transform
+{
 public:
-    Transform() : m_position(0.0f), m_rotation(glm::quat()), m_scale(1.0f) {}
-    ~Transform() {} 
+    Transform();
+    ~Transform();
 
-    void SetPosition(const glm::vec3& position) { m_position = position; }
-    void SetRotation(const glm::quat& rotation) { m_rotation = rotation; }
-    void SetScale(const glm::vec3& scale) { m_scale = scale; }
+    void SetPosition(glm::vec3& position);
+    void SetRotation(glm::vec3& rotation);
+    void SetScale(glm::vec3& scale);
 
-    glm::vec3 GetPosition() const { return m_position; }
-    glm::quat GetRotation() const { return m_rotation; }
-    glm::vec3 GetScale() const { return m_scale; }
+    void RotateX(float degree);
+    void RotateY(float degree);
+    void RotateZ(float degree);
 
-    void Translate(const glm::vec3& translation) { m_position += translation; }
-    void Rotate(float angle, const glm::vec3& axis) { m_rotation = glm::rotate(m_rotation, angle, axis); }
-    void scale(const glm::vec3& scale) { m_scale *= scale; }
+    void TransformX(float amount);
+    void TransformY(float amount);
+    void TransformZ(float amount);
 
-    glm::mat4 GetTransformMatrix() const 
+    void ScaleX(float amount);
+    void ScaleY(float amount);
+    void ScaleZ(float amount);
+
+    const glm::mat4& GetMatrix() const { return m_Matrix; };
+
+    const glm::vec3& GetPosition() const { return m_Position; };
+    const glm::vec3& GetRotation() const { return m_Rotation; };
+    const glm::vec3& GetScale() const { return m_Scale; };
+
+    std::string ToString()
     {
-        glm::mat4 scaleMatrix = glm::scale(glm::mat4(1.0f), m_scale);
-        glm::mat4 rotationMatrix = glm::mat4_cast(m_rotation);
-        glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), m_position);
-
-        return translationMatrix * rotationMatrix * scaleMatrix;
-    }
-
-    std::string ToString() 
-    {
-        glm::mat4 matrix = GetTransformMatrix();
+        glm::mat4 matrix = GetMatrix();
         std::stringstream ss;
         ss << std::fixed << std::setprecision(3);
 
         ss << "|-----------------------------|\n";
 
         for (int i = 0; i < 4; ++i) {
-            ss << "| "; 
+            ss << "| ";
             for (int j = 0; j < 4; ++j) {
                 float value = matrix[j][i];
                 if (value < 0) {
@@ -58,9 +60,13 @@ public:
 
         return ss.str();
     }
+private:
+    void UpdateMatrix();
 
 private:
-    glm::vec3 m_position;
-    glm::quat m_rotation;
-    glm::vec3 m_scale;
+    glm::vec3 m_Position;
+    glm::vec3 m_Rotation;
+    glm::vec3 m_Scale;
+
+    glm::mat4 m_Matrix;
 };

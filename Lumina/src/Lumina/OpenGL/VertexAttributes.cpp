@@ -4,6 +4,21 @@
 
 namespace GL
 {
+    void VertexAttributes::Destroy()
+    {
+        if (m_IndexBuffer)
+        {
+            m_IndexBuffer->Destroy();
+            m_IndexBuffer.reset(); 
+        }
+        
+        for (auto& attribute : m_Attributes)
+        {
+            attribute.Destroy();
+        }
+        m_Attributes.clear(); 
+    }
+
     void VertexAttributes::AddVertices(const std::string& name, int count, int components, const float* floats, GLenum usage)
     {
         if (m_VertexCount >= 0 && count != m_VertexCount)

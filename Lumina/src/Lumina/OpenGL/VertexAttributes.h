@@ -10,6 +10,8 @@
 #include <vector>
 #include <optional>
 
+#include "iostream"
+
 namespace GL
 {
     class VertexAttributes
@@ -19,7 +21,10 @@ namespace GL
         { 
             m_Attributes.reserve(m_MaxAttributeCount); 
         };
-        ~VertexAttributes() {};
+        ~VertexAttributes() = default;
+
+        void Destroy(); 
+
         void AddVertices(const std::string& name, int count, int components, const float* floats, GLenum usage = GL_STATIC_DRAW);
         void AddIndices(const unsigned int* indices, unsigned int count, GLenum usage = GL_STATIC_DRAW);
 

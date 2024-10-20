@@ -1,23 +1,25 @@
 #include "VertexArray.h"
+#include "GLUtils.h"
 
 namespace GL
 {
-    VertexArray::VertexArray(ShaderProgram& program, VertexAttributes& attributes)
-        : m_Attributes(attributes), m_IsBound(false)
+    VertexArray::VertexArray(VertexAttributes attributes, ShaderProgram& shader)
+        : m_Attributes(attributes),
+          m_IsBound(false)
     {
-        glGenVertexArrays(1, &m_VertexArray);
-        glBindVertexArray(m_VertexArray);
+        glGenVertexArrays(1, &m_VertexArrayID);
+        glBindVertexArray(m_VertexArrayID);
 
-        for (auto& attribute : m_Attributes)
+        for (auto& attribute : attributes)
         {
-            GLint location = program.GetAttributeLocation(attribute.GetBufferName());
+            GLint location = shader.GetAttributeLocation(attribute.GetBufferName());
             if (location < 0)
             {
                 std::cout << attribute.GetBufferName() << " is not used in the shader." << std::endl;
             }
             else
             {
-                attribute.Bind(); 
+                attribute.Bind();
                 glVertexAttribPointer(location, attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
                 glEnableVertexAttribArray(location);
             }
@@ -28,20 +30,27 @@ namespace GL
         Unbind();
     }
 
-    VertexArray::~VertexArray()
+    void VertexArray::Destroy()
     {
-        glDeleteVertexArrays(1, &m_VertexArray);
+        m_Attributes.Destroy(); 
+
+        if (m_VertexArrayID != 0)
+        {
+            GLDESTROY("VertexArray", m_VertexArrayID);
+            GLCALL(glDeleteVertexArrays(1, &m_VertexArrayID));
+            m_VertexArrayID = 0;
+        }
     }
 
     void VertexArray::Bind()
     {
-        glBindVertexArray(m_VertexArray);
+        GLCALL(glBindVertexArray(m_VertexArrayID));
         m_IsBound = true;
     }
 
     void VertexArray::Unbind()
     {
-        glBindVertexArray(0);
+        GLCALL(glBindVertexArray(0));
         m_IsBound = false;
     }
 

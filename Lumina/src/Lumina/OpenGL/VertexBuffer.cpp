@@ -11,20 +11,25 @@ namespace GL
 		m_Count(count),
 		m_Stride(stride)
 	{
-		GLCALL(glGenBuffers(1, &m_BufferID));
-		GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_BufferID));
-		GLCALL(glBufferData(GL_ARRAY_BUFFER, count * sizeof(float), floats, GL_STATIC_DRAW));
+		GLCALL(glGenBuffers(1, &m_VertexBufferID));
+		GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID));
+		GLCALL(glBufferData(GL_ARRAY_BUFFER, count * sizeof(float), floats, usage));
 		GLCALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 	}
 
-	VertexBuffer::~VertexBuffer()
+	void VertexBuffer::Destroy()
 	{
-		GLCALL(glDeleteBuffers(1, &m_BufferID));
+		if (m_VertexBufferID != 0)
+		{
+			GLDESTROY("VertexBuffer", m_VertexBufferID);
+			GLCALL(glDeleteBuffers(1, &m_VertexBufferID));
+			m_VertexBufferID = 0; 
+		}
 	}
 
 	void VertexBuffer::Bind()
 	{
-		GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_BufferID));
+		GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_VertexBufferID));
 	}
 
 	void VertexBuffer::Unbind()

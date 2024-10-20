@@ -11,19 +11,22 @@ namespace GL
     class VertexArray
     {
     public:
-        VertexArray(ShaderProgram& program, VertexAttributes& attributes);
-        ~VertexArray();
+        VertexArray(VertexAttributes attributes, ShaderProgram& shader);
+        ~VertexArray() = default;
+
+        void Destroy(); 
 
         void Bind();
         void Unbind();
 
         void DrawSequence(GLenum mode);
         void DrawIndexed(GLenum mode);
-
     private:
-        VertexAttributes& m_Attributes;
-        GLuint m_VertexArray;
+        GL::VertexAttributes m_Attributes; 
+
         bool m_IsBound;
+
+        unsigned int m_VertexArrayID = 0;
     };
 }
 

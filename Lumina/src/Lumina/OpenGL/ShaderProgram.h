@@ -16,7 +16,7 @@ namespace GL
     {
     public: 
         ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
-        ~ShaderProgram() { Destroy(); };
+        ~ShaderProgram();
 
         void Destroy();
         GLint GetAttributeLocation(const std::string& name);

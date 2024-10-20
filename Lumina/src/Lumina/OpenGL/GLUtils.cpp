@@ -2,8 +2,10 @@
 
 #include "GLUtils.h"
 
- #include <glad/glad.h>
+#include <glad/glad.h>
 #include <iostream>
+
+const int MAX_ERROR = 10; 
 
 std::string GetGLErrorString(GLenum error)
 {
@@ -22,7 +24,15 @@ std::string GetGLErrorString(GLenum error)
 
 void GLClearError()
 {
-    while (glGetError() != GL_NO_ERROR);
+    int i = 0; 
+    GLenum error = -1;
+    while (error != GL_NO_ERROR)
+    {
+        if (i == MAX_ERROR)
+            break; 
+        i++;
+        error = glGetError();
+    }
 }
 
 bool GLLogCall(const char* function, const char* file, int line)

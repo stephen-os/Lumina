@@ -1,7 +1,7 @@
 #pragma once
 
-namespace Lumina {
-
+namespace Lumina 
+{
 	class Layer
 	{
 	public:
@@ -13,5 +13,4 @@ namespace Lumina {
 		virtual void OnUpdate(float ts) {}
 		virtual void OnUIRender() {}
 	};
-
 }

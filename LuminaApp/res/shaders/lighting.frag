@@ -6,7 +6,7 @@ in vec3 v_CameraPosition;
 
 out vec4 FragColor;
 
-uniform vec3 lightPos = vec3(0.0, 10.0, 0.0);
+uniform vec3 lightPos = vec3(4.0, -5.0, 3.0);
 uniform vec3 lightColor = vec3(1.0, 1.0, 1.0);
 uniform vec3 objectColor = vec3(1.0, 0.0, 0.0);
 

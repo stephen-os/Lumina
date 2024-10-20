@@ -16,9 +16,9 @@ namespace GL
 
     Texture::~Texture()
     {
+        GLDESTROY("Texture", m_TextureID);
         GLCALL(glDeleteTextures(1, &m_TextureID));
     }
-
 
     void Texture::Bind(unsigned int slot) const
     {

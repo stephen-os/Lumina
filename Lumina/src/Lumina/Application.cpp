@@ -6,23 +6,21 @@
 #include <fstream>
 #include <filesystem>
 
-static void glfw_error_callback(int error, const char* description)
+static void GLFWErrorCallback(int error, const char* description)
 {
-    fprintf(stderr, "GLFW Error %d: %s\n", error, description);
+    std::cerr << "[GLFW ERROR] \"" << error << "\".\n";
+    std::cerr << description << ".\n";
 }
 
 Lumina::Application::Application(const ApplicationSpecification& applicationSpecification)
 {
-    // Set specs
     m_Specifications = applicationSpecification; 
 
-    glfwSetErrorCallback(glfw_error_callback);
+    glfwSetErrorCallback(GLFWErrorCallback);
 
-    /* Initialize the library */
     if (!glfwInit())
         return;
 
-/* Create a windowed mode window and its OpenGL context */
     m_Window = glfwCreateWindow(m_Specifications.Width, m_Specifications.Height, m_Specifications.Name.c_str(), NULL, NULL);
     if (!m_Window)
     {
@@ -30,30 +28,18 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
         return;
     }
 
-    /* Make the window's context current */
     glfwMakeContextCurrent(m_Window);
-    
-    /* Enable vsync */
     glfwSwapInterval(1);
 
-    /*
-    GLenum err = glewInit();
-    if (GLEW_OK != err)
+    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) 
     {
-        fprintf(stderr, "Error: %s\n", glewGetErrorString(err));
-        return;
-    }
-    */
-
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
+        std::cerr << "[GLAD ERROR]\n";
+        std::cerr << "Failed to initialize GLAD.\n";
         return;
     }
 
-    /* Version */
     std::cout << glGetString(GL_VERSION) << std::endl;
 
-    // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
@@ -63,10 +49,8 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
 
-    // Setup Dear ImGui style
     ImGui::StyleColorsDark();
 
-    // When viewports are enabled we tweak WindowRounding/WindowBg so platform windows can look identical to regular ones.
     ImGuiStyle& style = ImGui::GetStyle();
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
@@ -78,14 +62,15 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
 
     const char* glsl_version = "#version 130";
     ImGui_ImplOpenGL3_Init(glsl_version);
-
-    // glfwSetWindowFocusCallback(m_Window, glfw_window_focus_callback);
-    // glfwSetInputMode(m_Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 }
 
 Lumina::Application::~Application()
 {
-    // Cleanup: ImGui 
+    for (auto& layer : m_LayerStack)
+        layer->OnDetach();
+
+    m_LayerStack.clear(); 
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

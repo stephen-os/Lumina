@@ -60,8 +60,9 @@ namespace GL
         Unbind();
     }
 
-    void ShaderProgram::Destroy()
+    ShaderProgram::~ShaderProgram()
     {
+        GLDESTROY("ShaderProgram", m_Program);
         GLCALL(glDeleteShader(m_VertexShader));
         GLCALL(glDeleteShader(m_FragmentShader));
         GLCALL(glDeleteProgram(m_Program));

@@ -9,7 +9,9 @@ namespace GL
     {
     public:
         FrameBuffer();
-        ~FrameBuffer();
+        ~FrameBuffer() = default;
+
+        void Destroy(); 
 
         void Bind() const;
         void Unbind() const;
