@@ -19,14 +19,6 @@
 #include "Lumina/Renderer/Renderer.h"
 #include "Lumina/Renderer/Model.h"
 
-#define KEY_W GLFW_KEY_W
-#define KEY_S GLFW_KEY_S
-
-#define KEY_D GLFW_KEY_D
-#define KEY_A GLFW_KEY_A
-
-#define KEY_ESC GLFW_KEY_ESCAPE
-
 class Example : public Lumina::Layer
 {
 public:
