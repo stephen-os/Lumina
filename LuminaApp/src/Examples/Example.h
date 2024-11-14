@@ -1,12 +1,11 @@
 #include <vector>
 #include <iostream>
 
-#include <fstream>
-
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Lumina/Utils/Timer.h"
+#include "Lumina/Utils/FileReader.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
 
@@ -33,7 +32,7 @@ class Example : public Lumina::Layer
 public:
     Example()
         : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f),
-          m_ShaderProgram(ReadFile("res/shaders/lighting.vert"), ReadFile("res/shaders/lighting.frag"))
+          m_ShaderProgram(Lumina::ReadFile("res/shaders/lighting.vert"), Lumina::ReadFile("res/shaders/lighting.frag"))
     {
         m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
     }
@@ -101,25 +100,6 @@ public:
         {
             model.Destroy(); 
         }
-    }
-private:
-    std::string ReadFile(const std::string& filename) {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-        if (!file.is_open()) {
-            std::cerr << "Error: Failed to open file: " << filename << std::endl;
-            throw std::runtime_error("failed to open file!");
-        }
-
-        std::streampos fileSize = file.tellg();
-        size_t size = static_cast<size_t>(fileSize);
-        std::string buffer(size, '\0');
-
-        file.seekg(0);
-        file.read(&buffer[0], size);
-        file.close();
-
-        return buffer;
     }
 private:
     Renderer m_Renderer;
