@@ -19,12 +19,15 @@
 #include "Lumina/Renderer/Renderer.h"
 #include "Lumina/Renderer/Model.h"
 
+#include "Lumina/Windows/TileEditor.h"
+
 class Example : public Lumina::Layer
 {
 public:
     Example()
         : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f),
-          m_ShaderProgram(Lumina::ReadFile("res/shaders/lighting.vert"), Lumina::ReadFile("res/shaders/lighting.frag"))
+          m_ShaderProgram(Lumina::ReadFile("res/shaders/lighting.vert"), Lumina::ReadFile("res/shaders/lighting.frag")),
+          m_TileEditor(10, 10, 1)
     {
         m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
     }
@@ -45,6 +48,8 @@ public:
 
     virtual void OnUIRender() override
     {
+        m_TileEditor.Render(); 
+
         ImGui::Begin("Side Window");
         
         m_Camera.HandleMouseInput(0.1f); 
@@ -107,4 +112,6 @@ private:
     float m_FPS;
 
     Camera m_Camera;
+
+    Lumina::TileEditor m_TileEditor; 
 };
