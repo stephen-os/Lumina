@@ -5,7 +5,7 @@
 
 namespace GL
 {
-    Texture::Texture()
+    Texture::Texture() : m_Width(0), m_Height(0), m_TextureID(0)
     {
         GLCALL(glGenTextures(1, &m_TextureID));
         GLCALL(glBindTexture(GL_TEXTURE_2D, m_TextureID));
@@ -16,8 +16,16 @@ namespace GL
 
     Texture::~Texture()
     {
-        GLDESTROY("Texture", m_TextureID);
-        GLCALL(glDeleteTextures(1, &m_TextureID));
+        Destroy(); 
+    }
+
+    void Texture::Destroy()
+    {
+        if (m_TextureID != 0)
+        {
+            GLCALL(glDeleteTextures(1, &m_TextureID));
+            m_TextureID = 0;
+        }
     }
 
     void Texture::Bind(unsigned int slot) const
@@ -31,8 +39,20 @@ namespace GL
         GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
     }
 
-    void Texture::SetData(float width, float height)
+    bool Texture::SetData(int width, int height)
     {
-        GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, (GLsizei)width, (GLsizei)height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr));
+        if (m_Width == width && m_Height == height)
+        {
+            return false;
+        }
+
+        m_Width = width;
+        m_Height = height;
+
+        Bind();
+        GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr));
+        Unbind();
+
+        return true; 
     }
 }

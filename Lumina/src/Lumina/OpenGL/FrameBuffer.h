@@ -9,18 +9,16 @@ namespace GL
     {
     public:
         FrameBuffer();
-        ~FrameBuffer() = default;
+        ~FrameBuffer();
 
         void Destroy(); 
-
         void Bind() const;
         void Unbind() const;
-        void AttachTexture(unsigned int textureID);
-        void AttachDepthBuffer(float width, float height);
 
+        void AttachTexture(unsigned int id);
+        void AttachDepthBuffer(unsigned int id);
     private:
         unsigned int m_FrameBufferID;
-        unsigned int m_DepthBufferID;
     };
 }
 

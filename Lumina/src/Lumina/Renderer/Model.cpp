@@ -7,11 +7,31 @@
 
 #include "Transform.h"
 
-Model::Model(const std::string& name, const std::string& path, GL::ShaderProgram& shader) :
+Model::Model() : m_Name("Unnamed") {}
+
+Model::Model(const std::string& name, const std::string& path) :
     m_Name(name)
 {
-    LoadGLTF(path, shader); 
+    LoadGLTF(path); 
 }
+
+Model::Model(const Model& other)
+    : m_Name(other.m_Name), m_Transform(other.m_Transform), m_Meshes(other.m_Meshes) {}
+
+Model& Model::operator=(const Model& other)
+{
+    if (this != &other) 
+    {
+        m_Name = other.m_Name;
+        m_Transform = other.m_Transform;
+        m_Meshes = other.m_Meshes;
+    }
+    return *this;
+}
+
+Model::Model(Model&& other) noexcept
+    : m_Name(std::move(other.m_Name)), m_Transform(std::move(other.m_Transform)),
+    m_Meshes(std::move(other.m_Meshes)) {}
 
 void Model::Destroy()
 {
@@ -19,6 +39,12 @@ void Model::Destroy()
     {
         mesh.Destroy(); 
     }
+}
+
+void Model::SetData(const std::string& name, const std::string& path)
+{
+    m_Name = name; 
+    LoadGLTF(path);
 }
 
 void Model::Settings()
@@ -68,7 +94,7 @@ void Model::Draw(GL::ShaderProgram& shader)
     }
 }
 
-void Model::LoadGLTF(const std::string& filename, GL::ShaderProgram& shader)
+void Model::LoadGLTF(const std::string& filename)
 {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
@@ -172,7 +198,7 @@ void Model::LoadGLTF(const std::string& filename, GL::ShaderProgram& shader)
 
             MeshData meshData = { vertices, normals, indices, vertexCount, indexCount, transform };
 
-            m_Meshes.emplace_back(meshData, shader);
+            m_Meshes.emplace_back(meshData);
 
             delete[] vertices;
             delete[] normals;

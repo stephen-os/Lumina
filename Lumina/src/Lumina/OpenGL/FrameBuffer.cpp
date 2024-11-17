@@ -5,8 +5,7 @@
 
 namespace GL
 {
-    FrameBuffer::FrameBuffer()
-        : m_DepthBufferID(0)
+    FrameBuffer::FrameBuffer() : m_FrameBufferID(0)
     {
         GLCALL(glGenFramebuffers(1, &m_FrameBufferID));
         GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, m_FrameBufferID));
@@ -23,15 +22,17 @@ namespace GL
         GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
 
+    FrameBuffer::~FrameBuffer() 
+    {
+        Destroy(); 
+    }
+
     void FrameBuffer::Destroy()
     {
-        GLDESTROY("FrameBuffer", m_FrameBufferID);
-        GLCALL(glDeleteFramebuffers(1, &m_FrameBufferID));
-
-        if (m_DepthBufferID)
+        if (m_FrameBufferID != 0)
         {
-            GLDESTROY("DepthBuffer", m_DepthBufferID);
-            GLCALL(glDeleteRenderbuffers(1, &m_DepthBufferID));
+            GLCALL(glDeleteFramebuffers(1, &m_FrameBufferID));
+            m_FrameBufferID = 0; 
         }
     }
 
@@ -45,18 +46,17 @@ namespace GL
         GLCALL(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
 
-    void FrameBuffer::AttachTexture(unsigned int textureID)
+    void FrameBuffer::AttachTexture(unsigned int id)
     {
-        GLCALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureID, 0));
+        Bind();
+        GLCALL(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, id, 0));
+        Unbind(); 
     }
 
-    void FrameBuffer::AttachDepthBuffer(float width, float height)
+    void FrameBuffer::AttachDepthBuffer(unsigned int id)
     {
         Bind(); 
-        GLCALL(glGenRenderbuffers(1, &m_DepthBufferID));
-        GLCALL(glBindRenderbuffer(GL_RENDERBUFFER, m_DepthBufferID));
-        GLCALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, width, height)); // Adjust the size as needed
-        GLCALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, m_DepthBufferID));
+        GLCALL(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, id));
         Unbind(); 
     }
 }

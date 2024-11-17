@@ -8,19 +8,26 @@ namespace GL
 	class IndexBuffer
 	{
 	public:
+		IndexBuffer(); 
 		IndexBuffer(const unsigned int* indices, unsigned int count, GLenum usage = GL_STATIC_DRAW);
+
+		IndexBuffer(const IndexBuffer& other);
+		IndexBuffer(IndexBuffer&& other) noexcept;
+		IndexBuffer& operator=(const IndexBuffer& other);
+
 		~IndexBuffer() = default;
 
 		void Destroy();
-
 		void Bind();
 		void Unbind();
 
-		unsigned int GetIndexBufferID() const { return m_IndexBufferID; }; 
 		unsigned int GetIndexCount() const { return m_Count; };
+		unsigned int GetID() const { return m_IndexBufferID; }; 
+	
+		void SetData(const unsigned int* indices, unsigned int count, GLenum usage = GL_STATIC_DRAW);
 	private:
-		unsigned int m_Count; 
-		unsigned int m_IndexBufferID = 0;
+		int m_Count; 
+		unsigned int m_IndexBufferID;
 	};
 }
 

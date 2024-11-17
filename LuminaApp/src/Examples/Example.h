@@ -26,7 +26,6 @@ class Example : public Lumina::Layer
 public:
     Example()
         : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f),
-          m_ShaderProgram(Lumina::ReadFile("res/shaders/lighting.vert"), Lumina::ReadFile("res/shaders/lighting.frag")),
           m_TileEditor(10, 10, 1)
     {
         m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
@@ -59,6 +58,7 @@ public:
         m_Height = viewportSize.y;
         m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 100.0f);
 
+        m_Renderer.SetViewportSize(m_Width, m_Height);
         m_Renderer.Render(m_Camera, m_Models, m_ShaderProgram);
 
         ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(m_Width, m_Height));
@@ -67,7 +67,7 @@ public:
         for (auto& model : m_Models)
         {
             ImGui::Begin("Transforms");
-            model.Settings(); 
+            model.Settings();
             ImGui::End();
         }
 
@@ -78,16 +78,24 @@ public:
 
     virtual void OnAttach() override
     {   
+        std::string vertex = Lumina::ReadFile("res/shaders/lighting.vert");
+        std::string fragment = Lumina::ReadFile("res/shaders/lighting.frag");
+        m_ShaderProgram.SetSource(vertex, fragment); 
+
         for(size_t i = 0; i < 11; i++)
         {
-            Model model = Model("Model " + std::to_string(i), "res/gltf/multiple_boxes.gltf", m_ShaderProgram);
+            Model model; 
 
             glm::vec3 position = glm::vec3(0.0, -5.0 + i, 0.0);
             glm::vec3 rotation = glm::vec3(0.0, i * 5, 0.0);
+
+            model.SetData("Model " + std::to_string(i), "res/gltf/multiple_boxes.gltf");
             model.SetPosition(position);
             model.SetRotation(rotation);
 
             m_Models.push_back(model);
+
+            std::cout << "Test"; 
         }
     }
 

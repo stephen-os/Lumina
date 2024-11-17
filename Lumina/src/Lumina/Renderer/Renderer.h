@@ -2,6 +2,7 @@
 
 #include "Mesh.h"
 
+#include "../OpenGL/DepthBuffer.h"
 #include "../OpenGL/Framebuffer.h"
 #include "../OpenGL/Texture.h"
 #include "../OpenGL/ShaderProgram.h"
@@ -22,6 +23,7 @@ public:
 
 	unsigned int GetRendererID() { return m_Texture.GetID(); }
 private:
+	GL::DepthBuffer m_DepthBuffer; 
 	GL::FrameBuffer m_FrameBuffer;
 	GL::Texture m_Texture;
 

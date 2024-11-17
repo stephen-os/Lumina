@@ -10,18 +10,20 @@ Renderer::Renderer()
     GLCALL(glDepthFunc(GL_LEQUAL));
     GLCALL(glEnable(GL_CULL_FACE));
 
-    m_FrameBuffer.AttachDepthBuffer(m_Width, m_Height);
+    m_DepthBuffer.SetData((int)m_Width, (int)m_Height);
+    m_Texture.SetData((int)m_Width, (int)m_Height);
+
+    m_FrameBuffer.AttachDepthBuffer(m_DepthBuffer.GetID()); 
+    m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }
 
 void Renderer::Render(Camera& camera, std::vector<Model>& models, GL::ShaderProgram& shader)
 {
     m_Texture.Bind();
-    m_Texture.SetData(m_Width, m_Height);
-    
+    m_DepthBuffer.Bind();
     m_FrameBuffer.Bind();
-    m_FrameBuffer.AttachTexture(m_Texture.GetID());
 
-    GLCALL(glViewport(0, 0, (GLsizei)m_Width, (GLsizei)m_Height));
+    GLCALL(glViewport(0, 0, (int)m_Width, (int)m_Height));
     GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
     shader.Bind();
@@ -38,6 +40,7 @@ void Renderer::Render(Camera& camera, std::vector<Model>& models, GL::ShaderProg
     shader.Unbind();
 
     m_Texture.Unbind();
+    m_DepthBuffer.Unbind();
     m_FrameBuffer.Unbind();
 }
 
@@ -46,5 +49,10 @@ void Renderer::SetViewportSize(const float width, const float height)
 {
     m_Width = width;
     m_Height = height;
-    m_FrameBuffer.AttachDepthBuffer(width, height);
+    
+    if (m_DepthBuffer.SetData((int)width, (int)height))
+        m_FrameBuffer.AttachDepthBuffer(m_DepthBuffer.GetID());
+
+    if (m_Texture.SetData((int)width, (int)height))
+        m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }

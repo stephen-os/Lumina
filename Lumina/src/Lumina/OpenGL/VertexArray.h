@@ -11,22 +11,26 @@ namespace GL
     class VertexArray
     {
     public:
-        VertexArray(VertexAttributes attributes, ShaderProgram& shader);
+        VertexArray();
+        VertexArray(const VertexArray& other);
+        VertexArray(VertexArray&& other) noexcept;
+        VertexArray& operator=(const VertexArray& other);
+
         ~VertexArray() = default;
 
         void Destroy(); 
-
         void Bind();
         void Unbind();
+
+        void ApplyAttributes(VertexAttributes& attributes);
 
         void DrawSequence(GLenum mode);
         void DrawIndexed(GLenum mode);
     private:
-        GL::VertexAttributes m_Attributes; 
-
         bool m_IsBound;
-
-        unsigned int m_VertexArrayID = 0;
+        int m_VertexCount;
+        int m_IndexCount;
+        unsigned int m_VertexArrayID;
     };
 }
 

@@ -3,40 +3,40 @@
 
 namespace GL
 {
-    VertexArray::VertexArray(VertexAttributes attributes, ShaderProgram& shader)
-        : m_Attributes(attributes),
-          m_IsBound(false)
+    VertexArray::VertexArray() : m_IsBound(false), m_VertexCount(0), m_IndexCount(0), m_VertexArrayID(0) {}
+
+    VertexArray::VertexArray(const VertexArray& other)
+        : m_IsBound(other.m_IsBound), m_VertexCount(other.m_VertexCount), 
+        m_IndexCount(other.m_IndexCount), m_VertexArrayID(other.m_VertexArrayID) {}
+
+    VertexArray::VertexArray(VertexArray&& other) noexcept
+        : m_IsBound(other.m_IsBound), m_VertexCount(other.m_VertexCount), 
+        m_IndexCount(other.m_IndexCount), m_VertexArrayID(other.m_VertexArrayID)
     {
-        glGenVertexArrays(1, &m_VertexArrayID);
-        glBindVertexArray(m_VertexArrayID);
+        other.m_VertexArrayID = 0;
+        other.m_IsBound = false;
+        other.m_VertexCount = 0;
+        other.m_IndexCount = 0;
+    }
 
-        for (auto& attribute : attributes)
+    VertexArray& VertexArray::operator=(const VertexArray& other)
+    {
+        if (this != &other)
         {
-            GLint location = shader.GetAttributeLocation(attribute.GetBufferName());
-            if (location < 0)
-            {
-                std::cout << attribute.GetBufferName() << " is not used in the shader." << std::endl;
-            }
-            else
-            {
-                attribute.Bind();
-                glVertexAttribPointer(location, attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
-                glEnableVertexAttribArray(location);
-            }
+            Destroy();
+
+            m_IsBound = other.m_IsBound;
+            m_VertexCount = other.m_VertexCount;
+            m_IndexCount = other.m_IndexCount;
+            m_VertexArrayID = other.m_VertexArrayID;
         }
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
-
-        Unbind();
+        return *this;
     }
 
     void VertexArray::Destroy()
     {
-        m_Attributes.Destroy(); 
-
         if (m_VertexArrayID != 0)
         {
-            GLDESTROY("VertexArray", m_VertexArrayID);
             GLCALL(glDeleteVertexArrays(1, &m_VertexArrayID));
             m_VertexArrayID = 0;
         }
@@ -44,6 +44,12 @@ namespace GL
 
     void VertexArray::Bind()
     {
+        if (m_VertexArrayID == 0)
+        {
+            std::cerr << "[Error] Attempting to bind an ungenerated vertex array.\n";
+            return;
+        }
+
         GLCALL(glBindVertexArray(m_VertexArrayID));
         m_IsBound = true;
     }
@@ -54,11 +60,33 @@ namespace GL
         m_IsBound = false;
     }
 
+    void VertexArray::ApplyAttributes(VertexAttributes& attributes)
+    {
+        Destroy(); 
+
+        m_VertexCount = attributes.GetVertexCount();
+        m_IndexCount = attributes.GetIndexCount(); 
+        
+        glGenVertexArrays(1, &m_VertexArrayID);
+        glBindVertexArray(m_VertexArrayID);
+
+        for (auto& attribute : attributes)
+        {
+                attribute.Bind();
+                glVertexAttribPointer(attribute.GetLocation(), attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
+                glEnableVertexAttribArray(attribute.GetLocation());
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
+
+        Unbind();
+    }
+
     void VertexArray::DrawSequence(GLenum mode)
     {
         if (m_IsBound)
         {
-            glDrawArrays(mode, 0, m_Attributes.GetVertexCount());
+            glDrawArrays(mode, 0, m_VertexCount);
         }
         else
         {
@@ -70,7 +98,7 @@ namespace GL
     {
         if (m_IsBound)
         {
-            glDrawElements(mode, (GLint)m_Attributes.GetIndexCount(), GL_UNSIGNED_INT, 0);
+            glDrawElements(mode, m_IndexCount, GL_UNSIGNED_INT, 0);
         }
         else
         {

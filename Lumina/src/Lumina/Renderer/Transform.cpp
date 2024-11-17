@@ -2,15 +2,40 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Transform::Transform()
-    : m_Position(0.0f, 0.0f, 0.0f),
-    m_Rotation(0.0f, 0.0f, 0.0f),
-    m_Scale(1.0f, 1.0f, 1.0f),
-    m_Matrix(glm::mat4(1.0f))
+    : m_Position(0.0f, 0.0f, 0.0f), m_Rotation(0.0f, 0.0f, 0.0f),
+    m_Scale(1.0f, 1.0f, 1.0f), m_Matrix(glm::mat4(1.0f))
 {
     UpdateMatrix();
 }
 
-Transform::~Transform() = default;
+Transform::Transform(const Transform& other)
+    : m_Position(other.m_Position), m_Rotation(other.m_Rotation),
+    m_Scale(other.m_Scale), m_Matrix(other.m_Matrix)
+{
+    UpdateMatrix();
+}
+
+Transform& Transform::operator=(const Transform& other)
+{
+    if (this != &other)
+    {
+        m_Position = other.m_Position;
+        m_Rotation = other.m_Rotation;
+        m_Scale = other.m_Scale;
+        m_Matrix = other.m_Matrix;
+        UpdateMatrix();
+    }
+    return *this;
+}
+
+Transform::Transform(Transform&& other) noexcept
+    : m_Position(std::move(other.m_Position)),
+    m_Rotation(std::move(other.m_Rotation)),
+    m_Scale(std::move(other.m_Scale)),
+    m_Matrix(std::move(other.m_Matrix))
+{
+    UpdateMatrix();
+}
 
 void Transform::SetPosition(glm::vec3& position)
 {
@@ -32,7 +57,7 @@ void Transform::SetScale(glm::vec3& scale)
 
 void Transform::RotateX(float degree)
 {
-    m_Rotation.x =+ degree;
+    m_Rotation.x += degree;
     m_Rotation.x = fmod(m_Rotation.x, 360.0f);
     if (m_Rotation.x < 0) m_Rotation.x += 360.0f;
     UpdateMatrix();

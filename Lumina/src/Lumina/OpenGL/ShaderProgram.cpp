@@ -6,50 +6,77 @@
 
 namespace GL
 {
-    ShaderProgram::ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
+    ShaderProgram::ShaderProgram() : m_IsBound(false), m_VertexShaderID(0), m_FragmentShaderID(0), m_ShaderProgramID(0) {}
+
+    ShaderProgram::~ShaderProgram()
     {
-        m_IsBound = false;
+        Destroy(); 
+    }
 
-        // Compile shaders
-        m_VertexShader = CompileSource(GL_VERTEX_SHADER, vertexSource);
-        m_FragmentShader = CompileSource(GL_FRAGMENT_SHADER, fragmentSource);
+    void ShaderProgram::Destroy()
+    {
+        if (m_VertexShaderID != 0)
+        {
+            GLCALL(glDeleteShader(m_VertexShaderID));
+            m_VertexShaderID = 0;
+        }
 
-        // Link program
-        GLCALL(m_Program = glCreateProgram());
-        GLCALL(glAttachShader(m_Program, m_VertexShader));
-        GLCALL(glAttachShader(m_Program, m_FragmentShader));
-        GLCALL(glLinkProgram(m_Program));
+        if (m_FragmentShaderID != 0)
+        {
+            GLCALL(glDeleteShader(m_FragmentShaderID));
+            m_FragmentShaderID = 0;
+        }
 
-        GLint isOkay;
-        GLCALL(glGetProgramiv(m_Program, GL_LINK_STATUS, &isOkay));
+        if (m_ShaderProgramID != 0)
+        {
+            GLCALL(glDeleteProgram(m_ShaderProgramID));
+            m_ShaderProgramID = 0;
+        }
+    }
+
+    void ShaderProgram::SetSource(const std::string& vertexSource, const std::string& fragmentSource)
+    {
+        Destroy();
+
+        m_VertexShaderID = CompileSource(GL_VERTEX_SHADER, vertexSource);
+        m_FragmentShaderID = CompileSource(GL_FRAGMENT_SHADER, fragmentSource);
+        
+        GLCALL(m_ShaderProgramID = glCreateProgram());
+        GLCALL(glAttachShader(m_ShaderProgramID, m_VertexShaderID));
+        GLCALL(glAttachShader(m_ShaderProgramID, m_FragmentShaderID));
+        GLCALL(glLinkProgram(m_ShaderProgramID));
+
+        int isOkay;
+        GLCALL(glGetProgramiv(m_ShaderProgramID, GL_LINK_STATUS, &isOkay));
         if (!isOkay)
         {
-            GLchar message[512];
-            GLCALL(glGetProgramInfoLog(m_Program, 512, nullptr, message));
-            GLCALL(glDeleteProgram(m_Program));
+            char message[512];
+            GLCALL(glGetProgramInfoLog(m_ShaderProgramID, 512, nullptr, message));
+            GLCALL(glDeleteProgram(m_ShaderProgramID));
+            m_ShaderProgramID = 0;
 
-            std::cerr << "Shader compilation error: " << message << std::endl;
+            std::cerr << "[Error] Program linking failed:\n" << message << "\n";
         }
 
         // Query uniforms
-        GLint nuniforms;
-        GLCALL(glGetProgramiv(m_Program, GL_ACTIVE_UNIFORMS, &nuniforms));
+        m_Uniforms.clear();
+        int nuniforms;
+        GLCALL(glGetProgramiv(m_ShaderProgramID, GL_ACTIVE_UNIFORMS, &nuniforms));
         for (GLint i = 0; i < nuniforms; ++i)
         {
-            GLchar name[256];
-            GLsizei length;
-            GLint size;
-            GLenum type;
-            GLCALL(glGetActiveUniform(m_Program, i, 256, &length, &size, &type, name));
-            GLint location;
-            GLCALL(location = glGetUniformLocation(m_Program, name));
+            char name[256];
+            int length;
+            int size;
+            unsigned int type;
+            GLCALL(glGetActiveUniform(m_ShaderProgramID, i, 256, &length, &size, &type, name));
+            int location;
+            GLCALL(location = glGetUniformLocation(m_ShaderProgramID, name));
             m_Uniforms[name] = location;
 
-            // If uniform is an array, find locations of other elements
-            for (GLint elementIndex = 1; elementIndex < size; ++elementIndex)
+            for (int elementIndex = 1; elementIndex < size; ++elementIndex)
             {
                 std::string elementName = std::string(name).substr(0, length - 3) + "[" + std::to_string(elementIndex) + "]";
-                GLCALL(location = glGetUniformLocation(m_Program, elementName.c_str()));
+                GLCALL(location = glGetUniformLocation(m_ShaderProgramID, elementName.c_str()));
                 if (location != -1)
                 {
                     m_Uniforms[elementName] = location;
@@ -60,46 +87,46 @@ namespace GL
         Unbind();
     }
 
-    ShaderProgram::~ShaderProgram()
-    {
-        GLDESTROY("ShaderProgram", m_Program);
-        GLCALL(glDeleteShader(m_VertexShader));
-        GLCALL(glDeleteShader(m_FragmentShader));
-        GLCALL(glDeleteProgram(m_Program));
-    }
 
-    GLuint ShaderProgram::CompileSource(GLenum type, const std::string& source)
+    unsigned int ShaderProgram::CompileSource(unsigned int type, const std::string& source)
     {
-        GLuint shader;
+        unsigned int shader;
         GLCALL(shader = glCreateShader(type));
         const char* src = source.c_str();
         GLCALL(glShaderSource(shader, 1, &src, nullptr));
         GLCALL(glCompileShader(shader));
 
-        GLint isOkay;
-        GLCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &isOkay));
-        if (!isOkay)
+        int success;
+        char message[512];
+        GLCALL(glGetShaderiv(shader, GL_COMPILE_STATUS, &success));
+        if (!success)
         {
-            GLchar message[512];
             GLCALL(glGetShaderInfoLog(shader, 512, nullptr, message));
             GLCALL(glDeleteShader(shader));
 
-            std::cerr << "Shader compilation error: " << message << std::endl;
+            std::cerr << "[Error] " << (GL_VERTEX_SHADER ? "Vertex" : "Fragment") << " shader compilation error.\n";
+            std::cerr << message << ".\n";
         }
-
+            
         return shader;
     }
 
-    GLint ShaderProgram::GetAttributeLocation(const std::string& name)
+    int ShaderProgram::GetAttributeLocation(const std::string& name)
     {
-        GLint location;
-        GLCALL(location = glGetAttribLocation(m_Program, name.c_str()));
+        int location;
+        GLCALL(location = glGetAttribLocation(m_ShaderProgramID, name.c_str()));
         return location;
     }
 
     void ShaderProgram::Bind()
     {
-        GLCALL(glUseProgram(m_Program));
+        if (m_ShaderProgramID == 0)
+        {
+            std::cerr << "[Error] Attempting to bind an uncompiled shader program.\n";
+            return;
+        }
+
+        GLCALL(glUseProgram(m_ShaderProgramID));
         m_IsBound = true;
     }
 
@@ -109,11 +136,23 @@ namespace GL
         m_IsBound = false;
     }
 
+    void ShaderProgram::ValidateAttributes(VertexAttributes& attributes)
+    {
+        for (auto& attribute : attributes)
+        {
+            GLint location = GetAttributeLocation(attribute.GetBufferName());
+            if (location < 0)
+            {
+                std::cout << attribute.GetBufferName() << " is not used in the shader.\n";
+            }
+        }
+    }
+
     void ShaderProgram::AssertUniform(const std::string& name)
     {
         if (m_Uniforms.find(name) == m_Uniforms.end())
         {
-            std::cerr << name << " isn't a valid uniform." << std::endl;
+            std::cerr << "[Error] " << name << " isn't a valid uniform.\n";
         }
     }
 
@@ -151,6 +190,12 @@ namespace GL
     {
         AssertUniform(name);
         GLCALL(glUniform3fv(m_Uniforms[name], 1, glm::value_ptr(value)));
+    }
+
+    void ShaderProgram::SetUniformMatrix4f(const std::string& name, float a, float b, float c, float d)
+    {
+        AssertUniform(name);
+        GLCALL(glUniform4f(m_Uniforms[name], a, b, c, d));
     }
 
     void ShaderProgram::SetUniformMatrix4fv(const std::string& name, const glm::mat4& matrix)

@@ -28,7 +28,11 @@ struct MeshData
 class Mesh 
 {
 public:
-    Mesh(MeshData& data, GL::ShaderProgram& shader);
+    Mesh(MeshData& data);
+    Mesh(const Mesh& other);
+    Mesh(Mesh&& other) noexcept;
+    Mesh& operator=(const Mesh& other);
+
     ~Mesh() = default; 
 
     void Destroy();
@@ -37,6 +41,8 @@ public:
 
     void Draw(GL::ShaderProgram& shader);
 private:
-    Transform m_Transform; 
-    std::optional<GL::VertexArray> m_VertexArrays; 
+    Transform m_Transform;
+
+    GL::VertexAttributes m_VertexAttributes; 
+    GL::VertexArray m_VertexArrays; 
 };

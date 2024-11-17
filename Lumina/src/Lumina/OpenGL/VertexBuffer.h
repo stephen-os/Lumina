@@ -1,9 +1,7 @@
-#ifndef VERTEX_ATTRIBUTE_H
-#define VERTEX_ATTRIBUTE_H
+#ifndef VERTEX_BUFFER_H
+#define VERTEX_BUFFER_H
 
 #include <string>
-#include <vector>
-
 #include <glad/glad.h>
 
 namespace GL
@@ -11,24 +9,34 @@ namespace GL
     class VertexBuffer
     {
     public:
-        VertexBuffer(const std::string& name, int count, int stride, const float* floats, GLenum usage = GL_STATIC_DRAW);
+        VertexBuffer();
+        VertexBuffer(const std::string& name, int location, const float* data, int count, int stride, GLenum usage = GL_STATIC_DRAW);
+
+        VertexBuffer(const VertexBuffer& other);
+        VertexBuffer(VertexBuffer&& other) noexcept;
+        VertexBuffer& operator=(const VertexBuffer& other);
+
         ~VertexBuffer() = default;
-
+        
         void Destroy();
+        void Bind() const;
+        void Unbind() const;
 
-        void Bind(); 
-        void Unbind(); 
+        std::string GetBufferName() const { return m_Name; }
+        unsigned int GetLocation() const { return m_Location; }
+        unsigned int GetStride() const { return m_Stride; }
+        unsigned int GetCount() const { return m_Count; }
+        unsigned int GetID() const { return m_VertexBufferID; }
 
-        std::string GetBufferName() const { return m_Name; };
-        unsigned int GetStride() const { return m_Stride; };
-        unsigned int GetBufferID() const { return m_VertexBufferID; };
-        unsigned int GetCount() const { return m_Count; };
+        void SetName(const std::string& name) { m_Name = name; }
+        void SetData(int location, const float* data, int count, int stride, GLenum usage = GL_STATIC_DRAW);
     private:
         std::string m_Name;
-        unsigned int m_Count;
-        unsigned int m_Stride;
+        int m_Location; 
+        int m_Count;
+        int m_Stride;
         unsigned int m_VertexBufferID = 0;
     };
 }
 
-#endif 
+#endif

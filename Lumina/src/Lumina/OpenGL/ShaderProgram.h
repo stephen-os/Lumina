@@ -10,19 +10,24 @@
 
 #include <glad/glad.h>
 
+#include "VertexAttributes.h"
+
 namespace GL
 {
     class ShaderProgram
     {
     public: 
-        ShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
+        ShaderProgram();
         ~ShaderProgram();
 
-        void Destroy();
-        GLint GetAttributeLocation(const std::string& name);
-
+        void Destroy(); 
         void Bind();
         void Unbind();
+
+        void SetSource(const std::string& vertexSource, const std::string& fragmentSource);
+
+        int GetAttributeLocation(const std::string& name);
+        void ValidateAttributes(VertexAttributes& attributes); 
 
         void SetUniform1i(const std::string& name, int value);
         void SetUniform1f(const std::string& name, float value);
@@ -30,16 +35,17 @@ namespace GL
         void SetUniform2fv(const std::string& name, glm::vec2 value);
         void SetUniform3f(const std::string& name, float a, float b, float c);
         void SetUniform3fv(const std::string& name, const glm::vec3 value);
+        void SetUniformMatrix4f(const std::string& name, float a, float b, float c, float d);
         void SetUniformMatrix4fv(const std::string& name, const glm::mat4& matrix);
     private:
-        GLuint CompileSource(GLenum type, const std::string& source);
+        unsigned int CompileSource(unsigned int type, const std::string& source);
         void AssertUniform(const std::string& name);
     private:
-        GLuint m_VertexShader;
-        GLuint m_FragmentShader;
-        GLuint m_Program;
-        std::unordered_map<std::string, GLint> m_Uniforms;
         bool m_IsBound;
+        std::unordered_map<std::string, int> m_Uniforms;
+        unsigned int m_VertexShaderID;
+        unsigned int m_FragmentShaderID;
+        unsigned int m_ShaderProgramID;
     };
 }
 

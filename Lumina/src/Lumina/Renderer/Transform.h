@@ -10,7 +10,11 @@ class Transform
 {
 public:
     Transform();
-    ~Transform();
+    Transform(const Transform& other);
+    Transform& operator=(const Transform& other);
+    Transform(Transform&& other) noexcept;
+
+    ~Transform() = default;
 
     void SetPosition(glm::vec3& position);
     void SetRotation(glm::vec3& rotation);
