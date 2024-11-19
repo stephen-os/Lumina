@@ -10,6 +10,8 @@
 #include "Camera.h"
 #include "Model.h"
 
+#include "../Geometry/Cube.h"
+
 #include <vector>
 
 class Renderer
@@ -18,7 +20,7 @@ public:
 	Renderer(); 
 	~Renderer() = default; 
 
-	void Render(Camera& camera, std::vector<Model>& models, GL::ShaderProgram& program);
+	void Render(Camera& camera, Cube& cube, GL::ShaderProgram& program);
 	void SetViewportSize(const float width, const float height); 
 
 	unsigned int GetRendererID() { return m_Texture.GetID(); }

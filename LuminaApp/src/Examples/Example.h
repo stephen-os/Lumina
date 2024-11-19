@@ -35,11 +35,6 @@ public:
     {
         m_Camera.HandleKeyInput(0.1f);
 
-        for (auto& model : m_Models)
-        {
-            model.GetTransform().RotateY(1.0);
-        }
-
         float elapsedTime = m_FrameTimer.Elapsed();
         m_FPS = 1.0f / elapsedTime;
         m_FrameTimer.Reset();
@@ -59,17 +54,10 @@ public:
         m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 100.0f);
 
         m_Renderer.SetViewportSize(m_Width, m_Height);
-        m_Renderer.Render(m_Camera, m_Models, m_ShaderProgram);
+        m_Renderer.Render(m_Camera, m_Cube, m_ShaderProgram);
 
         ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(m_Width, m_Height));
         ImGui::End();
-
-        for (auto& model : m_Models)
-        {
-            ImGui::Begin("Transforms");
-            model.Settings();
-            ImGui::End();
-        }
 
         ImGui::Begin("FPS Counter");
         ImGui::Text("FPS: %.1f", m_FPS);
@@ -81,37 +69,18 @@ public:
         std::string vertex = Lumina::ReadFile("res/shaders/lighting.vert");
         std::string fragment = Lumina::ReadFile("res/shaders/lighting.frag");
         m_ShaderProgram.SetSource(vertex, fragment); 
-
-        for(size_t i = 0; i < 11; i++)
-        {
-            Model model; 
-
-            glm::vec3 position = glm::vec3(0.0, -5.0 + i, 0.0);
-            glm::vec3 rotation = glm::vec3(0.0, i * 5, 0.0);
-
-            model.SetData("Model " + std::to_string(i), "res/gltf/multiple_boxes.gltf");
-            model.SetPosition(position);
-            model.SetRotation(rotation);
-
-            m_Models.push_back(model);
-
-            std::cout << "Test"; 
-        }
     }
 
     virtual void OnDetach() override
     {
-        for (auto& model : m_Models)
-        {
-            model.Destroy(); 
-        }
+        
     }
 private:
     Renderer m_Renderer;
 
     GL::ShaderProgram m_ShaderProgram; 
 
-    std::vector<Model> m_Models; 
+    Cube m_Cube; 
 
     float m_Width = 900;
     float m_Height = 900;

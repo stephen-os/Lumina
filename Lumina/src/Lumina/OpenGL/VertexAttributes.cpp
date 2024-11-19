@@ -56,14 +56,6 @@ namespace GL
 
     void VertexAttributes::AddVertices(const std::string& name, int location, const float* data, int count, int stride, GLenum usage)
     {
-        if (m_VertexCount >= 0 && count != m_VertexCount)
-        {
-            std::cerr << "[ERROR] Failed to add vertices for attribute \"" << name << "\".\n";
-            std::cerr << "Expected vertex count: " << m_VertexCount << ", but received: " << count << ".\n";
-            std::cerr << "Ensure all attributes have the same number of vertices.\n";
-            return; 
-        }
-
         if (m_Attributes.size() >= m_MaxAttributeCount)
         {
             std::cerr << "[ERROR] Failed to add vertex buffer \"" << name << "\".\n";
