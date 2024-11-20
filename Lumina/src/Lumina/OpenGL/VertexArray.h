@@ -23,9 +23,11 @@ namespace GL
         void Unbind();
 
         void ApplyAttributes(VertexAttributes& attributes);
+        void ApplyAttributesInstanced(VertexAttributes& attributes, GLuint instanceBufferID);
 
         void DrawSequence(GLenum mode);
         void DrawIndexed(GLenum mode);
+        void DrawInstanced(GLenum mode, int instanceCount);
     private:
         bool m_IsBound;
         int m_VertexCount;

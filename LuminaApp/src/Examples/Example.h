@@ -66,8 +66,8 @@ public:
 
     virtual void OnAttach() override
     {   
-        std::string vertex = Lumina::ReadFile("res/shaders/lighting.vert");
-        std::string fragment = Lumina::ReadFile("res/shaders/lighting.frag");
+        std::string vertex = Lumina::ReadFile("res/shaders/instanced.vert");
+        std::string fragment = Lumina::ReadFile("res/shaders/instanced.frag");
         m_ShaderProgram.SetSource(vertex, fragment); 
     }
 

@@ -1,6 +1,8 @@
 #include "VertexArray.h"
 #include "GLUtils.h"
 
+#include <algorithm>
+
 namespace GL
 {
     VertexArray::VertexArray() : m_IsBound(false), m_VertexCount(0), m_IndexCount(0), m_VertexArrayID(0) {}
@@ -82,6 +84,47 @@ namespace GL
         Unbind();
     }
 
+    void VertexArray::ApplyAttributesInstanced(VertexAttributes& attributes, GLuint instanceBufferID)
+    {
+        Destroy();
+
+        m_VertexCount = attributes.GetVertexCount();
+        m_IndexCount = attributes.GetIndexCount();
+
+        glGenVertexArrays(1, &m_VertexArrayID);
+        glBindVertexArray(m_VertexArrayID);
+
+        int locationOffset = 0;
+        for (auto& attribute : attributes)
+        {
+            attribute.Bind();
+            glVertexAttribPointer(attribute.GetLocation(), attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
+            glEnableVertexAttribArray(attribute.GetLocation());
+            locationOffset = max(locationOffset, attribute.GetLocation() + 1);
+        }
+
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
+
+        // Apply instance attributes (assuming glm::mat4 for instance data)
+        if (instanceBufferID != 0)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, instanceBufferID);
+
+            // Assume glm::mat4 (4x4 matrix of floats), so we can directly set up each column as an attribute
+            int instanceDataSize = sizeof(glm::mat4);  // Size of a single instance (glm::mat4)
+
+            for (int i = 0; i < 4; ++i)  // There are 4 columns in a glm::mat4
+            {
+                glEnableVertexAttribArray(locationOffset + i);
+                glVertexAttribPointer(locationOffset + i, 4, GL_FLOAT, GL_FALSE, instanceDataSize, (void*)(sizeof(float) * i * 4));
+                glVertexAttribDivisor(locationOffset + i, 1); // Update per instance
+            }
+        }
+
+        Unbind();
+    }
+
+
     void VertexArray::DrawSequence(GLenum mode)
     {
         if (m_IsBound)
@@ -99,6 +142,18 @@ namespace GL
         if (m_IsBound)
         {
             glDrawElements(mode, m_IndexCount, GL_UNSIGNED_INT, 0);
+        }
+        else
+        {
+            std::cerr << "Vertex array is not bound!";
+        }
+    }
+
+    void VertexArray::DrawInstanced(GLenum mode, int instanceCount)
+    {
+        if (m_IsBound)
+        {
+            glDrawElementsInstanced(mode, m_IndexCount, GL_UNSIGNED_INT, nullptr, instanceCount);
         }
         else
         {

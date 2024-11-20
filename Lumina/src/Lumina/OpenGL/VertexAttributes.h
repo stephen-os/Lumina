@@ -3,6 +3,7 @@
 
 #include "VertexBuffer.h"
 #include "IndexBuffer.h"
+#include "InstanceBuffer.h"
 
 #include <glad/glad.h>
 
@@ -33,6 +34,7 @@ namespace GL
         // void Reserve(int size);
 
         void AddVertices(const std::string& name, int location, const float* data, int count, int stride, GLenum usage = GL_STATIC_DRAW);
+        void AddInstances(const std::string& name, int location, int size, unsigned int type, int stride, unsigned int divisor, int offset = 0);
         void AddIndices(const unsigned int* indices, int count, GLenum usage = GL_STATIC_DRAW);
 
         std::vector<VertexBuffer>::iterator begin() { return m_Attributes.begin(); }
@@ -46,6 +48,7 @@ namespace GL
         unsigned int m_MaxAttributeCount; 
         
         IndexBuffer m_IndexBuffer;
+        InstanceBuffer m_InstanceBuffer; 
         std::vector<VertexBuffer> m_Attributes;
     };
 }

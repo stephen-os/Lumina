@@ -68,6 +68,11 @@ namespace GL
         m_Attributes.emplace_back(name, location, data, count, stride, usage);
     }
 
+    void VertexAttributes::AddInstances(const std::string& name, int count)
+    {
+
+    }
+
     void VertexAttributes::AddIndices(const unsigned int* data, const int count, GLenum usage)
     {
         m_IndexBuffer.SetData(data, count, usage);

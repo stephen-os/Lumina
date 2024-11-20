@@ -19,6 +19,24 @@ Renderer::Renderer()
     m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }
 
+std::vector<glm::mat4> CreateInstanceTransforms()
+{
+    std::vector<glm::mat4> transforms;
+
+    // Define the starting position and spacing
+    glm::vec3 startPosition(-2.0f, 0.0f, 0.0f); // Start at x = -2
+    float spacing = 1.0f; // Space between each cube
+
+    for (int i = 0; i < 5; ++i)
+    {
+        glm::vec3 position = startPosition + glm::vec3(i * spacing, 0.0f, 0.0f);
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position);
+        transforms.push_back(transform);
+    }
+
+    return transforms;
+}
+
 void Renderer::Render(Camera& camera, Cube& cube, GL::ShaderProgram& shader)
 {
     m_Texture.Bind();
@@ -33,7 +51,8 @@ void Renderer::Render(Camera& camera, Cube& cube, GL::ShaderProgram& shader)
     shader.SetUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
     shader.SetUniform3fv("u_CameraPosition", camera.GetPosition());
     
-    cube.Draw(shader); 
+    std::vector<glm::mat4> transforms = CreateInstanceTransforms(); 
+    cube.Draw(shader, transforms); 
 
     shader.Unbind();
 
