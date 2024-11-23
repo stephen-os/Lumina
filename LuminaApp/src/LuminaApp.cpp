@@ -1,7 +1,8 @@
 #include "Lumina/Application.h"
 #include "Lumina/EntryPoint.h"
 
-#include "Examples/Example.h"
+#include "Examples/Tiles/Tiles.h"
+// #include "Examples/Minecraft/Minecraft.h"
 
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
 {
@@ -11,7 +12,7 @@ Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
     spec.Height = 900;
 
     Lumina::Application* app = new Lumina::Application(spec);
-    app->PushLayer<Example>();
+    app->PushLayer<Tiles>();
     
     return app;
 }

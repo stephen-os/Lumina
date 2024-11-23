@@ -68,13 +68,19 @@ namespace GL
         m_Attributes.emplace_back(name, location, data, count, stride, usage);
     }
 
-    void VertexAttributes::AddInstances(const std::string& name, int count)
+    void VertexAttributes::AddInstances(const std::string& name, int location, int size, unsigned int type, int stride, unsigned int divisor, int offset)
     {
-
+        m_InstanceBuffer.SetName(name); 
+        m_InstanceBuffer.SetInstanceAttribute(location, size, type, stride, divisor, offset);
     }
 
     void VertexAttributes::AddIndices(const unsigned int* data, const int count, GLenum usage)
     {
         m_IndexBuffer.SetData(data, count, usage);
+    }
+
+    void VertexAttributes::UpdateInstanceBufferData(const std::vector<glm::mat4>& data)
+    {
+        m_InstanceBuffer.UpdateBufferData(data);
     }
 }

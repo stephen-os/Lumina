@@ -81,6 +81,23 @@ namespace GL
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
 
+
+        // Currently assuming glm::mat4 
+        InstanceBuffer& instanceBuffer = attributes.GetInstanceBuffer(); 
+        if (instanceBuffer.GetID() != 0)
+        {
+            glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer.GetID());
+
+            int instanceDataSize = sizeof(glm::mat4);
+
+            for (int i = 0; i < 4; ++i)
+            {
+                glEnableVertexAttribArray(instanceBuffer.GetLocation() + i);
+                glVertexAttribPointer(instanceBuffer.GetLocation() + i, 4, GL_FLOAT, GL_FALSE, instanceDataSize, (void*)(sizeof(float) * i * 4));
+                glVertexAttribDivisor(instanceBuffer.GetLocation() + i, 1); 
+            }
+        }
+
         Unbind();
     }
 
@@ -123,7 +140,6 @@ namespace GL
 
         Unbind();
     }
-
 
     void VertexArray::DrawSequence(GLenum mode)
     {

@@ -77,14 +77,13 @@ class Cube
 public:
     Cube();
 
-    void Draw(GL::ShaderProgram& shader, const std::vector<glm::mat4>& instanceTransforms);
+    void Draw(GL::ShaderProgram& shader, std::vector<glm::mat4>& instanceTransforms);
 private: 
     void InitializeGeometry();
 private:
     GL::VertexArray m_VertexArray; 
     GL::VertexAttributes m_Attributes; 
     GL::Texture m_Texture;
-    GL::InstanceBuffer m_InstanceBuffer; 
 
     Transform m_Transform;
 };

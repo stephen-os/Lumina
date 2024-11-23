@@ -1,12 +1,13 @@
 #include "InstanceBuffer.h"
+
 #include <iostream>
 
 namespace GL
 {
     InstanceBuffer::InstanceBuffer()
-        : m_BufferID(0), m_InstanceCount(0)
+        : m_Name("unamed"), m_Location(0), m_InstanceBufferID(0), m_InstanceCount(0)
     {
-        glGenBuffers(1, &m_BufferID);
+        glGenBuffers(1, &m_InstanceBufferID);
     }
 
     InstanceBuffer::~InstanceBuffer()
@@ -16,7 +17,7 @@ namespace GL
 
     void InstanceBuffer::Bind() const
     {
-        glBindBuffer(GL_ARRAY_BUFFER, m_BufferID);
+        glBindBuffer(GL_ARRAY_BUFFER, m_InstanceBufferID);
     }
 
     void InstanceBuffer::Unbind() const
@@ -34,6 +35,8 @@ namespace GL
 
     void InstanceBuffer::SetInstanceAttribute(GLuint location, GLint size, GLenum type, GLsizei stride, GLuint divisor, GLsizei offset)
     {
+        m_Location = location; 
+
         Bind();
         glEnableVertexAttribArray(location);
         glVertexAttribPointer(location, size, type, GL_FALSE, stride, reinterpret_cast<const void*>(offset));
@@ -43,10 +46,10 @@ namespace GL
 
     void InstanceBuffer::Destroy()
     {
-        if (m_BufferID != 0)
+        if (m_InstanceBufferID != 0)
         {
-            glDeleteBuffers(1, &m_BufferID);
-            m_BufferID = 0;
+            glDeleteBuffers(1, &m_InstanceBufferID);
+            m_InstanceBufferID = 0;
         }
     }
 }

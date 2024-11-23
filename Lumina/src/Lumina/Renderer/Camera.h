@@ -8,7 +8,7 @@
 class Camera
 {
 public:
-    Camera(float fov, float aspect, float near, float far);
+    Camera();
 
     void SetPosition(const glm::vec3& position);
     void SetRotation(float pitch, float yaw);

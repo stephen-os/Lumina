@@ -15,8 +15,8 @@
 
 #define KEY_ESC GLFW_KEY_ESCAPE
 
-Camera::Camera(float fov, float aspect, float near, float far)
-    : m_ProjectionMatrix(glm::perspective(glm::radians(fov), aspect, near, far)),
+Camera::Camera()
+    : m_ProjectionMatrix(glm::perspective(glm::radians(45.0f), 3.0f / 4.0f, 0.1f, 100.f)),
     m_ViewMatrix(1.0f),
     m_Position(0.0f, 0.0f, 0.0f),
     m_Front(0.0f, 0.0f, -1.0f),

@@ -40,9 +40,15 @@ namespace GL
         std::vector<VertexBuffer>::iterator begin() { return m_Attributes.begin(); }
         std::vector<VertexBuffer>::iterator end() { return m_Attributes.end(); }
 
+        void UpdateInstanceBufferData(const std::vector<glm::mat4>& data);
+
         int GetVertexCount() const { return m_VertexCount; };
         int GetIndexCount() const { return m_IndexBuffer.GetIndexCount(); }
+
         unsigned int GetIndexBufferID() const { return m_IndexBuffer.GetID(); };
+        unsigned int GetInstanceBufferID() const { return m_InstanceBuffer.GetID(); }
+
+        InstanceBuffer& GetInstanceBuffer() { return m_InstanceBuffer; }
     private:
         int m_VertexCount;
         unsigned int m_MaxAttributeCount; 

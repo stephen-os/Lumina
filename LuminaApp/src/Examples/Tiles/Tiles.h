@@ -4,11 +4,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "Lumina/Layer.h"
+
 #include "Lumina/Utils/Timer.h"
 #include "Lumina/Utils/FileReader.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
-
 #include "Lumina/OpenGL/ShaderProgram.h"
 #include "Lumina/OpenGL/FrameBuffer.h"
 #include "Lumina/OpenGL/Texture.h"
@@ -16,17 +17,15 @@
 #include "Lumina/OpenGL/VertexArray.h"
 
 #include "Lumina/Renderer/Camera.h"
-#include "Lumina/Renderer/Renderer.h"
-#include "Lumina/Renderer/Model.h"
 
-#include "Lumina/Windows/TileEditor.h"
+// Client
+#include "TileEditor.h"
+#include "Renderer.h"
 
-class Example : public Lumina::Layer
+class Tiles : public Lumina::Layer
 {
 public:
-    Example()
-        : m_Camera(45.0f, m_Width / m_Height, 0.1f, 100.0f),
-          m_TileEditor(10, 10, 1)
+    Tiles()
     {
         m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
     }
@@ -48,15 +47,13 @@ public:
         
         m_Camera.HandleMouseInput(0.1f); 
 
-        auto viewportSize = ImGui::GetContentRegionAvail();
-        m_Width = viewportSize.x;
-        m_Height = viewportSize.y;
-        m_Camera.SetProjectionMatrix(45.0f, m_Width / m_Height, 0.1f, 100.0f);
+        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        m_Camera.SetProjectionMatrix(45.0f, viewportSize.x / viewportSize.y, 0.1f, 100.0f);
 
-        m_Renderer.SetViewportSize(m_Width, m_Height);
-        m_Renderer.Render(m_Camera, m_Cube, m_ShaderProgram);
+        m_Renderer.SetViewportSize(viewportSize.x, viewportSize.y);
+        m_Renderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_ShaderProgram);
 
-        ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(m_Width, m_Height));
+        ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(viewportSize.x, viewportSize.y));
         ImGui::End();
 
         ImGui::Begin("FPS Counter");
@@ -66,29 +63,27 @@ public:
 
     virtual void OnAttach() override
     {   
-        std::string vertex = Lumina::ReadFile("res/shaders/instanced.vert");
-        std::string fragment = Lumina::ReadFile("res/shaders/instanced.frag");
+        m_TileEditor.InitEditor(10, 10, 5);
+
+        // m_Renderer.InitWindow(900, 900); 
+
+        std::string vertex = Lumina::ReadFile("res/shaders/world.vert");
+        std::string fragment = Lumina::ReadFile("res/shaders/world.frag");
         m_ShaderProgram.SetSource(vertex, fragment); 
     }
 
     virtual void OnDetach() override
     {
-        
+        m_ShaderProgram.Destroy(); 
     }
 private:
     Renderer m_Renderer;
-
-    GL::ShaderProgram m_ShaderProgram; 
-
-    Cube m_Cube; 
-
-    float m_Width = 900;
-    float m_Height = 900;
+    TileEditor m_TileEditor; 
 
     Lumina::Timer m_FrameTimer;
-    float m_FPS;
-
+    float m_FPS = 0;
+    
     Camera m_Camera;
 
-    Lumina::TileEditor m_TileEditor; 
+    GL::ShaderProgram m_ShaderProgram; 
 };
