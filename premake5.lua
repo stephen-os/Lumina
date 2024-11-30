@@ -7,4 +7,12 @@ workspace "LuminaApp"
 outputdir = "%{cfg.buildcfg}-%{cfg.system}-%{cfg.architecture}"
 
 include "LuminaExternal.lua"
+
+-- Project Template
+
 include "LuminaApp"
+
+-- Example Projects
+
+include "Tiles"
+include "Minecraft"
