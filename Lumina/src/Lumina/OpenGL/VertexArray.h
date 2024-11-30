@@ -3,8 +3,9 @@
 
 #include "ShaderProgram.h"
 #include "VertexAttributes.h"
-
 #include <glad/glad.h>
+#include <iostream>
+#include <algorithm>
 
 namespace GL
 {
@@ -15,23 +16,21 @@ namespace GL
         VertexArray(const VertexArray& other);
         VertexArray(VertexArray&& other) noexcept;
         VertexArray& operator=(const VertexArray& other);
+        ~VertexArray();
 
-        ~VertexArray() = default;
-
-        void Destroy(); 
+        void Destroy();
         void Bind();
         void Unbind();
 
         void ApplyAttributes(VertexAttributes& attributes);
         void ApplyAttributesInstanced(VertexAttributes& attributes, GLuint instanceBufferID);
 
-        void DrawSequence(GLenum mode);
         void DrawIndexed(GLenum mode);
         void DrawInstanced(GLenum mode, int instanceCount);
+
     private:
         bool m_IsBound;
-        int m_VertexCount;
-        int m_IndexCount;
+        int m_IndexCount; // Updated to remove vertex count
         unsigned int m_VertexArrayID;
     };
 }

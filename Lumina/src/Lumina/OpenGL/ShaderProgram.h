@@ -27,7 +27,6 @@ namespace GL
         void SetSource(const std::string& vertexSource, const std::string& fragmentSource);
 
         int GetAttributeLocation(const std::string& name);
-        void ValidateAttributes(VertexAttributes& attributes); 
 
         void SetUniform1i(const std::string& name, int value);
         void SetUniform1f(const std::string& name, float value);

@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-Mesh::Mesh(MeshData& data) : m_VertexAttributes(2)
+Mesh::Mesh(MeshData& data)
 { 
     m_VertexAttributes.AddVertices("a_Position", 0, data.vertices, data.vertexCount * 3, 3);
     m_VertexAttributes.AddVertices("a_Normal", 1, data.normals, data.vertexCount * 3, 3);

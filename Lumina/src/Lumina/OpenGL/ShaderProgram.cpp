@@ -136,18 +136,6 @@ namespace GL
         m_IsBound = false;
     }
 
-    void ShaderProgram::ValidateAttributes(VertexAttributes& attributes)
-    {
-        for (auto& attribute : attributes)
-        {
-            GLint location = GetAttributeLocation(attribute.GetBufferName());
-            if (location < 0)
-            {
-                std::cout << attribute.GetBufferName() << " is not used in the shader.\n";
-            }
-        }
-    }
-
     void ShaderProgram::AssertUniform(const std::string& name)
     {
         if (m_Uniforms.find(name) == m_Uniforms.end())

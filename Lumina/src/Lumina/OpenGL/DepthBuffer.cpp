@@ -20,7 +20,6 @@ namespace GL
     {
         if (m_DepthBufferID != 0)
         {
-            GLDESTROY("DepthBuffer", m_DepthBufferID);
             GLCALL(glDeleteRenderbuffers(1, &m_DepthBufferID));
             m_DepthBufferID = 0; 
         }

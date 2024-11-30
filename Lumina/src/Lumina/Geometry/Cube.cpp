@@ -1,6 +1,6 @@
 #include "Cube.h"
 
-Cube::Cube() : m_Attributes(3)
+Cube::Cube()
 {
     InitializeGeometry();
 }

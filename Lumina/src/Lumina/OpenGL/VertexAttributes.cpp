@@ -3,80 +3,66 @@
 namespace GL
 {
     VertexAttributes::VertexAttributes(const VertexAttributes& other)
-        : m_VertexCount(other.m_VertexCount), m_MaxAttributeCount(other.m_MaxAttributeCount),
-        m_IndexBuffer(other.m_IndexBuffer)
+        : m_IndexBuffer(other.m_IndexBuffer),
+        m_InstanceBuffer(other.m_InstanceBuffer)
     {
         for (const auto& attribute : other.m_Attributes)
         {
-            m_Attributes.emplace_back(attribute);
+            m_Attributes.emplace_back(attribute.first, attribute.second);
         }
     }
 
     VertexAttributes::VertexAttributes(VertexAttributes&& other) noexcept
-        : m_VertexCount(other.m_VertexCount),
-        m_MaxAttributeCount(other.m_MaxAttributeCount),
-        m_IndexBuffer(std::move(other.m_IndexBuffer))
+        : m_IndexBuffer(std::move(other.m_IndexBuffer)),
+        m_InstanceBuffer(std::move(other.m_InstanceBuffer)),
+        m_Attributes(std::move(other.m_Attributes))
     {
-        m_Attributes = std::move(other.m_Attributes);
-
-        other.m_VertexCount = -1;
-        other.m_MaxAttributeCount = 0;
     }
 
     VertexAttributes& VertexAttributes::operator=(const VertexAttributes& other)
     {
         if (this != &other)
         {
-            Destroy(); 
-
-            m_VertexCount = other.m_VertexCount;
-            m_MaxAttributeCount = other.m_MaxAttributeCount;
-
+            Destroy();
             m_IndexBuffer = other.m_IndexBuffer;
-
-            m_Attributes.reserve(other.m_Attributes.size());
-            for (const auto& attribute : other.m_Attributes)
-            {
-                m_Attributes.emplace_back(attribute);
-            }
+            m_InstanceBuffer = other.m_InstanceBuffer;
+            m_Attributes = other.m_Attributes;
         }
         return *this;
     }
 
     void VertexAttributes::Destroy()
     {
-        m_IndexBuffer.Destroy(); 
-        
+        m_IndexBuffer.Delete();
         for (auto& attribute : m_Attributes)
         {
-            attribute.Destroy();
+            attribute.second.Delete();
         }
-        m_Attributes.clear(); 
+        m_Attributes.clear();
     }
 
     void VertexAttributes::AddVertices(const std::string& name, int location, const float* data, int count, int stride, GLenum usage)
     {
-        if (m_Attributes.size() >= m_MaxAttributeCount)
-        {
-            std::cerr << "[ERROR] Failed to add vertex buffer \"" << name << "\".\n";
-            std::cerr << "Exceeded maximum number of allowed buffers (" << m_MaxAttributeCount << ").\n";
-            std::cerr << "Current buffer count: " << m_Attributes.size() << ".\n";
-            return;
-        }
+        Buffer buffer;
+        buffer.Init();
+        buffer.SetData(GL_ARRAY_BUFFER, data, count, stride, usage);
+        m_Attributes.emplace_back(location, std::move(buffer));
 
-        m_VertexCount = count; 
-        m_Attributes.emplace_back(name, location, data, count, stride, usage);
+        // Enable the vertex attribute array
+        glEnableVertexAttribArray(location);
+        glVertexAttribPointer(location, stride / sizeof(float), GL_FLOAT, GL_FALSE, stride, nullptr);
     }
 
     void VertexAttributes::AddInstances(const std::string& name, int location, int size, unsigned int type, int stride, unsigned int divisor, int offset)
     {
-        m_InstanceBuffer.SetName(name); 
+        m_InstanceBuffer.SetName(name);
         m_InstanceBuffer.SetInstanceAttribute(location, size, type, stride, divisor, offset);
     }
 
     void VertexAttributes::AddIndices(const unsigned int* data, const int count, GLenum usage)
     {
-        m_IndexBuffer.SetData(data, count, usage);
+        m_IndexBuffer.Init();
+        m_IndexBuffer.SetData(GL_ELEMENT_ARRAY_BUFFER, data, count, sizeof(unsigned int), usage);
     }
 
     void VertexAttributes::UpdateInstanceBufferData(const std::vector<glm::mat4>& data)

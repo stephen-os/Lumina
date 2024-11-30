@@ -1,23 +1,23 @@
 #include "VertexArray.h"
 #include "GLUtils.h"
 
-#include <algorithm>
-
 namespace GL
 {
-    VertexArray::VertexArray() : m_IsBound(false), m_VertexCount(0), m_IndexCount(0), m_VertexArrayID(0) {}
+    VertexArray::VertexArray()
+        : m_IsBound(false), m_IndexCount(0), m_VertexArrayID(0) {}
 
     VertexArray::VertexArray(const VertexArray& other)
-        : m_IsBound(other.m_IsBound), m_VertexCount(other.m_VertexCount), 
-        m_IndexCount(other.m_IndexCount), m_VertexArrayID(other.m_VertexArrayID) {}
+        : m_IsBound(other.m_IsBound),
+        m_IndexCount(other.m_IndexCount),
+        m_VertexArrayID(other.m_VertexArrayID) {}
 
     VertexArray::VertexArray(VertexArray&& other) noexcept
-        : m_IsBound(other.m_IsBound), m_VertexCount(other.m_VertexCount), 
-        m_IndexCount(other.m_IndexCount), m_VertexArrayID(other.m_VertexArrayID)
+        : m_IsBound(other.m_IsBound),
+        m_IndexCount(other.m_IndexCount),
+        m_VertexArrayID(other.m_VertexArrayID)
     {
         other.m_VertexArrayID = 0;
         other.m_IsBound = false;
-        other.m_VertexCount = 0;
         other.m_IndexCount = 0;
     }
 
@@ -28,11 +28,15 @@ namespace GL
             Destroy();
 
             m_IsBound = other.m_IsBound;
-            m_VertexCount = other.m_VertexCount;
             m_IndexCount = other.m_IndexCount;
             m_VertexArrayID = other.m_VertexArrayID;
         }
         return *this;
+    }
+
+    VertexArray::~VertexArray()
+    {
+        Destroy();
     }
 
     void VertexArray::Destroy()
@@ -64,37 +68,32 @@ namespace GL
 
     void VertexArray::ApplyAttributes(VertexAttributes& attributes)
     {
-        Destroy(); 
+        Destroy();
 
-        m_VertexCount = attributes.GetVertexCount();
-        m_IndexCount = attributes.GetIndexCount(); 
-        
+        m_IndexCount = attributes.GetIndexCount();
         glGenVertexArrays(1, &m_VertexArrayID);
         glBindVertexArray(m_VertexArrayID);
 
-        for (auto& attribute : attributes)
+        for (auto& [location, buffer] : attributes)
         {
-                attribute.Bind();
-                glVertexAttribPointer(attribute.GetLocation(), attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
-                glEnableVertexAttribArray(attribute.GetLocation());
+            buffer.Bind();
+            glVertexAttribPointer(location, buffer.GetStride(), GL_FLOAT, GL_FALSE, buffer.GetStride() * sizeof(float), nullptr);
+            glEnableVertexAttribArray(location);
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
 
-
-        // Currently assuming glm::mat4 
-        InstanceBuffer& instanceBuffer = attributes.GetInstanceBuffer(); 
-        if (instanceBuffer.GetID() != 0)
+        if (attributes.GetInstanceBufferID() != 0)
         {
-            glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer.GetID());
-
-            int instanceDataSize = sizeof(glm::mat4);
+            glBindBuffer(GL_ARRAY_BUFFER, attributes.GetInstanceBufferID());
+            const int instanceSize = sizeof(glm::mat4);
 
             for (int i = 0; i < 4; ++i)
             {
-                glEnableVertexAttribArray(instanceBuffer.GetLocation() + i);
-                glVertexAttribPointer(instanceBuffer.GetLocation() + i, 4, GL_FLOAT, GL_FALSE, instanceDataSize, (void*)(sizeof(float) * i * 4));
-                glVertexAttribDivisor(instanceBuffer.GetLocation() + i, 1); 
+                int instanceLocation = attributes.GetInstanceBuffer().GetLocation() + i;
+                glEnableVertexAttribArray(instanceLocation);
+                glVertexAttribPointer(instanceLocation, 4, GL_FLOAT, GL_FALSE, instanceSize, (void*)(sizeof(float) * i * 4));
+                glVertexAttribDivisor(instanceLocation, 1);
             }
         }
 
@@ -105,63 +104,44 @@ namespace GL
     {
         Destroy();
 
-        m_VertexCount = attributes.GetVertexCount();
         m_IndexCount = attributes.GetIndexCount();
-
         glGenVertexArrays(1, &m_VertexArrayID);
         glBindVertexArray(m_VertexArrayID);
 
-        int locationOffset = 0;
-        for (auto& attribute : attributes)
+        for (auto& [location, buffer] : attributes)
         {
-            attribute.Bind();
-            glVertexAttribPointer(attribute.GetLocation(), attribute.GetStride(), GL_FLOAT, GL_FALSE, attribute.GetStride() * sizeof(float), nullptr);
-            glEnableVertexAttribArray(attribute.GetLocation());
-            locationOffset = max(locationOffset, attribute.GetLocation() + 1);
+            buffer.Bind();
+            glVertexAttribPointer(location, buffer.GetStride(), GL_FLOAT, GL_FALSE, buffer.GetStride() * sizeof(float), nullptr);
+            glEnableVertexAttribArray(location);
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
 
-        // Apply instance attributes (assuming glm::mat4 for instance data)
         if (instanceBufferID != 0)
         {
             glBindBuffer(GL_ARRAY_BUFFER, instanceBufferID);
+            const int instanceSize = sizeof(glm::mat4);
 
-            // Assume glm::mat4 (4x4 matrix of floats), so we can directly set up each column as an attribute
-            int instanceDataSize = sizeof(glm::mat4);  // Size of a single instance (glm::mat4)
-
-            for (int i = 0; i < 4; ++i)  // There are 4 columns in a glm::mat4
+            for (int i = 0; i < 4; ++i)
             {
-                glEnableVertexAttribArray(locationOffset + i);
-                glVertexAttribPointer(locationOffset + i, 4, GL_FLOAT, GL_FALSE, instanceDataSize, (void*)(sizeof(float) * i * 4));
-                glVertexAttribDivisor(locationOffset + i, 1); // Update per instance
+                glEnableVertexAttribArray(i);
+                glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, instanceSize, (void*)(sizeof(float) * i * 4));
+                glVertexAttribDivisor(i, 1);
             }
         }
 
         Unbind();
     }
 
-    void VertexArray::DrawSequence(GLenum mode)
-    {
-        if (m_IsBound)
-        {
-            glDrawArrays(mode, 0, m_VertexCount);
-        }
-        else
-        {
-            std::cerr << "Vertex array is not bound!";
-        }
-    }
-
     void VertexArray::DrawIndexed(GLenum mode)
     {
         if (m_IsBound)
         {
-            glDrawElements(mode, m_IndexCount, GL_UNSIGNED_INT, 0);
+            glDrawElements(mode, m_IndexCount, GL_UNSIGNED_INT, nullptr);
         }
         else
         {
-            std::cerr << "Vertex array is not bound!";
+            std::cerr << "[Error] VertexArray is not bound.\n";
         }
     }
 
@@ -173,7 +153,7 @@ namespace GL
         }
         else
         {
-            std::cerr << "Vertex array is not bound!";
+            std::cerr << "[Error] VertexArray is not bound.\n";
         }
     }
 }
