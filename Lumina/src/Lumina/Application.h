@@ -40,6 +40,8 @@ namespace Lumina
 			m_LayerStack.emplace_back(std::make_shared<T>())->OnAttach();
 		}
 
+		void ApplyDarkTheme(); 
+
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
 		GLFWwindow* m_Window = nullptr;
