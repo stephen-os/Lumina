@@ -32,17 +32,30 @@ void TileEditor::Render()
 {
     ImGui::Begin("Tile Editor");
 
+    // Layer Selector Dropdown
     ImGui::Text("Layers:");
+    std::vector<std::string> layerNames(m_TileLayers.size());
     for (int i = 0; i < m_TileLayers.size(); ++i)
     {
-        if (ImGui::RadioButton(("Layer " + std::to_string(i + 1)).c_str(), m_ActiveLayer == i))
-        {
-            m_ActiveLayer = i;
-        }
+        layerNames[i] = "Layer " + std::to_string(i + 1);
+    }
+
+    // Create a list of C-style strings for the combo box
+    std::vector<const char*> cLayerNames;
+    for (const auto& name : layerNames)
+    {
+        cLayerNames.push_back(name.c_str());
+    }
+
+    // Render the combo box
+    if (ImGui::Combo("Active Layer", &m_ActiveLayer, cLayerNames.data(), static_cast<int>(cLayerNames.size())))
+    {
+        // m_ActiveLayer gets updated automatically by ImGui::Combo
     }
 
     ImGui::Separator();
 
+    // Render the tiles
     for (int y = 0; y < m_Width; ++y)
     {
         for (int x = 0; x < m_Height; ++x)
@@ -71,6 +84,7 @@ void TileEditor::Render()
 
     ImGui::End();
 }
+
 
 glm::vec4 TileEditor::GetTileColor(int x, int y) const
 {
