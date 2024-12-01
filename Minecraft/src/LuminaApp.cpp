@@ -2,7 +2,7 @@
 #include "Lumina/EntryPoint.h"
 
 // #include "Examples/Tiles/Tiles.h"
-#include "Examples/Minecraft/Minecraft.h"
+#include "Minecraft/Minecraft.h"
 
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
 {
