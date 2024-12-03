@@ -28,17 +28,21 @@ public:
 
 	void Render();
 private:
-	void ToggleTile(int x, int y); 
-	glm::vec4 GetTileColor(int x, int y) const; 
+	Tile& GetTile(int x, int y); 
+	void ResetTile(int x, int y);
+	void UpdateTile(int x, int y, const glm::vec4& color);
 private:
 	std::vector<TileLayer> m_TileLayers; 
 	int m_NumLayers; 
-	int m_ActiveLayer; 
+	int m_ActiveLayer;
+	bool m_EraserMode; 
+
+	glm::vec4 m_CurrentColor;
 
 	// Tile Settings
 	int m_Width;
 	int m_Height;
-	int m_Padding = 5.0f;
+	int m_Padding = 0.0f;
 	int m_TileSize = 40.0f; 
 
 	std::vector<glm::mat4> m_Matrices;

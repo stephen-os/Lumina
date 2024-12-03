@@ -1,11 +1,14 @@
 #include "TileEditor.h"
 #include <imgui.h>
-#include <string>
-
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <string>
+#include <algorithm>
+
+#include <iostream>
 
 TileEditor::TileEditor()
-    : m_Width(0), m_Height(0), m_NumLayers(0), m_ActiveLayer(0) {}
+    : m_Width(0), m_Height(0), m_NumLayers(0), m_ActiveLayer(0), m_EraserMode(false) {}
 
 void TileEditor::InitEditor(int width, int height, int layers)
 {
@@ -16,13 +19,13 @@ void TileEditor::InitEditor(int width, int height, int layers)
     m_TileLayers.resize(m_NumLayers);
     for (auto& layer : m_TileLayers)
     {
-        layer.m_Tiles.resize(m_Width, std::vector<Tile>(m_Height));
+        layer.m_Tiles.resize(m_Height, std::vector<Tile>(m_Width));
         for (int y = 0; y < m_Height; ++y)
         {
             for (int x = 0; x < m_Width; ++x)
             {
-                layer.m_Tiles[x][y].m_Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-                layer.m_Tiles[x][y].m_Selected = false;
+                layer.m_Tiles[y][x].m_Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f); // Default color
+                layer.m_Tiles[y][x].m_Selected = false;
             }
         }
     }
@@ -32,104 +35,101 @@ void TileEditor::Render()
 {
     ImGui::Begin("Tile Editor");
 
-    // Layer Selector Dropdown
+    // Eraser toggle
+    ImGui::Checkbox("Eraser", &m_EraserMode);
+
+    // Color picker
+    ImGui::ColorEdit4("Tile Color", glm::value_ptr(m_CurrentColor));
+
+    // Layer selector
     ImGui::Text("Layers:");
     std::vector<std::string> layerNames(m_TileLayers.size());
     for (int i = 0; i < m_TileLayers.size(); ++i)
     {
         layerNames[i] = "Layer " + std::to_string(i + 1);
     }
-
-    // Create a list of C-style strings for the combo box
     std::vector<const char*> cLayerNames;
     for (const auto& name : layerNames)
     {
         cLayerNames.push_back(name.c_str());
     }
-
-    // Render the combo box
-    if (ImGui::Combo("Active Layer", &m_ActiveLayer, cLayerNames.data(), static_cast<int>(cLayerNames.size())))
-    {
-        // m_ActiveLayer gets updated automatically by ImGui::Combo
-    }
+    ImGui::Combo("Active Layer", &m_ActiveLayer, cLayerNames.data(), static_cast<int>(cLayerNames.size()));
 
     ImGui::Separator();
 
-    // Render the tiles
-    for (int y = 0; y < m_Width; ++y)
+    // Render tiles
+    ImVec2 cursorPos = ImGui::GetCursorScreenPos();
+    for (int y = 0; y < m_Height; ++y)
     {
-        for (int x = 0; x < m_Height; ++x)
+        for (int x = 0; x < m_Width; ++x)
         {
             ImGui::PushID(y * m_Width + x);
 
-            glm::vec4 color = GetTileColor(x, y);
-            ImVec4 imguiColor = ImVec4(color.r, color.g, color.b, color.a);
+            Tile& tile = GetTile(x, y);
+            ImVec2 tileMin = ImVec2(cursorPos.x + x * (m_TileSize + m_Padding),
+                cursorPos.y + y * (m_TileSize + m_Padding));
+            ImVec2 tileMax = ImVec2(tileMin.x + m_TileSize, tileMin.y + m_TileSize);
 
-            ImGui::PushStyleColor(ImGuiCol_Button, imguiColor);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(imguiColor.x + 0.1f, imguiColor.y + 0.1f, imguiColor.z + 0.1f, imguiColor.w));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(imguiColor.x - 0.1f, imguiColor.y - 0.1f, imguiColor.z - 0.1f, imguiColor.w));
-
-            if (ImGui::Button("", ImVec2(m_TileSize, m_TileSize)))
+            // Detect mouse interaction and apply the current color
+            if (ImGui::IsMouseHoveringRect(tileMin, tileMax) && ImGui::IsMouseDown(0))
             {
-                ToggleTile(x, y);
+                if (m_EraserMode)
+                {
+                    ResetTile(x, y);
+                }
+                else
+                {
+                    UpdateTile(x, y, m_CurrentColor);
+                }
             }
 
-            ImGui::PopStyleColor(3);
-            ImGui::PopID();
+            // Draw the tile
+            ImGui::GetWindowDrawList()->AddRectFilled(tileMin, tileMax,
+                ImGui::ColorConvertFloat4ToU32(ImVec4(tile.m_Color.r, tile.m_Color.g, tile.m_Color.b, 1.0f))); // shorten this line
+            ImGui::GetWindowDrawList()->AddRect(tileMin, tileMax, IM_COL32(255, 255, 255, 255));
 
-            if (x < m_Width - 1)
-                ImGui::SameLine(0.0f, m_Padding);
+            ImGui::PopID();
         }
     }
 
     ImGui::End();
 }
 
-
-glm::vec4 TileEditor::GetTileColor(int x, int y) const
+Tile& TileEditor::GetTile(int x, int y)
 {
-    const TileLayer& activeLayer = m_TileLayers[m_ActiveLayer];
-
-    if (activeLayer.m_Tiles[x][y].m_Selected)
-    {
-        return activeLayer.m_Tiles[y][x].m_Color;
-    }
-
-    for (int i = 0; i < m_TileLayers.size(); ++i)
-    {
-        if (i == m_ActiveLayer) continue;
-        const TileLayer& layer = m_TileLayers[i];
-        if (layer.m_Tiles[x][y].m_Selected)
-        {
-            return layer.m_Tiles[y][x].m_Color * glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-        }
-    }
-
-    return glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+    return m_TileLayers[m_ActiveLayer].m_Tiles[y][x];
 }
 
-void TileEditor::ToggleTile(int x, int y)
+void TileEditor::UpdateTile(int x, int y, const glm::vec4& color)
 {
-    TileLayer& activeLayer = m_TileLayers[m_ActiveLayer];
-    activeLayer.m_Tiles[x][y].m_Selected = !activeLayer.m_Tiles[x][y].m_Selected;
+    Tile& tile = m_TileLayers[m_ActiveLayer].m_Tiles[y][x];
+    tile.m_Color = color;
 
-    if (activeLayer.m_Tiles[x][y].m_Selected)
+    // Update or add the matrix if the color is not default
+    glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, -1.0f * m_ActiveLayer, y));
+    if (color != glm::vec4(0.5f, 0.5f, 0.5f, 1.0f))
     {
-        activeLayer.m_Tiles[y][x].m_Color = glm::vec4(1.0f, 0.0f, 0.0f, 1.0f);
-
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, -1.0f * m_ActiveLayer, y));
-        m_Matrices.push_back(transform);
+        auto it = std::find(m_Matrices.begin(), m_Matrices.end(), transform);
+        if (it == m_Matrices.end())
+        {
+            m_Matrices.push_back(transform);
+        }
     }
     else
     {
-        activeLayer.m_Tiles[y][x].m_Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-
-        m_Matrices.erase(std::remove_if(m_Matrices.begin(), m_Matrices.end(),
-            [x, y, this](const glm::mat4& mat) {
-                glm::vec3 position = glm::vec3(mat[3]);
-                return position.x == x && position.z == y && position.y == -1.0f * m_ActiveLayer;
-            }), m_Matrices.end());
+        // Remove matrix for default color
+        m_Matrices.erase(std::remove(m_Matrices.begin(), m_Matrices.end(), transform), m_Matrices.end());
     }
+}
+
+void TileEditor::ResetTile(int x, int y)
+{
+    Tile& tile = m_TileLayers[m_ActiveLayer].m_Tiles[y][x];
+    tile.m_Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+    // Remove matrix
+    glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(x, -1.0f * m_ActiveLayer, y));
+    m_Matrices.erase(std::remove(m_Matrices.begin(), m_Matrices.end(), transform), m_Matrices.end());
 }
 
 std::vector<glm::mat4>& TileEditor::GetMatrices()
