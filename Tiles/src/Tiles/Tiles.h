@@ -50,8 +50,8 @@ public:
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
         m_Camera.SetProjectionMatrix(45.0f, viewportSize.x / viewportSize.y, 0.1f, 100.0f);
 
-        m_Renderer.SetViewportSize(viewportSize.x, viewportSize.y);
-        m_Renderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_ShaderProgram);
+        // m_Renderer.SetViewportSize(viewportSize.x, viewportSize.y);
+        // m_Renderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_ShaderProgram);
 
         ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(viewportSize.x, viewportSize.y));
         ImGui::End();
@@ -63,7 +63,7 @@ public:
 
     virtual void OnAttach() override
     {   
-        m_TileEditor.InitEditor(10, 10, 5);
+        m_TileEditor.InitEditor(20, 20);
 
         // m_Renderer.InitWindow(900, 900); 
 
