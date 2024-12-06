@@ -50,8 +50,8 @@ public:
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
         m_Camera.SetProjectionMatrix(45.0f, viewportSize.x / viewportSize.y, 0.1f, 100.0f);
 
-        // m_Renderer.SetViewportSize(viewportSize.x, viewportSize.y);
-        // m_Renderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_ShaderProgram);
+        m_Renderer.SetViewportSize(viewportSize.x, viewportSize.y);
+        m_Renderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_TileEditor.GetTextureIndices(), m_ShaderProgram);
 
         ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(viewportSize.x, viewportSize.y));
         ImGui::End();

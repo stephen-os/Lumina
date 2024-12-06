@@ -23,7 +23,6 @@ namespace GL
         void Unbind();
 
         void ApplyAttributes(VertexAttributes& attributes);
-        void ApplyAttributesInstanced(VertexAttributes& attributes, GLuint instanceBufferID);
 
         void DrawIndexed(GLenum mode);
         void DrawInstanced(GLenum mode, int instanceCount);

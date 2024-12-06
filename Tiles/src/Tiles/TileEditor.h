@@ -28,6 +28,9 @@ public:
 
     void InitEditor(int width, int height);
     void Render();
+
+    std::vector<glm::mat4>& GetMatrices() { return m_Matrices; }
+    std::vector<int>& GetTextureIndices() { return m_TextureIndices; }
 private:
     void AddLayer(std::string name = "Layer 1");
     void DeleteLayer();
@@ -37,6 +40,8 @@ private:
     Tile& GetTile(int x, int y);
     void ResetTile(int x, int y);
     void Fill(int startX, int startY);
+
+    void UpdateMatrices();
 
 private:
     std::vector<TileLayer> m_TileLayers;
@@ -59,4 +64,5 @@ private:
     int m_TileSize = 40.0f;
 
     std::vector<glm::mat4> m_Matrices;
+    std::vector<int> m_TextureIndices;
 };

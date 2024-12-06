@@ -5,7 +5,6 @@
 
 #include "../OpenGL/VertexAttributes.h"
 #include "../OpenGL/VertexArray.h"
-#include "../OpenGL/InstanceBuffer.h"
 #include "../OpenGL/ShaderProgram.h"
 #include "../OpenGL/Texture.h"
 

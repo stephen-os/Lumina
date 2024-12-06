@@ -44,6 +44,28 @@ void TextureAtlas::Unbind() const {
     m_Texture.Unbind();
 }
 
+void TextureAtlas::BindRegion(int index) const 
+{
+    if (index < 0 || index >= static_cast<int>(m_TexCoords.size())) {
+        std::cerr << "Invalid texture index: " << index << ". Binding whole texture." << std::endl;
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        return;
+    }
+
+    glm::vec4 uv = m_TexCoords[index];
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    // Setup the texture matrix to scale the texture coordinates
+    glMatrixMode(GL_TEXTURE);
+    glLoadIdentity();
+    glTranslatef(uv.x, uv.y, 0.0f); // Offset to the start of the region
+    glScalef(uv.z - uv.x, uv.w - uv.y, 1.0f); // Scale to the size of the region
+    glMatrixMode(GL_MODELVIEW); // Return to default matrix mode
+}
+
 glm::vec4 TextureAtlas::GetTexCoords(int index) const {
     if (index < 0 || index >= static_cast<int>(m_TexCoords.size())) {
         std::cerr << "Invalid texture index: " << index << std::endl;

@@ -6,7 +6,7 @@
 namespace GL
 {
     Buffer::Buffer()
-        : m_Name("Unnamed"), m_Type(0), m_Count(0), m_Stride(0), m_ID(0) {}
+        : m_Name("Unnamed"), m_Type(0), m_Count(0), m_Stride(0), m_IsInstance(false), m_ID(0) {}
 
     Buffer::~Buffer()
     {
@@ -16,17 +16,19 @@ namespace GL
     // Copy constructor: Copies member variables and OpenGL state.
     Buffer::Buffer(const Buffer& other)
         : m_Name(other.m_Name), m_Type(other.m_Type), m_Count(other.m_Count),
-        m_Stride(other.m_Stride), m_ID(other.m_ID) {}
+        m_Stride(other.m_Stride), m_Size(other.m_Size), m_IsInstance(other.m_IsInstance), m_ID(other.m_ID) {}
 
     // Move constructor: Transfers ownership of OpenGL resources.
     Buffer::Buffer(Buffer&& other) noexcept
         : m_Name(std::move(other.m_Name)), m_Type(other.m_Type), m_Count(other.m_Count),
-        m_Stride(other.m_Stride), m_ID(other.m_ID)
+        m_Stride(other.m_Stride), m_Size(other.m_Size), m_IsInstance(other.m_IsInstance), m_ID(other.m_ID)
     {
         other.m_Name = "Unnamed";
         other.m_Type = 0;
         other.m_Count = 0;
         other.m_Stride = 0;
+        other.m_Size = 0;
+        other.m_IsInstance = false;
         other.m_ID = 0;
     }
 
@@ -39,6 +41,8 @@ namespace GL
             m_Type = other.m_Type;
             m_Count = other.m_Count;
             m_Stride = other.m_Stride;
+            m_Size = other.m_Size;
+            m_IsInstance = other.m_IsInstance;
             m_ID = other.m_ID;
         }
         return *this;
@@ -79,25 +83,35 @@ namespace GL
     }
 
     // Sets buffer data and uploads it to the GPU.
-    void Buffer::SetData(GLuint type, const void* data, int count, int stride, GLenum usage)
+    void Buffer::SetData(GLuint type, const void* data, int size, int count, int stride, bool isInstance, GLenum usage)
     {
         m_Type = type;
         m_Count = count;
         m_Stride = stride;
+        m_Size = size; 
+        m_IsInstance = isInstance;
 
         Init();
         Bind();
 
-        // Calculate size based on buffer type.
-        if (type == GL_ELEMENT_ARRAY_BUFFER)
+        GLCALL(glBufferData(type, count * size, data, usage));
+        
+        Unbind();
+    }
+
+    void Buffer::UpdateBuffer(const void* data, int count, GLenum usage)
+    {
+        if (m_ID == 0)
         {
-            GLCALL(glBufferData(type, count * sizeof(unsigned int), data, usage));
+            std::cerr << "Buffer not initialized. Call Init() before updating data.\n";
+            return;
         }
-        else
-        {
-            GLCALL(glBufferData(type, count * sizeof(float), data, usage));
-        }
+
+        Bind();
+
+        glBufferData(m_Type, count * m_Size, data, usage);
 
         Unbind();
     }
 }
+

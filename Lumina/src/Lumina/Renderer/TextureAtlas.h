@@ -17,13 +17,13 @@ public:
 
     void Bind() const;
     void Unbind() const;
+    void BindRegion(int index) const; // New function to bind a region of the texture
 
     int GetGridWidth() const { return m_GridWidth; }
 	int GetGridHeight() const { return m_GridHeight; }
 
     unsigned int GetTextureID() { return m_Texture.GetID(); }
-    glm::vec4 GetTexCoords(int index) const; // Returns texture coordinates for a specific tile
-
+    glm::vec4 GetTexCoords(int index) const;
 private:
     GL::Texture m_Texture;
     int m_GridWidth;  // Number of textures along the width

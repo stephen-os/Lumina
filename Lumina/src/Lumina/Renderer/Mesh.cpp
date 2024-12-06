@@ -7,8 +7,8 @@
 
 Mesh::Mesh(MeshData& data)
 { 
-    m_VertexAttributes.AddVertices("a_Position", 0, data.vertices, data.vertexCount * 3, 3);
-    m_VertexAttributes.AddVertices("a_Normal", 1, data.normals, data.vertexCount * 3, 3);
+    m_VertexAttributes.AddBuffer("a_Position", 0, data.vertices, sizeof(float), data.vertexCount * 3, 3, false);
+    m_VertexAttributes.AddBuffer("a_Normal", 1, data.normals, sizeof(float), data.vertexCount * 3, 3, false);
     m_VertexAttributes.AddIndices(data.indices, data.indicesCount);
 
     m_Transform = data.transform; 

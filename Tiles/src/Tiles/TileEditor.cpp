@@ -6,6 +6,8 @@
 
 #include "imgui.h"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 TileEditor::TileEditor()
     : m_Width(0), m_Height(0), m_NumLayers(0), m_ActiveLayer(0), m_EraserMode(false), m_FillMode(false),
     m_Opacity(1.0f), m_SelectedTextureIndex(-1) {}
@@ -33,6 +35,8 @@ void TileEditor::LoadTextures()
 
 void TileEditor::Render()
 {
+    UpdateMatrices();
+
     ImGui::Begin("Tile Editor", nullptr, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
     // Eraser tool.
@@ -314,6 +318,31 @@ void TileEditor::Fill(int startX, int startY)
 
             // Push the adjacent tile to the queue
             tileQueue.push({ newX, newY });
+        }
+    }
+}
+
+void TileEditor::UpdateMatrices()
+{
+    m_Matrices.clear();
+    m_TextureIndices.clear();
+
+    for (int layer = 0; layer < m_NumLayers; ++layer)
+    {
+        for (int y = 0; y < m_Height; ++y)
+        {
+            for (int x = 0; x < m_Width; ++x)
+            {
+                Tile& tile = m_TileLayers[layer].m_Tiles[y][x];
+                if (tile.m_UseTexture)
+                {
+                    glm::mat4 translation = glm::translate(glm::mat4(1.0f), 
+                        glm::vec3(x, y, static_cast<float>(layer)));
+
+                    m_Matrices.push_back(translation);
+                    m_TextureIndices.push_back(tile.m_TextureIndex);
+                }
+            }
         }
     }
 }

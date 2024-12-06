@@ -76,60 +76,45 @@ namespace GL
 
         for (auto& [location, buffer] : attributes)
         {
-            buffer.Bind();
-            glVertexAttribPointer(location, buffer.GetStride(), GL_FLOAT, GL_FALSE, buffer.GetStride() * sizeof(float), nullptr);
-            glEnableVertexAttribArray(location);
+            if (buffer.IsInstance())
+			{
+                std::cout << "Instance buffer: " << buffer.GetName() << std::endl;
+                buffer.Bind();
+                const int instanceSize = buffer.GetSize();
+                for (int i = 0; i < buffer.GetCount(); ++i)
+                {
+                    int instanceLocation = location + i;
+                    glEnableVertexAttribArray(instanceLocation);
+                    glVertexAttribPointer(instanceLocation, buffer.GetStride(), GL_FLOAT, GL_FALSE, instanceSize, (void*)(sizeof(float) * i * buffer.GetStride()));
+                    glVertexAttribDivisor(instanceLocation, 1);
+                }
+                buffer.Unbind();
+			}
+            else
+            {
+                buffer.Bind();
+                glVertexAttribPointer(location, buffer.GetStride(), GL_FLOAT, GL_FALSE, buffer.GetStride() * sizeof(float), nullptr);
+                glEnableVertexAttribArray(location);
+                buffer.Unbind();
+            }
         }
 
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
 
-        if (attributes.GetInstanceBufferID() != 0)
+        /*
+        glBindBuffer(GL_ARRAY_BUFFER, attributes.GetBufferID(3));
+        const int instanceSize = sizeof(glm::mat4);
+
+        std::cout << "Instance size: " << instanceSize << std::endl;
+
+        for (int i = 0; i < 4; ++i)
         {
-            glBindBuffer(GL_ARRAY_BUFFER, attributes.GetInstanceBufferID());
-            const int instanceSize = sizeof(glm::mat4);
-
-            for (int i = 0; i < 4; ++i)
-            {
-                int instanceLocation = attributes.GetInstanceBuffer().GetLocation() + i;
-                glEnableVertexAttribArray(instanceLocation);
-                glVertexAttribPointer(instanceLocation, 4, GL_FLOAT, GL_FALSE, instanceSize, (void*)(sizeof(float) * i * 4));
-                glVertexAttribDivisor(instanceLocation, 1);
-            }
+            int instanceLocation = 3 + i;
+            glEnableVertexAttribArray(instanceLocation);
+            glVertexAttribPointer(instanceLocation, 4, GL_FLOAT, GL_FALSE, instanceSize, (void*)(sizeof(float) * i * 4));
+            glVertexAttribDivisor(instanceLocation, 1);
         }
-
-        Unbind();
-    }
-
-    void VertexArray::ApplyAttributesInstanced(VertexAttributes& attributes, GLuint instanceBufferID)
-    {
-        Destroy();
-
-        m_IndexCount = attributes.GetIndexCount();
-        glGenVertexArrays(1, &m_VertexArrayID);
-        glBindVertexArray(m_VertexArrayID);
-
-        for (auto& [location, buffer] : attributes)
-        {
-            buffer.Bind();
-            glVertexAttribPointer(location, buffer.GetStride(), GL_FLOAT, GL_FALSE, buffer.GetStride() * sizeof(float), nullptr);
-            glEnableVertexAttribArray(location);
-        }
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, attributes.GetIndexBufferID());
-
-        if (instanceBufferID != 0)
-        {
-            glBindBuffer(GL_ARRAY_BUFFER, instanceBufferID);
-            const int instanceSize = sizeof(glm::mat4);
-
-            for (int i = 0; i < 4; ++i)
-            {
-                glEnableVertexAttribArray(i);
-                glVertexAttribPointer(i, 4, GL_FLOAT, GL_FALSE, instanceSize, (void*)(sizeof(float) * i * 4));
-                glVertexAttribDivisor(i, 1);
-            }
-        }
-
+        */
         Unbind();
     }
 

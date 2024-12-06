@@ -35,9 +35,12 @@ namespace GL
 
         // Unbinds the currently bound buffer from the target.
         void Unbind() const;
+        
+        // Sets the name of the buffer, typically used for identification or debugging purposes.
+        void SetName (const std::string& name) { m_Name = name; }
 
         // Retrieves the buffer's name, typically used for identification or debugging purposes.
-        std::string GetBufferName() const { return m_Name; }
+        std::string GetName() const { return m_Name; }
 
         // Retrieves the stride of the data in the buffer (e.g., the size of each vertex attribute).
         unsigned int GetStride() const { return m_Stride; }
@@ -45,8 +48,12 @@ namespace GL
         // Retrieves the number of elements stored in the buffer.
         unsigned int GetCount() const { return m_Count; }
 
+        int GetSize() const { return m_Size; }
+
         // Retrieves the OpenGL ID of the buffer, which uniquely identifies it within the GPU.
         unsigned int GetID() const { return m_ID; }
+
+        bool IsInstance() const { return m_IsInstance; }
 
         // Uploads data to the GPU buffer. 
         // - `type`: Specifies the buffer type (e.g., GL_ARRAY_BUFFER, GL_ELEMENT_ARRAY_BUFFER).
@@ -54,13 +61,20 @@ namespace GL
         // - `count`: Number of elements in the data array.
         // - `stride`: Size (in bytes) of a single data element.
         // - `usage`: OpenGL usage hint (e.g., GL_STATIC_DRAW, GL_DYNAMIC_DRAW).
-        void SetData(GLuint type, const void* data, int count, int stride, GLenum usage = GL_STATIC_DRAW);
+        void SetData(GLuint type, const void* data, int size, int count, int stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
 
+        // Updates part of the buffer data.
+        // - `offset`: Byte offset in the buffer where the update should begin.
+        // - `data`: Pointer to the new data to upload.
+        // - `size`: Size (in bytes) of the data to upload.
+        void UpdateBuffer(const void* data, int count, GLenum usage = GL_STATIC_DRAW);
     private:
         std::string m_Name;    // Optional identifier for the buffer.
         GLuint m_Type;         // Type of buffer (e.g., GL_ARRAY_BUFFER).
         int m_Count;           // Number of elements stored in the buffer.
         int m_Stride;          // Size of a single element in bytes.
+        int m_Size;            // Size of the buffer in bytes.
+        bool m_IsInstance;     // Indicates if the buffer is used for instancing.
         GLuint m_ID;           // OpenGL identifier for the buffer.
     };
 }

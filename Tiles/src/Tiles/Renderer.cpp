@@ -1,7 +1,6 @@
 #include "Renderer.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
-#include "Lumina/Geometry/Cube.h"
 
 Renderer::Renderer()
 {
@@ -16,7 +15,7 @@ Renderer::Renderer()
     m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }
 
-void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, GL::ShaderProgram& shader)
+void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<int>& textureIndices, GL::ShaderProgram& shader)
 {
     m_Texture.Bind();
     m_DepthBuffer.Bind();
@@ -29,7 +28,11 @@ void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, GL::Sh
     shader.SetUniformMatrix4fv("u_View", camera.GetViewMatrix());
     shader.SetUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
 
-    cube.Draw(shader, transforms);
+    for (size_t i = 0; i < transforms.size(); i++)
+    {
+        shader.SetUniformMatrix4fv("u_Transform", transforms[i]);
+        m_TileObject.Draw(shader, textureIndices[i]);
+    }
 
     shader.Unbind();
 
