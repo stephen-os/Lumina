@@ -30,7 +30,7 @@ public:
     void Render();
 
     std::vector<glm::mat4>& GetMatrices() { return m_Matrices; }
-    std::vector<int>& GetTextureIndices() { return m_TextureIndices; }
+    std::vector<glm::vec2>& GetOffsets() { return m_Offsets; }
 private:
     void AddLayer(std::string name = "Layer 1");
     void DeleteLayer();
@@ -64,5 +64,5 @@ private:
     int m_TileSize = 40.0f;
 
     std::vector<glm::mat4> m_Matrices;
-    std::vector<int> m_TextureIndices;
+    std::vector<glm::vec2> m_Offsets;
 };

@@ -24,6 +24,7 @@ public:
 
     unsigned int GetTextureID() { return m_Texture.GetID(); }
     glm::vec4 GetTexCoords(int index) const;
+    glm::vec2 GetOffset(int index) const;
 private:
     GL::Texture m_Texture;
     int m_GridWidth;  // Number of textures along the width

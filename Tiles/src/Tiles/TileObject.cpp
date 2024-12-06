@@ -17,18 +17,18 @@ void TileObject::InitializeGeometry() {
 
     m_VertexArray.ApplyAttributes(m_Attributes);
 
-    m_TextureAtlas.SetData("res/texture/atlas.jpg", 4, 4);
+    m_Texture.SetData("res/texture/atlas.jpg");
 }
 
-void TileObject::Draw(GL::ShaderProgram& shader, int textureIndex) 
+void TileObject::Draw(GL::ShaderProgram& shader) 
 {
     m_VertexArray.Bind();
 
-    m_TextureAtlas.Bind();
+    m_Texture.Bind();
 
     m_VertexArray.DrawIndexed(GL_TRIANGLES);
 
-    m_TextureAtlas.Unbind();
+    m_Texture.Unbind();
 
     m_VertexArray.Unbind();
 }

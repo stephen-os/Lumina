@@ -325,7 +325,7 @@ void TileEditor::Fill(int startX, int startY)
 void TileEditor::UpdateMatrices()
 {
     m_Matrices.clear();
-    m_TextureIndices.clear();
+    m_Offsets.clear();
 
     for (int layer = 0; layer < m_NumLayers; ++layer)
     {
@@ -340,7 +340,7 @@ void TileEditor::UpdateMatrices()
                         glm::vec3(x, y, static_cast<float>(layer)));
 
                     m_Matrices.push_back(translation);
-                    m_TextureIndices.push_back(tile.m_TextureIndex);
+                    m_Offsets.push_back(m_Atlas.GetOffset(tile.m_TextureIndex));
                 }
             }
         }

@@ -2,6 +2,8 @@
 
 #include "Lumina/OpenGL/GLUtils.h"
 
+#include <glm/glm.hpp>
+
 Renderer::Renderer()
 {
     GLCALL(glEnable(GL_DEPTH_TEST));
@@ -15,7 +17,7 @@ Renderer::Renderer()
     m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }
 
-void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<int>& textureIndices, GL::ShaderProgram& shader)
+void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
 {
     m_Texture.Bind();
     m_DepthBuffer.Bind();
@@ -27,11 +29,13 @@ void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::v
     shader.Bind();
     shader.SetUniformMatrix4fv("u_View", camera.GetViewMatrix());
     shader.SetUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+    shader.SetUniform1f("u_NumberOfRows", 4.0f);
 
     for (size_t i = 0; i < transforms.size(); i++)
     {
         shader.SetUniformMatrix4fv("u_Transform", transforms[i]);
-        m_TileObject.Draw(shader, textureIndices[i]);
+        shader.SetUniform2fv("u_Offset", offsets[i]);
+        m_TileObject.Draw(shader);
     }
 
     shader.Unbind();

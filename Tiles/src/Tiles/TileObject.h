@@ -42,16 +42,16 @@ class TileObject {
 public:
     TileObject();
 
-    void Draw(GL::ShaderProgram& shader, int textureIndex);
+    void Draw(GL::ShaderProgram& shader);
     GL::VertexAttributes& GetAttributes() { return m_Attributes; }
 private:
     void InitializeGeometry();
 private:
     GL::VertexArray m_VertexArray;
     GL::VertexAttributes m_Attributes;
+    GL::Texture m_Texture;
 
     Transform m_Transform;
-    TextureAtlas m_TextureAtlas;
 
     int m_InstanceCount = 0;
 };

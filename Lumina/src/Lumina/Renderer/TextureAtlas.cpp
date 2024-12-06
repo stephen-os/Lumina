@@ -73,3 +73,14 @@ glm::vec4 TextureAtlas::GetTexCoords(int index) const {
     }
     return m_TexCoords[index];
 }
+
+glm::vec2 TextureAtlas::GetOffset(int index) const {
+    int row = index / m_GridWidth;
+    int col = index % m_GridWidth;
+
+    // Calculate the offset in terms of the texture's grid spacing (UV space)
+    float xOffset = col * m_TexWidth;
+    float yOffset = row * m_TexHeight;
+
+    return glm::vec2(xOffset, yOffset);
+}
