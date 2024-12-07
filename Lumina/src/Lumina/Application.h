@@ -22,6 +22,7 @@ namespace Lumina
 		std::string Name = "Lumina App";
 		uint32_t Width = 1600;
 		uint32_t Height = 900;
+		bool Fullscreen = false;
 	};
 
 	class Application
@@ -40,7 +41,8 @@ namespace Lumina
 			m_LayerStack.emplace_back(std::make_shared<T>())->OnAttach();
 		}
 
-		void ApplyDarkTheme(); 
+		void ApplyDarkTheme();
+		void SetWindowFullscreen();
 
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:

@@ -31,6 +31,11 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(1);
 
+    if (m_Specifications.Fullscreen)
+    {
+        SetWindowFullscreen();
+    }
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) 
     {
         std::cerr << "[GLAD ERROR]\n";
@@ -182,4 +187,21 @@ void Lumina::Application::ApplyDarkTheme()
         style.WindowRounding = 0.0f; // Disable rounding for additional platform windows
         colors[ImGuiCol_WindowBg].w = 1.0f; // Fully opaque background
     }
+}
+
+void Lumina::Application::SetWindowFullscreen()
+{
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    if (!monitor) return;
+
+    // Get the monitor's video mode
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    // Set the window to fullscreen
+    // glfwSetWindowMonitor(m_Window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
+
+    glfwSetWindowAttrib(m_Window, GLFW_DECORATED, GLFW_FALSE); // Remove borders
+    glfwSetWindowAttrib(m_Window, GLFW_RESIZABLE, GLFW_FALSE); // Disable resizing
+    glfwSetWindowPos(m_Window, 0, 0);                         // Position at the top-left corner
+    glfwSetWindowSize(m_Window, mode->width, mode->height);   // Match monitor resolution
 }
