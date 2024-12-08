@@ -19,6 +19,13 @@ TileRenderer::TileRenderer()
     m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }
 
+TileRenderer::~TileRenderer()
+{
+    m_DepthBuffer.Destroy();
+    m_FrameBuffer.Destroy();
+    m_Texture.Destroy();
+}
+
 void TileRenderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
 {
     ImGui::Begin("Scene View");

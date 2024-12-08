@@ -18,7 +18,7 @@ class TileRenderer
 {
 public:
 	TileRenderer();
-	~TileRenderer() = default;
+	~TileRenderer();
 
 	void Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& program);
 	void SetViewportSize(const float width, const float height);

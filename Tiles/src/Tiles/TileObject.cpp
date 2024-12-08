@@ -5,6 +5,13 @@ TileObject::TileObject()
     InitializeGeometry();
 }
 
+TileObject::~TileObject()
+{
+    m_VertexArray.Destroy();
+    m_Attributes.Destroy();
+    m_Texture.Destroy();
+}
+
 void TileObject::InitializeGeometry() {
     TileData tileData;
 

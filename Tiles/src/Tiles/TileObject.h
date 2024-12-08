@@ -42,6 +42,7 @@ struct TileData
 class TileObject {
 public:
     TileObject();
+    ~TileObject();
 
     void Draw(GL::ShaderProgram& shader);
     GL::VertexAttributes& GetAttributes() { return m_Attributes; }

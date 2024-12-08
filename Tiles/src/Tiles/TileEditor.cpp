@@ -11,8 +11,12 @@
 #include "TileObject.h"
 
 TileEditor::TileEditor()
-    : m_Width(0), m_Height(0), m_NumLayers(0), m_ActiveLayer(0), m_EraserMode(false), 
-    m_FillMode(false), m_Opacity(1.0f), m_SelectedTextureIndex(-1) {}
+    : m_NumLayers(0), m_ActiveLayer(0), 
+    m_Width(0), m_Height(0), m_Padding(0.0), m_TileSize(0.0),
+    m_EraserMode(false), m_FillMode(false), m_Opacity(1.0f), m_SelectedTextureIndex(-1) 
+{
+    InitEditor(20, 20);
+}
 
 TileEditor::~TileEditor()
 {
@@ -21,9 +25,12 @@ TileEditor::~TileEditor()
 
 void TileEditor::InitEditor(int width, int height)
 {
+    m_NumLayers = 1; 
+
     m_Width = width;
     m_Height = height;
-    m_NumLayers = 1; 
+    m_Padding = 0.0f;
+    m_TileSize = 40.0f;
 
     AddLayer();
 
@@ -44,7 +51,7 @@ void TileEditor::Render()
     ImGui::Checkbox("Eraser Mode", &m_EraserMode);
 
     // FillLayer tool. 
-    ImGui::Checkbox("FillLayer Mode", &m_FillMode);
+    ImGui::Checkbox("Fill Mode", &m_FillMode);
 
     // Texture selection buttons
     ImGui::Text("Textures:");

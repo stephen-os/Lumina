@@ -8,8 +8,8 @@
 struct Tile
 {
     glm::vec4 m_Color;
-    bool m_UseTexture; // Whether the tile uses a texture
-    float m_Opacity;   // Blend factor for color and texture (0.0f to 1.0f)
+    bool m_UseTexture;  // Whether the tile uses a texture
+    float m_Opacity;    // Blend factor for color and texture (0.0f to 1.0f)
     int m_TextureIndex; // Index into the texture atlas
 };
 
@@ -42,25 +42,26 @@ private:
 
     void UpdateMatrices();
 private:
-    std::vector<TileLayer> m_TileLayers;
-    size_t m_NumLayers;
-    int m_ActiveLayer;
-
-    // Flags
-    bool m_EraserMode;
-    bool m_FillMode;
-
-    float m_Opacity;
-
     TextureAtlas m_Atlas;
-    int m_SelectedTextureIndex;
+
+    // Tile Layer Settings
+    std::vector<TileLayer> m_TileLayers;
+    int m_NumLayers;
+    int m_ActiveLayer;
 
     // Tile Settings
     int m_Width;
     int m_Height;
-    int m_Padding = 0.0f;
-    int m_TileSize = 40.0f;
+    int m_Padding;
+    int m_TileSize;
 
+    // Flags/Attributes
+    bool m_EraserMode;
+    bool m_FillMode;
+    float m_Opacity;
+    int m_SelectedTextureIndex;
+
+    // Render Data
     std::vector<glm::mat4> m_Matrices;
     std::vector<glm::vec2> m_Offsets;
 };

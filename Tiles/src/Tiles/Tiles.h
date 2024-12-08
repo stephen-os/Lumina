@@ -56,8 +56,6 @@ public:
 
     virtual void OnAttach() override
     {   
-        m_TileEditor.InitEditor(20, 20);
-
         std::string vertex = Lumina::ReadFile("res/shaders/world.vert");
         std::string fragment = Lumina::ReadFile("res/shaders/world.frag");
         m_ShaderProgram.SetSource(vertex, fragment); 
