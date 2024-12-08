@@ -1,16 +1,18 @@
 #include "TileEditor.h"
+
 #include <string>
 #include <iostream>
-#include <stb_image.h> // Assumes stb_image is used for loading textures
 #include <queue>
 
 #include "imgui.h"
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "TileObject.h"
+
 TileEditor::TileEditor()
-    : m_Width(0), m_Height(0), m_NumLayers(0), m_ActiveLayer(0), m_EraserMode(false), m_FillMode(false),
-    m_Opacity(1.0f), m_SelectedTextureIndex(-1) {}
+    : m_Width(0), m_Height(0), m_NumLayers(0), m_ActiveLayer(0), m_EraserMode(false), 
+    m_FillMode(false), m_Opacity(1.0f), m_SelectedTextureIndex(-1) {}
 
 TileEditor::~TileEditor()
 {
@@ -30,20 +32,19 @@ void TileEditor::InitEditor(int width, int height)
 
 void TileEditor::LoadTextures()
 {
+    // Need a check here to check if there is a texture loaded. 
     m_Atlas.SetData("res/texture/atlas.jpg", 4, 4);
 }
 
 void TileEditor::Render()
 {
-    UpdateMatrices();
-
     ImGui::Begin("Tile Editor", nullptr, ImGuiWindowFlags_AlwaysVerticalScrollbar);
 
     // Eraser tool.
     ImGui::Checkbox("Eraser Mode", &m_EraserMode);
 
-    // Fill tool. 
-    ImGui::Checkbox("Fill Mode", &m_FillMode);
+    // FillLayer tool. 
+    ImGui::Checkbox("FillLayer Mode", &m_FillMode);
 
     // Texture selection buttons
     ImGui::Text("Textures:");
@@ -52,12 +53,9 @@ void TileEditor::Render()
     for (int y = 0; y < m_Atlas.GetGridHeight(); ++y) {
         for (int x = 0; x < m_Atlas.GetGridWidth(); ++x) {
             int index = y * m_Atlas.GetGridWidth() + x;
-
-            // Get the texture coordinates for this tile
             glm::vec4 texCoords = m_Atlas.GetTexCoords(index);
 
-            // Define button size based on window size and grid size
-            ImVec2 buttonSize(100, 100);  // Set the button size (can adjust based on window size)
+            ImVec2 buttonSize(100, 100);
             ImVec2 xy = ImVec2(texCoords.x, texCoords.y);
             ImVec2 zw = ImVec2(texCoords.z, texCoords.w);
 
@@ -70,16 +68,19 @@ void TileEditor::Render()
                 ImGui::GetWindowDrawList()->AddRect(min, max, IM_COL32(169, 169, 169, 255), 3.0f, 0, 1.5f);
             }
 
-            if (ImGui::IsItemClicked()) {
+            if (ImGui::IsItemClicked())
+            {
                 m_SelectedTextureIndex = index;
-                std::cout << "Selected texture index: " << index << std::endl;
             }
 
-            if (index != 7) {
+            // 4 buttons per row
+            if ((index + 1) % 7 != 0)
+            {
                 ImGui::SameLine();
             }
         }
     }
+
     ImGui::EndChild();
 
     // Opacity slider
@@ -87,119 +88,112 @@ void TileEditor::Render()
 
     // Layer selector and management
     ImGui::Text("Layers:");
-    std::vector<std::string> layerNames(m_TileLayers.size());
-    for (int i = 0; i < m_TileLayers.size(); ++i)
-    {
-        layerNames[i] = m_TileLayers[i].m_Name;
+    std::vector<const char*> layerNames;
+    layerNames.reserve(m_TileLayers.size());
+    for (const auto& layer : m_TileLayers) {
+        layerNames.push_back(layer.m_Name.c_str());
     }
-    std::vector<const char*> cLayerNames;
-    for (const auto& name : layerNames)
-    {
-        cLayerNames.push_back(name.c_str());
-    }
-    ImGui::Combo("Active Layer", &m_ActiveLayer, cLayerNames.data(), static_cast<int>(cLayerNames.size()));
+    ImGui::Combo("Active Layer", &m_ActiveLayer, layerNames.data(), static_cast<int>(layerNames.size()));
 
     // Add Layer Button
     if (ImGui::Button("Add Layer"))
-    {
         AddLayer("Layer " + std::to_string(m_NumLayers + 1));
-    }
 
     ImGui::SameLine();
 
     // Delete Layer Button
     if (ImGui::Button("Delete Layer"))
-    {
         DeleteLayer();
-    }
 
     ImGui::SameLine();
 
     // Clear Layer Button
     if (ImGui::Button("Clear Layer"))
-    {
         ClearLayer();
-    }
 
     ImGui::Separator();
 
     // Editable layer name field
-    TileLayer& activeLayer = m_TileLayers[m_ActiveLayer]; // Get the active layer reference
+    TileLayer& activeLayer = m_TileLayers[m_ActiveLayer];
     char layerNameBuffer[128];
     strncpy(layerNameBuffer, activeLayer.m_Name.c_str(), sizeof(layerNameBuffer) - 1);
-    layerNameBuffer[sizeof(layerNameBuffer) - 1] = '\0'; // Ensure null-termination
+    layerNameBuffer[sizeof(layerNameBuffer) - 1] = '\0';
 
     // ImGui input text for editable layer name
     if (ImGui::InputText("Layer Name", layerNameBuffer, sizeof(layerNameBuffer)))
     {
-        activeLayer.m_Name = std::string(layerNameBuffer); // Update layer name
+        activeLayer.m_Name = std::string(layerNameBuffer);
     }
 
     ImGui::Separator();
 
     // Render tiles
-    float childWidth = m_Width * (m_TileSize + m_Padding) + 15;  // Total width of all tiles
-    float childHeight = m_Height * (m_TileSize + m_Padding) + 15; // Total height of all tiles
-
+    float childWidth = m_Width * (m_TileSize + m_Padding) + 15;
+    float childHeight = m_Height * (m_TileSize + m_Padding) + 15;
     ImGui::BeginChild("RenderTiles", ImVec2(childWidth, childHeight), true, 0);
-    // ImGui::Dummy(ImVec2(childWidth, childHeight));
-
+    
     ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-    for (int y = 0; y < m_Height; ++y)
+    for (int y = 0; y < m_Height; y++)
     {
-        for (int x = 0; x < m_Width; ++x)
+        for (int x = 0; x < m_Width; x++)
         {
             ImGui::PushID(y * m_Width + x);
 
             Tile& tile = GetTile(x, y);
-            ImVec2 tileMin = ImVec2(cursorPos.x + x * (m_TileSize + m_Padding),
-                cursorPos.y + y * (m_TileSize + m_Padding));
+            float offset = m_TileSize + m_Padding;
+            ImVec2 tileMin = ImVec2(cursorPos.x + x * offset, cursorPos.y + y * offset);
             ImVec2 tileMax = ImVec2(tileMin.x + m_TileSize, tileMin.y + m_TileSize);
 
             // Mouse interaction for painting
             if (ImGui::IsMouseHoveringRect(tileMin, tileMax) && ImGui::IsMouseDown(0))
             {
                 tile.m_Opacity = m_Opacity;
-                // Texture
+
                 if (m_FillMode)
                 {
-                    std::cout << "Filling tile at (" << x << ", " << y << ")\n";
-                    Fill(x, y);
+                    FillLayer(x, y);
                 }
 
                 if (m_SelectedTextureIndex >= 0)
                 {
-                    std::cout << "Painting tile at (" << x << ", " << y << ")\n";
                     tile.m_UseTexture = true;
                     tile.m_TextureIndex = m_SelectedTextureIndex;
                 }
+
+                UpdateMatrices();
             }
 
             // Draw the tile
             if (tile.m_UseTexture && tile.m_TextureIndex >= 0)
             {
+                intptr_t textureID = (intptr_t)m_Atlas.GetTextureID();
+
                 glm::vec4 texCoords = m_Atlas.GetTexCoords(tile.m_TextureIndex);
                 ImVec2 xy = ImVec2(texCoords.x, texCoords.y);
                 ImVec2 zw = ImVec2(texCoords.z, texCoords.w);
 
-                ImGui::GetWindowDrawList()->AddImage(
-                    (void*)(intptr_t)m_Atlas.GetTextureID(), tileMin, tileMax,
-                    xy, zw,
-                    IM_COL32(
-                        static_cast<int>(tile.m_Opacity * 255),
-                        static_cast<int>(tile.m_Opacity * 255),
-                        static_cast<int>(tile.m_Opacity * 255),
-                        255));
+                const int r = static_cast<int>(tile.m_Opacity * 255);
+                const int g = static_cast<int>(tile.m_Opacity * 255);
+                const int b = static_cast<int>(tile.m_Opacity * 255);
+                const int a = 255;
+
+                const ImU32 color = IM_COL32(r, g, b, a); 
+
+                ImGui::GetWindowDrawList()->AddImage((void*)textureID, tileMin, tileMax, xy, zw, color);
             }
             else
             {
-                ImGui::GetWindowDrawList()->AddRectFilled(
-                    tileMin, tileMax,
-                    ImGui::ColorConvertFloat4ToU32(
-                        ImVec4(tile.m_Color.r, tile.m_Color.g, tile.m_Color.b, tile.m_Color.a)));
-            }
-            ImGui::GetWindowDrawList()->AddRect(tileMin, tileMax, IM_COL32(169, 169, 169, 255));
+                const float r = tile.m_Color.r;
+                const float g = tile.m_Color.g;
+                const float b = tile.m_Color.b;
+                const float a = tile.m_Color.a;
 
+				const ImU32 color = ImGui::ColorConvertFloat4ToU32(ImVec4(r, g, b, a));
+
+                ImGui::GetWindowDrawList()->AddRectFilled(tileMin, tileMax, color);
+            }
+
+            ImGui::GetWindowDrawList()->AddRect(tileMin, tileMax, IM_COL32(169, 169, 169, 255));
             ImGui::PopID();
         }
     }
@@ -207,7 +201,6 @@ void TileEditor::Render()
 
     ImGui::End();
 }
-
 
 // Add a new layer
 void TileEditor::AddLayer(std::string name)
@@ -221,7 +214,6 @@ void TileEditor::AddLayer(std::string name)
         {
             Tile& tile = layer.m_Tiles[y][x];
             tile.m_Color = glm::vec4(0.5f, 0.5f, 0.5f, 1.0f);
-            tile.m_Selected = false;
             tile.m_UseTexture = false;
             tile.m_Opacity = 1.0f;
             tile.m_TextureIndex = -1; 
@@ -229,7 +221,7 @@ void TileEditor::AddLayer(std::string name)
     }
     m_TileLayers.push_back(layer);
     m_NumLayers = static_cast<int>(m_TileLayers.size());
-    m_ActiveLayer = m_NumLayers - 1; // Set to the newly added layer
+    m_ActiveLayer = m_NumLayers - 1;
 }
 
 void TileEditor::DeleteLayer()
@@ -246,6 +238,8 @@ void TileEditor::DeleteLayer()
             m_ActiveLayer = m_NumLayers - 1;
         }
     }
+
+    UpdateMatrices();
 }
 
 void TileEditor::ClearLayer()
@@ -257,6 +251,8 @@ void TileEditor::ClearLayer()
 			ResetTile(x, y);
         }
     }
+
+    UpdateMatrices();
 }
 
 Tile& TileEditor::GetTile(int x, int y)
@@ -273,24 +269,19 @@ void TileEditor::ResetTile(int x, int y)
     tile.m_TextureIndex = -1;
 }
 
-void TileEditor::Fill(int startX, int startY)
+void TileEditor::FillLayer(int x, int y)
 {
-    // Ensure the starting tile is within bounds
-    if (startX < 0 || startX >= m_Width || startY < 0 || startY >= m_Height)
+    if (x < 0 || x >= m_Width || y < 0 || y >= m_Height)
         return;
 
-    // Get the texture index of the starting tile
-    int originalTextureIndex = m_TileLayers[m_ActiveLayer].m_Tiles[startY][startX].m_TextureIndex;
+    int originalTextureIndex = m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_TextureIndex;
 
-    // If the original texture index is the same as the new one, no filling is needed
     if (originalTextureIndex == m_SelectedTextureIndex)
         return;
 
-    // Queue for breadth-first search (BFS)
     std::queue<std::pair<int, int>> tileQueue;
-    tileQueue.push({ startX, startY });
+    tileQueue.push({ x, y });
 
-    // Directions: right, down, left, up (adjacent tiles)
     const std::vector<std::pair<int, int>> directions = { {1, 0}, {0, 1}, {-1, 0}, {0, -1} };
 
     while (!tileQueue.empty())
@@ -298,25 +289,19 @@ void TileEditor::Fill(int startX, int startY)
         auto [x, y] = tileQueue.front();
         tileQueue.pop();
 
-        // Skip if out of bounds or already processed
         if (x < 0 || x >= m_Width || y < 0 || y >= m_Height)
             continue;
 
-        // Skip if the texture is not the original one
         if (m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_TextureIndex != originalTextureIndex)
             continue;
 
-        // Update the texture of the current tile
         m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_TextureIndex = m_SelectedTextureIndex;
         m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_UseTexture = true;
 
-        // Enqueue adjacent tiles if they have the same texture index
         for (const auto& direction : directions)
         {
             int newX = x + direction.first;
             int newY = y + direction.second;
-
-            // Push the adjacent tile to the queue
             tileQueue.push({ newX, newY });
         }
     }
@@ -336,9 +321,7 @@ void TileEditor::UpdateMatrices()
                 Tile& tile = m_TileLayers[layer].m_Tiles[y][x];
                 if (tile.m_UseTexture)
                 {
-                    glm::mat4 translation = glm::translate(glm::mat4(1.0f), 
-                        glm::vec3(x, y, static_cast<float>(layer)));
-
+                    glm::mat4 translation = glm::translate(glm::mat4(1.0f),  glm::vec3(x, y, layer));
                     m_Matrices.push_back(translation);
                     m_Offsets.push_back(m_Atlas.GetOffset(tile.m_TextureIndex));
                 }

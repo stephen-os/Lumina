@@ -1,10 +1,12 @@
-#include "Renderer.h"
+#include "TileRenderer.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
 
 #include <glm/glm.hpp>
 
-Renderer::Renderer()
+#include <imgui.h>
+
+TileRenderer::TileRenderer()
 {
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthFunc(GL_LEQUAL));
@@ -17,8 +19,15 @@ Renderer::Renderer()
     m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }
 
-void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
+void TileRenderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
 {
+    ImGui::Begin("Scene View");
+
+    camera.HandleMouseInput(0.1f);
+
+    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+    SetViewportSize(viewportSize.x, viewportSize.y);
+
     m_Texture.Bind();
     m_DepthBuffer.Bind();
     m_FrameBuffer.Bind();
@@ -43,10 +52,13 @@ void Renderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::v
     m_Texture.Unbind();
     m_DepthBuffer.Unbind();
     m_FrameBuffer.Unbind();
+
+    ImGui::Image((void*)(intptr_t)GetRendererID(), ImVec2(viewportSize.x, viewportSize.y));
+    ImGui::End();
 }
 
 
-void Renderer::SetViewportSize(const float width, const float height)
+void TileRenderer::SetViewportSize(const float width, const float height)
 {
     m_Width = width;
     m_Height = height;

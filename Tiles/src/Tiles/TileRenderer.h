@@ -12,14 +12,18 @@
 
 #include <vector>
 
-class Renderer
+#include <glm/glm.hpp>
+
+class TileRenderer
 {
 public:
-	Renderer();
-	~Renderer() = default;
+	TileRenderer();
+	~TileRenderer() = default;
 
 	void Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& program);
 	void SetViewportSize(const float width, const float height);
+
+	glm::vec2 GetViewportSize() const { return glm::vec2(m_Width, m_Height); }
 
 	unsigned int GetRendererID() { return m_Texture.GetID(); }
 private:

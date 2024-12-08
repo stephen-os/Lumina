@@ -10,7 +10,8 @@
 #include "Lumina/Renderer/Transform.h"
 #include "Lumina/Renderer/TextureAtlas.h"
 
-struct TileData {
+struct TileData 
+{
     std::vector<float> positions = {
         -0.5f, -0.5f, 0.0f,
          0.5f, -0.5f, 0.0f,

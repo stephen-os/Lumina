@@ -20,7 +20,7 @@
 
 // Client
 #include "TileEditor.h"
-#include "Renderer.h"
+#include "TileRenderer.h"
 
 class Tiles : public Lumina::Layer
 {
@@ -43,18 +43,11 @@ public:
     {
         m_TileEditor.Render(); 
 
-        ImGui::Begin("Side Window");
-        
-        m_Camera.HandleMouseInput(0.1f); 
-
-        ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        m_Camera.HandleMouseInput(0.1f);
+        glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
         m_Camera.SetProjectionMatrix(45.0f, viewportSize.x / viewportSize.y, 0.1f, 100.0f);
 
-        m_Renderer.SetViewportSize(viewportSize.x, viewportSize.y);
-        m_Renderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_TileEditor.GetOffsets(), m_ShaderProgram);
-
-        ImGui::Image((void*)(intptr_t)m_Renderer.GetRendererID(), ImVec2(viewportSize.x, viewportSize.y));
-        ImGui::End();
+        m_TileRenderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_TileEditor.GetOffsets(), m_ShaderProgram);
 
         ImGui::Begin("FPS Counter");
         ImGui::Text("FPS: %.1f", m_FPS);
@@ -64,8 +57,6 @@ public:
     virtual void OnAttach() override
     {   
         m_TileEditor.InitEditor(20, 20);
-
-        // m_Renderer.InitWindow(900, 900); 
 
         std::string vertex = Lumina::ReadFile("res/shaders/world.vert");
         std::string fragment = Lumina::ReadFile("res/shaders/world.frag");
@@ -77,8 +68,8 @@ public:
         m_ShaderProgram.Destroy(); 
     }
 private:
-    Renderer m_Renderer;
     TileEditor m_TileEditor; 
+    TileRenderer m_TileRenderer;
 
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0;
