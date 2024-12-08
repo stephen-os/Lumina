@@ -31,6 +31,7 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(1);
 
+    // Fullscreen
     if (m_Specifications.Fullscreen)
     {
         SetWindowFullscreen();
@@ -198,10 +199,5 @@ void Lumina::Application::SetWindowFullscreen()
     const GLFWvidmode* mode = glfwGetVideoMode(monitor);
 
     // Set the window to fullscreen
-    // glfwSetWindowMonitor(m_Window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
-
-    glfwSetWindowAttrib(m_Window, GLFW_DECORATED, GLFW_FALSE); // Remove borders
-    glfwSetWindowAttrib(m_Window, GLFW_RESIZABLE, GLFW_FALSE); // Disable resizing
-    glfwSetWindowPos(m_Window, 0, 0);                         // Position at the top-left corner
-    glfwSetWindowSize(m_Window, mode->width, mode->height);   // Match monitor resolution
+    glfwSetWindowMonitor(m_Window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
 }
