@@ -16,7 +16,7 @@ TileEditor::TileEditor()
 
 TileEditor::~TileEditor()
 {
-     
+    m_Atlas.Destroy(); 
 }
 
 void TileEditor::InitEditor(int width, int height)
