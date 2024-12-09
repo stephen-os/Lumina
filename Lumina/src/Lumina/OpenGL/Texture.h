@@ -22,6 +22,8 @@ namespace GL
 		bool SetResolution(int width, int height); 
 
 		unsigned int GetID() { return m_TextureID; };
+		int GetWidth() const { return m_Width; }
+		int GetHeight() const { return m_Height; }
 	private:
 		int m_Slot;
 		int m_Width;

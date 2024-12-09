@@ -24,7 +24,7 @@ void TileObject::InitializeGeometry() {
 
     m_VertexArray.ApplyAttributes(m_Attributes);
 
-    m_Texture.SetData("res/texture/atlas.jpg");
+    m_Texture.SetData("res/texture/world_tileset.png");
 }
 
 void TileObject::Draw(GL::ShaderProgram& shader) 

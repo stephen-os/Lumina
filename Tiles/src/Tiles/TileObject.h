@@ -26,11 +26,13 @@ struct TileData
         0.0f, 1.0f, 0.0f,
     };
 
-    std::vector<float> texCoords = {
-        0.0f, 1.0f,
-        1.0f, 1.0f,
-        1.0f, 0.0f,
+    // These coords are upside down. 
+    std::vector<float> texCoords = 
+    {
         0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
     };
 
     std::vector<unsigned int> indices = {

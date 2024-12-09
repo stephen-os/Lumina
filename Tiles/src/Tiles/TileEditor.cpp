@@ -40,7 +40,7 @@ void TileEditor::InitEditor(int width, int height)
 void TileEditor::LoadTextures()
 {
     // Need a check here to check if there is a texture loaded. 
-    m_Atlas.SetData("res/texture/atlas.jpg", 4, 4);
+    m_Atlas.SetData("res/texture/world_tileset.png", 16, 16);
 }
 
 void TileEditor::Render()
@@ -55,14 +55,18 @@ void TileEditor::Render()
 
     // Texture selection buttons
     ImGui::Text("Textures:");
-    ImGui::BeginChild("TextureChild", ImVec2(0, 258), true, ImGuiWindowFlags_HorizontalScrollbar);
+    
+    ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+
+    ImGui::BeginChild("TextureChild", ImVec2(0, viewportSize.y / 4), true, ImGuiWindowFlags_HorizontalScrollbar);
 
     for (int y = 0; y < m_Atlas.GetGridHeight(); ++y) {
         for (int x = 0; x < m_Atlas.GetGridWidth(); ++x) {
             int index = y * m_Atlas.GetGridWidth() + x;
             glm::vec4 texCoords = m_Atlas.GetTexCoords(index);
 
-            ImVec2 buttonSize(100, 100);
+            float size = (viewportSize.x - 300) / m_Atlas.GetGridWidth();
+            ImVec2 buttonSize(size, size);
             ImVec2 xy = ImVec2(texCoords.x, texCoords.y);
             ImVec2 zw = ImVec2(texCoords.z, texCoords.w);
 
@@ -81,7 +85,7 @@ void TileEditor::Render()
             }
 
             // 4 buttons per row
-            if ((index + 1) % 7 != 0)
+            if ((index + 1) % m_Atlas.GetGridWidth() != 0)
             {
                 ImGui::SameLine();
             }

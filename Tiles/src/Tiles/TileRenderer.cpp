@@ -12,6 +12,9 @@ TileRenderer::TileRenderer()
     GLCALL(glDepthFunc(GL_LEQUAL));
     GLCALL(glEnable(GL_CULL_FACE));
 
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     m_DepthBuffer.SetData((int)m_Width, (int)m_Height);
     m_Texture.SetResolution((int)m_Width, (int)m_Height);
 
@@ -45,7 +48,7 @@ void TileRenderer::Render(OrthographicCamera& camera, std::vector<glm::mat4>& tr
     shader.Bind();
     shader.SetUniformMatrix4fv("u_View", camera.GetViewMatrix());
     shader.SetUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
-    shader.SetUniform1f("u_NumberOfRows", 4.0f);
+    shader.SetUniform1f("u_NumberOfRows", 16.0f);
 
     for (size_t i = 0; i < transforms.size(); i++)
     {

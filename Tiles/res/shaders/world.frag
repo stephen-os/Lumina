@@ -15,7 +15,8 @@ void main()
     vec3 uniformLighting = lightColor; // Full brightness from light color
 
     // Texture color
-    vec3 texColor = texture(u_Texture, v_TexCoord).rgb;
-
-    FragColor = vec4(texColor, 1.0);
+    vec4 texColor = texture(u_Texture, v_TexCoord);
+    if(texColor.a < 0.1)
+        discard;
+    FragColor = texColor;
 }

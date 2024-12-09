@@ -27,7 +27,7 @@ class Tiles : public Lumina::Layer
 public:
     Tiles()
     {
-        m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
+        m_Camera.SetPosition(glm::vec3(10.0f, 10.0f, 25.0f));
 
         glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
         m_Camera.SetProjectionMatrix(-viewportSize.x / m_Zoom, viewportSize.x / m_Zoom,
@@ -77,7 +77,7 @@ private:
     TileEditor m_TileEditor; 
     TileRenderer m_TileRenderer;
 
-    float m_Zoom = 150.0f;
+    float m_Zoom = 90.0f;
 
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0;

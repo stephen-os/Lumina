@@ -12,34 +12,47 @@ void TextureAtlas::Destroy()
 }
 
 bool TextureAtlas::SetData(const std::string& filepath, int gridWidth, int gridHeight) {
-    if (!m_Texture.SetData(filepath)) 
-    {
+    if (!m_Texture.SetData(filepath)) {
         std::cerr << "[Texture Atlas] Failed to load texture atlas: " << filepath << std::endl;
         return false;
     }
 
+    // Load texture dimensions in pixels
+    int texturePixelWidth = m_Texture.GetWidth();  // Assuming m_Texture has a GetWidth() method
+    int texturePixelHeight = m_Texture.GetHeight(); // Assuming m_Texture has a GetHeight() method
+
     m_GridWidth = gridWidth;
     m_GridHeight = gridHeight;
 
-    m_TexWidth = 1.0f / static_cast<float>(m_GridWidth);
-    m_TexHeight = 1.0f / static_cast<float>(m_GridHeight);
+    // Calculate the width and height of each cell in pixels
+    int cellWidth = texturePixelWidth / m_GridWidth;
+    int cellHeight = texturePixelHeight / m_GridHeight;
+
+    m_TexWidth = static_cast<float>(cellWidth) / static_cast<float>(texturePixelWidth);
+    m_TexHeight = static_cast<float>(cellHeight) / static_cast<float>(texturePixelHeight);
 
     m_TexCoords.clear();
-    for (int y = 0; y < m_GridHeight; y++) 
-    {
-        for (int x = 0; x < m_GridWidth; x++) 
-        {
-            float uMin = x * m_TexWidth;
-            float vMin = y * m_TexHeight;
-            float uMax = uMin + m_TexWidth;
-            float vMax = vMin + m_TexHeight;
+    for (int y = 0; y < m_GridHeight; y++) {
+        for (int x = 0; x < m_GridWidth; x++) {
+            // Calculate pixel boundaries
+            int uMinPixel = x * cellWidth;
+            int vMinPixel = y * cellHeight;
+            int uMaxPixel = uMinPixel + cellWidth;
+            int vMaxPixel = vMinPixel + cellHeight;
+
+            // Normalize to [0, 1] texture coordinates
+            float uMin = static_cast<float>(uMinPixel) / static_cast<float>(texturePixelWidth);
+            float vMin = static_cast<float>(vMinPixel) / static_cast<float>(texturePixelHeight);
+            float uMax = static_cast<float>(uMaxPixel) / static_cast<float>(texturePixelWidth);
+            float vMax = static_cast<float>(vMaxPixel) / static_cast<float>(texturePixelHeight);
+
+            // Add normalized coordinates to the vector
             m_TexCoords.emplace_back(uMin, vMin, uMax, vMax);
         }
     }
 
     return true;
 }
-
 void TextureAtlas::Bind() const 
 {
     m_Texture.Bind();

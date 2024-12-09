@@ -26,6 +26,8 @@ public:
     ~TileEditor();
 
     void InitEditor(int width, int height);
+    // void Shutdown(); 
+
     void Render();
     std::vector<glm::mat4>& GetMatrices() { return m_Matrices; }
     std::vector<glm::vec2>& GetOffsets() { return m_Offsets; }
