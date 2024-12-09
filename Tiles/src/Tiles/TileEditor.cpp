@@ -9,6 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "TileObject.h"
+#include "TileSerializer.h"
 
 TileEditor::TileEditor()
     : m_NumLayers(0), m_ActiveLayer(0), 
@@ -32,9 +33,22 @@ void TileEditor::InitEditor(int width, int height)
     m_Padding = 0.0f;
     m_TileSize = 40.0f;
 
-    AddLayer();
+    m_TileLayers = TileSerializer::Deserialize("res/maps/tiles.json");
+
+    if (m_TileLayers.size() == 0)
+    {
+        AddLayer();
+    }
+
 
     LoadTextures();
+
+    UpdateMatrices();
+}
+
+void TileEditor::Shutdown()
+{
+    TileSerializer::Serialize(m_TileLayers, "res/maps/tiles.json");
 }
 
 void TileEditor::LoadTextures()

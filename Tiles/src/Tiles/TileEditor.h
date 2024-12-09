@@ -1,23 +1,12 @@
 #include <vector>
 #include <glm/glm.hpp>
+
 #include "imgui.h"
 
 #include "Lumina/OpenGL/Texture.h"
 #include "Lumina/Renderer/TextureAtlas.h"
 
-struct Tile
-{
-    glm::vec4 m_Color;
-    bool m_UseTexture;  // Whether the tile uses a texture
-    float m_Opacity;    // Blend factor for color and texture (0.0f to 1.0f)
-    int m_TextureIndex; // Index into the texture atlas
-};
-
-struct TileLayer
-{
-    std::vector<std::vector<Tile>> m_Tiles;
-    std::string m_Name;
-};
+#include "TileLayer.h"
 
 class TileEditor
 {
@@ -26,7 +15,7 @@ public:
     ~TileEditor();
 
     void InitEditor(int width, int height);
-    // void Shutdown(); 
+    void Shutdown(); 
 
     void Render();
     std::vector<glm::mat4>& GetMatrices() { return m_Matrices; }

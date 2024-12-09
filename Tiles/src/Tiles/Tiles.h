@@ -71,6 +71,7 @@ public:
 
     virtual void OnDetach() override
     {
+        m_TileEditor.Shutdown(); 
         m_ShaderProgram.Destroy(); 
     }
 private:
