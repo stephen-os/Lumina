@@ -65,7 +65,7 @@ void TileEditor::Render()
             int index = y * m_Atlas.GetGridWidth() + x;
             glm::vec4 texCoords = m_Atlas.GetTexCoords(index);
 
-            float size = (viewportSize.x - 300) / m_Atlas.GetGridWidth();
+            float size = (viewportSize.x - 310) / m_Atlas.GetGridWidth();
             ImVec2 buttonSize(size, size);
             ImVec2 xy = ImVec2(texCoords.x, texCoords.y);
             ImVec2 zw = ImVec2(texCoords.z, texCoords.w);
