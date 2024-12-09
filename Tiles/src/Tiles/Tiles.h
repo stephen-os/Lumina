@@ -16,7 +16,7 @@
 #include "Lumina/OpenGL/VertexAttributes.h"
 #include "Lumina/OpenGL/VertexArray.h"
 
-#include "Lumina/Renderer/Camera.h"
+#include "Lumina/Renderer/OrthographicCamera.h"
 
 // Client
 #include "TileEditor.h"
@@ -28,6 +28,11 @@ public:
     Tiles()
     {
         m_Camera.SetPosition(glm::vec3(0.0f, 0.0f, 25.0f));
+
+        glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
+        m_Camera.SetProjectionMatrix(-viewportSize.x / m_Zoom, viewportSize.x / m_Zoom,
+            -viewportSize.y / m_Zoom, viewportSize.y / m_Zoom,
+            0.1f, 100.0f);
     }
 
     virtual void OnUpdate(float timestep) override
@@ -45,7 +50,10 @@ public:
 
         m_Camera.HandleMouseInput(0.1f);
         glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
-        m_Camera.SetProjectionMatrix(45.0f, viewportSize.x / viewportSize.y, 0.1f, 100.0f);
+        
+        m_Camera.SetProjectionMatrix(-viewportSize.x / m_Zoom, viewportSize.x / m_Zoom,
+            -viewportSize.y / m_Zoom, viewportSize.y / m_Zoom,
+            0.1f, 100.0f);
 
         m_TileRenderer.Render(m_Camera, m_TileEditor.GetMatrices(), m_TileEditor.GetOffsets(), m_ShaderProgram);
 
@@ -69,10 +77,12 @@ private:
     TileEditor m_TileEditor; 
     TileRenderer m_TileRenderer;
 
+    float m_Zoom = 150.0f;
+
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0;
     
-    Camera m_Camera;
+    OrthographicCamera m_Camera;
 
     GL::ShaderProgram m_ShaderProgram; 
 };

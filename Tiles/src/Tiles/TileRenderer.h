@@ -5,7 +5,7 @@
 #include "Lumina/OpenGL/Texture.h"
 #include "Lumina/OpenGL/ShaderProgram.h"
 
-#include "Lumina/Renderer/Camera.h"
+#include "Lumina/Renderer/OrthographicCamera.h"
 #include "Lumina/Renderer/Model.h"
 
 #include "TileObject.h"
@@ -20,7 +20,7 @@ public:
 	TileRenderer();
 	~TileRenderer();
 
-	void Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& program);
+	void Render(OrthographicCamera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& program);
 	void SetViewportSize(const float width, const float height);
 
 	glm::vec2 GetViewportSize() const { return glm::vec2(m_Width, m_Height); }

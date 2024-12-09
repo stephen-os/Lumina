@@ -26,7 +26,7 @@ TileRenderer::~TileRenderer()
     m_Texture.Destroy();
 }
 
-void TileRenderer::Render(Camera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
+void TileRenderer::Render(OrthographicCamera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
 {
     ImGui::Begin("Scene View");
 
