@@ -174,15 +174,17 @@ void TileEditor::Render()
             {
                 tile.m_Opacity = m_Opacity;
 
-                if (m_FillMode)
-                {
-                    FillLayer(x, y);
-                }
-
                 if (m_SelectedTextureIndex >= 0)
                 {
-                    tile.m_UseTexture = true;
-                    tile.m_TextureIndex = m_SelectedTextureIndex;
+                    if (m_FillMode)
+                    {
+                        FillLayer(x, y);
+                    }
+                    else
+                    {
+                        tile.m_UseTexture = true;
+                        tile.m_TextureIndex = m_SelectedTextureIndex;
+                    }
                 }
 
                 UpdateMatrices();
@@ -299,15 +301,21 @@ void TileEditor::FillLayer(int x, int y)
     if (x < 0 || x >= m_Width || y < 0 || y >= m_Height)
         return;
 
-    int originalTextureIndex = m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_TextureIndex;
+    int originalTextureIndex = m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex;
+
+    std::cout << originalTextureIndex << std::endl;
 
     if (originalTextureIndex == m_SelectedTextureIndex)
         return;
+
 
     std::queue<std::pair<int, int>> tileQueue;
     tileQueue.push({ x, y });
 
     const std::vector<std::pair<int, int>> directions = { {1, 0}, {0, 1}, {-1, 0}, {0, -1} };
+
+    std::cout << "x: " << x << ", y: " << y << std::endl;
+    std::cout << m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex << std::endl;
 
     while (!tileQueue.empty())
     {
@@ -317,11 +325,13 @@ void TileEditor::FillLayer(int x, int y)
         if (x < 0 || x >= m_Width || y < 0 || y >= m_Height)
             continue;
 
-        if (m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_TextureIndex != originalTextureIndex)
-            continue;
+        if (m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex != originalTextureIndex)
+           continue;
 
-        m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_TextureIndex = m_SelectedTextureIndex;
-        m_TileLayers[m_ActiveLayer].m_Tiles[x][y].m_UseTexture = true;
+        std::cout << "x: " << x << ", y: " << y << std::endl;
+
+        m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex = m_SelectedTextureIndex;
+        m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_UseTexture = true;
 
         for (const auto& direction : directions)
         {
