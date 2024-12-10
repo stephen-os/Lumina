@@ -2,6 +2,8 @@
 
 #include "Lumina/OpenGL/GLUtils.h"
 
+#include "Lumina/Utils/FileReader.h"
+
 #include <glm/glm.hpp>
 
 #include <imgui.h>
@@ -20,13 +22,22 @@ TileRenderer::TileRenderer()
 
     m_FrameBuffer.AttachDepthBuffer(m_DepthBuffer.GetID());
     m_FrameBuffer.AttachTexture(m_Texture.GetID());
+
+
+    std::string vertex = Lumina::ReadFile("res/shaders/grid.vert");
+    std::string fragment = Lumina::ReadFile("res/shaders/grid.frag");
+    m_GridShader.SetSource(vertex, fragment);
 }
 
 TileRenderer::~TileRenderer()
 {
+    // Destroy buffers
     m_DepthBuffer.Destroy();
     m_FrameBuffer.Destroy();
     m_Texture.Destroy();
+
+    // Destroy shaders
+    m_GridShader.Destroy();
 }
 
 void TileRenderer::Render(OrthographicCamera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& shader)
@@ -45,6 +56,14 @@ void TileRenderer::Render(OrthographicCamera& camera, std::vector<glm::mat4>& tr
     GLCALL(glViewport(0, 0, (int)m_Width, (int)m_Height));
     GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
+    // Draw grid first
+    m_GridShader.Bind();
+    m_GridShader.SetUniformMatrix4fv("u_View", camera.GetViewMatrix());
+    m_GridShader.SetUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
+    m_Grid.Draw(m_GridShader);
+    m_GridShader.Unbind();
+
+    // Draw tiles
     shader.Bind();
     shader.SetUniformMatrix4fv("u_View", camera.GetViewMatrix());
     shader.SetUniformMatrix4fv("u_Projection", camera.GetProjectionMatrix());
@@ -73,9 +92,9 @@ void TileRenderer::SetViewportSize(const float width, const float height)
     m_Width = width;
     m_Height = height;
 
-    if (m_DepthBuffer.SetData((int)width, (int)height))
+    if (m_DepthBuffer.SetData((int)m_Width, (int)m_Height))
         m_FrameBuffer.AttachDepthBuffer(m_DepthBuffer.GetID());
 
-    if (m_Texture.SetResolution((int)width, (int)height))
+    if (m_Texture.SetResolution((int)m_Width, (int)m_Height))
         m_FrameBuffer.AttachTexture(m_Texture.GetID());
 }

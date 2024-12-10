@@ -27,7 +27,10 @@ class Tiles : public Lumina::Layer
 public:
     Tiles()
     {
-        m_Camera.SetPosition(glm::vec3(10.0f, 10.0f, 25.0f));
+        m_Camera.SetPosition(glm::vec3(10.0f, 10.0f, 26.0f));
+
+        std::cout << m_Camera.GetProjMatrixToString();
+        std::cout << m_Camera.GetViewMatrixToString();
 
         glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
         m_Camera.SetProjectionMatrix(-viewportSize.x / m_Zoom, viewportSize.x / m_Zoom,
@@ -37,8 +40,7 @@ public:
 
     virtual void OnUpdate(float timestep) override
     {
-        m_Camera.HandleKeyInput(0.1f);
-
+        // m_Camera.HandleKeyInput(0.1f);
         float elapsedTime = m_FrameTimer.Elapsed();
         m_FPS = 1.0f / elapsedTime;
         m_FrameTimer.Reset();
@@ -48,7 +50,6 @@ public:
     {
         m_TileEditor.Render(); 
 
-        m_Camera.HandleMouseInput(0.1f);
         glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
         
         m_Camera.SetProjectionMatrix(-viewportSize.x / m_Zoom, viewportSize.x / m_Zoom,

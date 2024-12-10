@@ -39,7 +39,10 @@ void TileEditor::InitEditor(int width, int height)
     {
         AddLayer();
     }
-
+    else
+    {
+        m_NumLayers = m_TileLayers.size();
+    }
 
     LoadTextures();
 
@@ -185,6 +188,11 @@ void TileEditor::Render()
                         tile.m_UseTexture = true;
                         tile.m_TextureIndex = m_SelectedTextureIndex;
                     }
+                }
+
+                if (m_EraserMode)
+                {
+                    ResetTile(x, y);
                 }
 
                 UpdateMatrices();

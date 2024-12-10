@@ -9,6 +9,7 @@
 #include "Lumina/Renderer/Model.h"
 
 #include "TileObject.h"
+#include "InfiniteGrid.h"
 
 #include <vector>
 
@@ -31,7 +32,10 @@ private:
 	GL::FrameBuffer m_FrameBuffer;
 	GL::Texture m_Texture;
 
+	GL::ShaderProgram m_GridShader; 
+
 	TileObject m_TileObject;
+	InfiniteGrid m_Grid;
 
 	float m_Width = 1;
 	float m_Height = 1;
