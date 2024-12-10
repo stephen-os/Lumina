@@ -21,7 +21,7 @@ public:
 	TileRenderer();
 	~TileRenderer();
 
-	void Render(OrthographicCamera& camera, std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets, GL::ShaderProgram& program);
+	void Render(std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets);
 	void SetViewportSize(const float width, const float height);
 
 	glm::vec2 GetViewportSize() const { return glm::vec2(m_Width, m_Height); }
@@ -32,10 +32,13 @@ private:
 	GL::FrameBuffer m_FrameBuffer;
 	GL::Texture m_Texture;
 
+	GL::ShaderProgram m_TileShader;
 	GL::ShaderProgram m_GridShader; 
 
 	TileObject m_TileObject;
 	InfiniteGrid m_Grid;
+
+	OrthographicCamera m_Camera;
 
 	float m_Width = 1;
 	float m_Height = 1;
