@@ -22,11 +22,11 @@ public:
 	~TileRenderer();
 
 	void Render(std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets);
-	void SetViewportSize(const float width, const float height);
-
 	glm::vec2 GetViewportSize() const { return glm::vec2(m_Width, m_Height); }
-
 	unsigned int GetRendererID() { return m_Texture.GetID(); }
+private:
+	void SaveToFile(const std::string& filename, const std::vector<glm::mat4>& transforms, const std::vector<glm::vec2>& offsets);
+	void SetViewportSize(const float width, const float height);
 private:
 	GL::DepthBuffer m_DepthBuffer;
 	GL::FrameBuffer m_FrameBuffer;

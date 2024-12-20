@@ -364,7 +364,7 @@ void TileEditor::UpdateMatrices()
                 Tile& tile = m_TileLayers[layer].m_Tiles[y][x];
                 if (tile.m_UseTexture)
                 {
-                    glm::mat4 translation = glm::translate(glm::mat4(1.0f),  glm::vec3(x, y, layer));
+                    glm::mat4 translation = glm::translate(glm::mat4(1.0f),  glm::vec3(x, y, layer * 0.01f));
                     m_Matrices.push_back(translation);
                     m_Offsets.push_back(m_Atlas.GetOffset(tile.m_TextureIndex));
                 }

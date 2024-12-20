@@ -1,12 +1,30 @@
 #include "TileRenderer.h"
 
 #include "Lumina/OpenGL/GLUtils.h"
+#include "Lumina/OpenGL/ShaderProgram.h"
 
 #include "Lumina/Utils/FileReader.h"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <imgui.h>
+
+#include <stb_image_write.h>
+#include <cstdlib> 
+#include <string>
+
+std::string GetHomeDirectory()
+{
+#ifdef _WIN32
+    const char* homeDrive = getenv("HOMEDRIVE");
+    const char* homePath = getenv("HOMEPATH");
+    return std::string(homeDrive) + std::string(homePath);
+#else
+    const char* home = getenv("HOME");
+    return std::string(home ? home : "/");
+#endif
+}
 
 TileRenderer::TileRenderer()
 {
@@ -52,20 +70,33 @@ TileRenderer::~TileRenderer()
 
 void TileRenderer::Render(std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets)
 {
+    static char location[256];
+    static char filename[256] = "output.png";
+
+    // Set default location if it's not already set
+    static bool isLocationInitialized = false;
+    if (!isLocationInitialized)
+    {
+        std::string homeDir = GetHomeDirectory();
+        strncpy(location, homeDir.c_str(), sizeof(location) - 1);
+        location[sizeof(location) - 1] = '\0';
+        isLocationInitialized = true;
+    }
+
     ImGui::Begin("Scene View");
 
     m_Camera.HandleMouseInput(0.1f);
 
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-    float zoom = 90.0f; 
+    float zoom = 90.0f;
 
     SetViewportSize(viewportSize.x, viewportSize.y);
 
     m_Camera.SetProjectionMatrix(
-        -viewportSize.x / zoom, 
-        viewportSize.x / zoom, 
-        -viewportSize.y / zoom, 
-        viewportSize.y / zoom, 
+        -viewportSize.x / zoom,
+        viewportSize.x / zoom,
+        -viewportSize.y / zoom,
+        viewportSize.y / zoom,
         0.1f, 100.0f
     );
 
@@ -103,8 +134,87 @@ void TileRenderer::Render(std::vector<glm::mat4>& transforms, std::vector<glm::v
     m_FrameBuffer.Unbind();
 
     ImGui::Image((void*)(intptr_t)GetRendererID(), ImVec2(viewportSize.x, viewportSize.y));
+
+    ImGui::InputText("Location", location, sizeof(location));
+    ImGui::InputText("Filename", filename, sizeof(filename));
+
+    if (ImGui::Button("Save Image"))
+    {
+        std::cout << m_Camera.GetViewMatrixToString() << std::endl;
+        std::cout << m_Camera.GetProjMatrixToString() << std::endl;
+
+        std::string fullPath = std::string(location) + "\\" + std::string(filename);
+        SaveToFile(fullPath, transforms, offsets);
+    }
+
+
     ImGui::End();
 }
+
+void TileRenderer::SaveToFile(const std::string& filepath, const std::vector<glm::mat4>& transforms, const std::vector<glm::vec2>& offsets)
+{
+    GL::ShaderProgram saveShader;
+    saveShader.SetSource(Lumina::ReadFile("res/shaders/save.vert"), Lumina::ReadFile("res/shaders/save.frag"));
+
+    glm::mat4 orthoProjection = glm::ortho(
+        0.0f, static_cast<float>(20),  // Left, Right
+        0.0f, static_cast<float>(20), // Bottom, Top
+        -1.0f, 2.0f                           // Near, Far
+    );
+
+    // Proportional dimensions for the output texture
+    int outputWidth = static_cast<int>(m_Width * 2);
+    int outputHeight = static_cast<int>(m_Height * 2);
+
+    // Create texture for saving
+    GL::Texture saveTexture;
+    if (!saveTexture.SetResolution(outputWidth, outputHeight))
+    {
+        printf("Failed to create save texture.\n");
+        return;
+    }
+
+    // Create framebuffer for saving
+    GL::FrameBuffer saveFramebuffer;
+    saveFramebuffer.AttachTexture(saveTexture.GetID());
+
+    // Bind framebuffer and clear it
+    saveFramebuffer.Bind();
+    GLCALL(glViewport(0, 0, outputWidth, outputHeight));
+    GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+    // Render tiles only (no grid)
+    saveShader.Bind();
+    saveShader.SetUniformMatrix4fv("u_OrthoProjection", orthoProjection);
+    saveShader.SetUniform1f("u_NumberOfRows", 16.0f);
+
+    for (size_t i = 0; i < transforms.size(); i++)
+    {
+        saveShader.SetUniformMatrix4fv("u_Transform", transforms[i]);
+        saveShader.SetUniform2fv("u_Offset", offsets[i]);
+        m_TileObject.Draw(saveShader);
+    }
+
+    saveShader.Unbind();
+
+    // Read pixels and save to file
+    std::vector<unsigned char> pixels(outputWidth * outputHeight * 4);
+    GLCALL(glReadPixels(0, 0, outputWidth, outputHeight, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data()));
+
+    // Save the image using stb_image_write
+    if (stbi_write_png(filepath.c_str(), outputWidth, outputHeight, 4, pixels.data(), outputWidth * 4))
+    {
+        printf("Image saved to %s\n", filepath.c_str());
+    }
+    else
+    {
+        printf("Failed to save image to %s\n", filepath.c_str());
+    }
+
+    // Unbind framebuffer
+    saveFramebuffer.Unbind();
+}
+
 
 void TileRenderer::SetViewportSize(const float width, const float height)
 {
