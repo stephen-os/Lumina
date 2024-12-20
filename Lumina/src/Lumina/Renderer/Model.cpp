@@ -145,7 +145,10 @@ void Model::LoadGLTF(const std::string& filename)
 
             if (node.rotation.size() == 4)
             {
-                glm::quat quat(node.rotation[3], node.rotation[0], node.rotation[1], node.rotation[2]);
+                glm::quat quat(static_cast<float>(node.rotation[3]),
+                    static_cast<float>(node.rotation[0]),
+                    static_cast<float>(node.rotation[1]),
+                    static_cast<float>(node.rotation[2]));
                 glm::vec3 euler = glm::eulerAngles(quat);
                 transform.SetRotation(glm::degrees(euler));
             }
@@ -193,10 +196,10 @@ void Model::LoadGLTF(const std::string& filename)
             }
             else if (indicesAccessor.componentType == TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT)
             {
-                memcpy(indices, &indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset], indexCount * sizeof(unsigned int));
+                memcpy(indices, &indicesBuffer.data[indicesBufferView.byteOffset + indicesAccessor.byteOffset], (uint32_t)indexCount * sizeof(unsigned int));
             }
 
-            MeshData meshData = { vertices, normals, indices, vertexCount, indexCount, transform };
+            MeshData meshData = { vertices, normals, indices, (uint32_t)vertexCount, (uint32_t)indexCount, transform };
 
             m_Meshes.emplace_back(meshData);
 

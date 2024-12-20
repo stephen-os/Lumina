@@ -43,12 +43,13 @@ namespace GL
         std::string GetName() const { return m_Name; }
 
         // Retrieves the stride of the data in the buffer (e.g., the size of each vertex attribute).
-        unsigned int GetStride() const { return m_Stride; }
+        uint32_t GetStride() const { return m_Stride; }
 
         // Retrieves the number of elements stored in the buffer.
-        unsigned int GetCount() const { return m_Count; }
+        uint32_t GetCount() const { return m_Count; }
 
-        int GetSize() const { return m_Size; }
+        // Retrieves the size of the buffer in bytes.
+        GLsizei GetSize() const { return m_Size; }
 
         // Retrieves the OpenGL ID of the buffer, which uniquely identifies it within the GPU.
         unsigned int GetID() const { return m_ID; }
@@ -61,7 +62,7 @@ namespace GL
         // - `count`: Number of elements in the data array.
         // - `stride`: Size (in bytes) of a single data element.
         // - `usage`: OpenGL usage hint (e.g., GL_STATIC_DRAW, GL_DYNAMIC_DRAW).
-        void SetData(GLuint type, const void* data, int size, int count, int stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
+        void SetData(GLuint type, const void* data, GLsizei size, uint32_t count, uint32_t stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
 
         // Updates part of the buffer data.
         // - `offset`: Byte offset in the buffer where the update should begin.
@@ -71,9 +72,9 @@ namespace GL
     private:
         std::string m_Name;    // Optional identifier for the buffer.
         GLuint m_Type;         // Type of buffer (e.g., GL_ARRAY_BUFFER).
-        int m_Count;           // Number of elements stored in the buffer.
-        int m_Stride;          // Size of a single element in bytes.
-        int m_Size;            // Size of the buffer in bytes.
+        uint32_t m_Count;      // Number of elements stored in the buffer.
+        uint32_t m_Stride;     // Size of a single element in bytes.
+        GLsizei m_Size;        // Size of the buffer in bytes.
         bool m_IsInstance;     // Indicates if the buffer is used for instancing.
         GLuint m_ID;           // OpenGL identifier for the buffer.
     };

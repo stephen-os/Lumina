@@ -80,8 +80,8 @@ namespace GL
 			{
                 std::cout << "Instance buffer: " << buffer.GetName() << std::endl;
                 buffer.Bind();
-                const int instanceSize = buffer.GetSize();
-                for (int i = 0; i < buffer.GetCount(); ++i)
+                const GLsizei instanceSize = buffer.GetSize();
+                for (uint32_t i = 0; i < buffer.GetCount(); ++i)
                 {
                     int instanceLocation = location + i;
                     glEnableVertexAttribArray(instanceLocation);

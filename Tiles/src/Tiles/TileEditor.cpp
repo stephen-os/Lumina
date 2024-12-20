@@ -41,7 +41,7 @@ void TileEditor::InitEditor(int width, int height)
     }
     else
     {
-        m_NumLayers = m_TileLayers.size();
+        m_NumLayers = (int)m_TileLayers.size();
     }
 
     LoadTextures();
@@ -87,7 +87,7 @@ void TileEditor::Render()
             ImVec2 xy = ImVec2(texCoords.x, texCoords.y);
             ImVec2 zw = ImVec2(texCoords.z, texCoords.w);
 
-            ImGui::ImageButton((void*)m_Atlas.GetTextureID(), buttonSize, xy, zw);
+            ImGui::ImageButton(reinterpret_cast<void*>(static_cast<uintptr_t>(m_Atlas.GetTextureID())), buttonSize, xy, zw);
 
             if (index == m_SelectedTextureIndex)
             {
@@ -144,7 +144,7 @@ void TileEditor::Render()
     // Editable layer name field
     TileLayer& activeLayer = m_TileLayers[m_ActiveLayer];
     char layerNameBuffer[128];
-    strncpy(layerNameBuffer, activeLayer.m_Name.c_str(), sizeof(layerNameBuffer) - 1);
+    strncpy_s(layerNameBuffer, activeLayer.m_Name.c_str(), sizeof(layerNameBuffer) - 1);
     layerNameBuffer[sizeof(layerNameBuffer) - 1] = '\0';
 
     // ImGui input text for editable layer name

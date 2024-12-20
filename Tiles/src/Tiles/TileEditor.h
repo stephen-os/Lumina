@@ -43,8 +43,8 @@ private:
     // Tile Settings
     int m_Width;
     int m_Height;
-    int m_Padding;
-    int m_TileSize;
+    float m_Padding;
+    float m_TileSize;
 
     // Flags/Attributes
     bool m_EraserMode;

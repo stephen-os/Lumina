@@ -20,8 +20,8 @@ struct MeshData
     float* vertices; 
     float* normals; 
     unsigned int* indices;
-    size_t vertexCount;
-    size_t indicesCount;
+    uint32_t vertexCount;
+    uint32_t indicesCount;
     Transform transform; 
 };
 

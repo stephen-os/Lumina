@@ -14,12 +14,22 @@
 #include <cstdlib> 
 #include <string>
 
-std::string GetHomeDirectory()
+std::string TileRenderer::GetHomeDirectory()
 {
 #ifdef _WIN32
-    const char* homeDrive = getenv("HOMEDRIVE");
-    const char* homePath = getenv("HOMEPATH");
-    return std::string(homeDrive) + std::string(homePath);
+    char* homeDrive = nullptr;
+    char* homePath = nullptr;
+    size_t len = 0;
+
+    if (_dupenv_s(&homeDrive, &len, "HOMEDRIVE") == 0 && homeDrive != nullptr &&
+        _dupenv_s(&homePath, &len, "HOMEPATH") == 0 && homePath != nullptr)
+    {
+        std::string homeDir = std::string(homeDrive) + std::string(homePath);
+        free(homeDrive);
+        free(homePath);
+        return homeDir;
+    }
+    return "";
 #else
     const char* home = getenv("HOME");
     return std::string(home ? home : "/");
@@ -78,7 +88,7 @@ void TileRenderer::Render(std::vector<glm::mat4>& transforms, std::vector<glm::v
     if (!isLocationInitialized)
     {
         std::string homeDir = GetHomeDirectory();
-        strncpy(location, homeDir.c_str(), sizeof(location) - 1);
+        strncpy_s(location, homeDir.c_str(), sizeof(location) - 1);
         location[sizeof(location) - 1] = '\0';
         isLocationInitialized = true;
     }

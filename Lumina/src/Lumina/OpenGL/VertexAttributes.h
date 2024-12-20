@@ -33,13 +33,13 @@ namespace GL
         void Destroy();
 
         // Adds a new vertex buffer with given parameters and uploads its data to the GPU
-        void AddBuffer(const std::string& name, int location, const float* data, int size, int count, int stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
+        void AddBuffer(const std::string& name, int location, const float* data, GLsizei size, uint32_t count, uint32_t stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
         
         // Updates instance buffer data with a vector of transformation matrices
         void UpdateBuffer(int location, const void* data, int count);
 
         // Adds an index buffer to the vertex attributes and uploads its data to the GPU
-        void AddIndices(const unsigned int* indices, int count, GLenum usage = GL_STATIC_DRAW);
+        void AddIndices(const unsigned int* indices, uint32_t count, GLenum usage = GL_STATIC_DRAW);
 
         // Gets buffer by location.
         GLuint GetBufferID(int location);

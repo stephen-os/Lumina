@@ -6,7 +6,7 @@
 namespace GL
 {
     Buffer::Buffer()
-        : m_Name("Unnamed"), m_Type(0), m_Count(0), m_Stride(0), m_IsInstance(false), m_ID(0) {}
+        : m_Name("Unnamed"), m_Type(0), m_Count(0), m_Stride(0), m_Size(0), m_IsInstance(false), m_ID(0) {}
 
     Buffer::~Buffer()
     {
@@ -83,7 +83,7 @@ namespace GL
     }
 
     // Sets buffer data and uploads it to the GPU.
-    void Buffer::SetData(GLuint type, const void* data, int size, int count, int stride, bool isInstance, GLenum usage)
+    void Buffer::SetData(GLuint type, const void* data, GLsizei size, uint32_t count, uint32_t stride, bool isInstance, GLenum usage)
     {
         m_Type = type;
         m_Count = count;

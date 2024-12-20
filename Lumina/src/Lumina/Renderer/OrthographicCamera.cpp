@@ -171,8 +171,8 @@ void OrthographicCamera::HandleMouseInput(const float& sensitivity)
             }
 
             glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
-            float xOffset = x - m_CurrentMousePos.x;
-            float yOffset = m_CurrentMousePos.y - y;
+            float xOffset = (float)x - m_CurrentMousePos.x;
+            float yOffset = m_CurrentMousePos.y - (float)y;
 
             xOffset *= sensitivity;
             yOffset *= sensitivity;
