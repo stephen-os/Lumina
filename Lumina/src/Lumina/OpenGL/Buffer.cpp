@@ -83,21 +83,23 @@ namespace GL
     }
 
     // Sets buffer data and uploads it to the GPU.
-    void Buffer::SetData(GLuint type, const void* data, GLsizei size, uint32_t count, uint32_t stride, bool isInstance, GLenum usage)
+    void Buffer::SetData(GLuint type, const void* data, uint32_t count, uint32_t stride, bool isInstance, GLenum usage)
     {
         m_Type = type;
         m_Count = count;
         m_Stride = stride;
-        m_Size = size; 
+        m_Size = 4; // Assume 4 bytes 
         m_IsInstance = isInstance;
 
         Init();
         Bind();
 
-        GLCALL(glBufferData(type, count * size, data, usage));
+        GLCALL(glBufferData(type, count * m_Size, data, usage));
         
         Unbind();
     }
+
+
 
     void Buffer::UpdateBuffer(const void* data, int count, GLenum usage)
     {

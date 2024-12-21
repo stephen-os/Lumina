@@ -38,12 +38,12 @@ namespace GL
         m_Attributes.clear();
     }
 
-    void VertexAttributes::AddBuffer(const std::string& name, int location, const float* data, GLsizei size, uint32_t count, uint32_t stride, bool isInstance, GLenum usage)
+    void VertexAttributes::AddBuffer(const std::string& name, int location, const float* data, uint32_t count, uint32_t stride, bool isInstance, GLenum usage)
     {
         Buffer buffer;
         buffer.Init();
         buffer.SetName(name);
-        buffer.SetData(GL_ARRAY_BUFFER, data, size, count, stride, isInstance, usage);
+        buffer.SetData(GL_ARRAY_BUFFER, data, count, stride, isInstance, usage);
         m_Attributes.emplace_back(location, std::move(buffer));
     }
 
@@ -81,6 +81,6 @@ namespace GL
     void VertexAttributes::AddIndices(const unsigned int* data, const uint32_t count, GLenum usage)
     {
         m_IndexBuffer.Init();
-        m_IndexBuffer.SetData(GL_ELEMENT_ARRAY_BUFFER, data, sizeof(unsigned int), count, sizeof(unsigned int), usage);
+        m_IndexBuffer.SetData(GL_ELEMENT_ARRAY_BUFFER, data, count, false, usage);
     }
 }

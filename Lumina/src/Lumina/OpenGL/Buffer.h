@@ -6,6 +6,35 @@
 
 namespace GL
 {
+    enum BufferType : int
+    {
+        ARRAY = GL_ARRAY_BUFFER,
+        ELEMENT = GL_ELEMENT_ARRAY_BUFFER
+    };
+
+    enum DrawMode : int
+    {
+        STATIC = GL_STATIC_DRAW,
+        DYNAMIC = GL_DYNAMIC_DRAW,
+        STREAM = GL_STREAM_DRAW
+    };
+
+    struct BufferInfo
+    {
+        void* data = nullptr;           // Default: null (expect user define)
+
+        GLuint type = ARRAY;            // Default: ARRAY
+        GLenum usage = STATIC;          // Default: STATIC
+        GLsizei size = 4;               // Default: 4 bytes
+        uint32_t count = 0;             // Default: 0 elements
+        uint32_t stride = 3;            // Default: 3 (vec3)
+        bool isInstance = false;        // Default: false (single draw per data) 
+
+        // TODO:
+        // Add name or remove name?
+        // Buffer should handle location? 
+    };
+
     class Buffer
     {
     public:
@@ -62,7 +91,9 @@ namespace GL
         // - `count`: Number of elements in the data array.
         // - `stride`: Size (in bytes) of a single data element.
         // - `usage`: OpenGL usage hint (e.g., GL_STATIC_DRAW, GL_DYNAMIC_DRAW).
-        void SetData(GLuint type, const void* data, GLsizei size, uint32_t count, uint32_t stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
+        void SetData(GLuint type, const void* data, uint32_t count, uint32_t stride, bool isInstance, GLenum usage = GL_STATIC_DRAW);
+
+        // void SetData(); 
 
         // Updates part of the buffer data.
         // - `offset`: Byte offset in the buffer where the update should begin.
