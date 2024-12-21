@@ -16,9 +16,9 @@ void TileObject::InitializeGeometry() {
     TileData tileData;
 
     // Per vertex
-    m_Attributes.AddBuffer("a_Position", 0, tileData.positions.data(), sizeof(float), (uint32_t)tileData.positions.size(), 3, false);
-    m_Attributes.AddBuffer("a_Normal", 1, tileData.normals.data(), sizeof(float), (uint32_t)tileData.normals.size(), 3, false);
-    m_Attributes.AddBuffer("a_TexCoord", 2, tileData.texCoords.data(), sizeof(float), (uint32_t)tileData.texCoords.size(), 2, false);
+    m_Attributes.AddBuffer("a_Position", 0, tileData.positions.data(), (uint32_t)tileData.positions.size(), 3, false);
+    m_Attributes.AddBuffer("a_Normal", 1, tileData.normals.data(), (uint32_t)tileData.normals.size(), 3, false);
+    m_Attributes.AddBuffer("a_TexCoord", 2, tileData.texCoords.data(), (uint32_t)tileData.texCoords.size(), 2, false);
 
     m_Attributes.AddIndices(tileData.indices.data(), (uint32_t)tileData.indices.size());
 

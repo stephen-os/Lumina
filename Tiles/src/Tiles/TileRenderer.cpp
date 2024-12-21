@@ -167,14 +167,14 @@ void TileRenderer::SaveToFile(const std::string& filepath, const std::vector<glm
     saveShader.SetSource(Lumina::ReadFile("res/shaders/save.vert"), Lumina::ReadFile("res/shaders/save.frag"));
 
     glm::mat4 orthoProjection = glm::ortho(
-        0.0f, static_cast<float>(20),  // Left, Right
-        0.0f, static_cast<float>(20), // Bottom, Top
-        -1.0f, 2.0f                           // Near, Far
+        0.0f, static_cast<float>(20),           // Left, Right
+        0.0f, static_cast<float>(20),           // Bottom, Top
+        -1.0f, 2.0f                             // Near, Far
     );
 
-    // Proportional dimensions for the output texture
-    int outputWidth = static_cast<int>(m_Width * 2);
-    int outputHeight = static_cast<int>(m_Height * 2);
+    // TODO: Allow user to specify pixil width per tile. 
+    int outputWidth = static_cast<int>(20 * 100);
+    int outputHeight = static_cast<int>(20 * 100);
 
     // Create texture for saving
     GL::Texture saveTexture;
