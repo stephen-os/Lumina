@@ -7,7 +7,7 @@ out vec4 FragColor;
 uniform vec3 u_GridColor = vec3(0.8, 0.8, 0.8);         // Light gray
 uniform vec3 u_BackgroundColor = vec3(0.2, 0.2, 0.2);   // Dark gray
 uniform float u_GridSpacing = 1.0;                      // Space between grid lines
-uniform float u_LineThickness = 0.02;                   // Thickness of grid lines
+uniform float u_LineThickness = 0.04;                   // Thickness of grid lines
 uniform vec2 u_Offset = vec2(0.0, 0.0);                 // Offset for grid translation
 
 void main()
