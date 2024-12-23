@@ -35,8 +35,6 @@ public:
     {
         m_TileEditor.Render(); 
 
-        glm::vec2 viewportSize = m_TileRenderer.GetViewportSize();
-
         m_TileRenderer.Render(m_TileEditor.GetMatrices(), m_TileEditor.GetOffsets());
 
         ImGui::Begin("FPS Counter");

@@ -22,7 +22,6 @@ public:
 	~TileRenderer();
 
 	void Render(std::vector<glm::mat4>& transforms, std::vector<glm::vec2>& offsets);
-	glm::vec2 GetViewportSize() const { return glm::vec2(m_Width, m_Height); }
 	unsigned int GetRendererID() { return m_Texture.GetID(); }
 private:
 	std::string GetHomeDirectory(); 
