@@ -41,6 +41,8 @@ private:
 
 	OrthographicCamera m_Camera;
 
+	int m_TileResolution; 
+
 	float m_Width = 1;
 	float m_Height = 1;
 };

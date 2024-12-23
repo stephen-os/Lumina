@@ -13,6 +13,7 @@
 #include <stb_image_write.h>
 #include <cstdlib> 
 #include <string>
+#include <algorithm>
 
 std::string TileRenderer::GetHomeDirectory()
 {
@@ -36,7 +37,7 @@ std::string TileRenderer::GetHomeDirectory()
 #endif
 }
 
-TileRenderer::TileRenderer()
+TileRenderer::TileRenderer() : m_TileResolution(200)
 {
     GLCALL(glEnable(GL_DEPTH_TEST));
     GLCALL(glDepthFunc(GL_LEQUAL));
@@ -98,6 +99,9 @@ void TileRenderer::Render(std::vector<glm::mat4>& transforms, std::vector<glm::v
     m_Camera.HandleMouseInput(0.1f);
 
     ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+    viewportSize.x = std::floor(viewportSize.x / 2) * 2; // Ensure even-number width
+    viewportSize.y = std::floor(viewportSize.y / 2) * 2; // Ensure even-number height
+
     float zoom = 90.0f;
 
     SetViewportSize(viewportSize.x, viewportSize.y);
@@ -148,6 +152,10 @@ void TileRenderer::Render(std::vector<glm::mat4>& transforms, std::vector<glm::v
     ImGui::InputText("Location", location, sizeof(location));
     ImGui::InputText("Filename", filename, sizeof(filename));
 
+    // Add tile resolution field
+    ImGui::InputInt("Tile Resolution", &m_TileResolution);
+    m_TileResolution = std::max(1, m_TileResolution); // Ensure a positive resolution value
+
     if (ImGui::Button("Save Image"))
     {
         std::cout << m_Camera.GetViewMatrixToString() << std::endl;
@@ -156,7 +164,6 @@ void TileRenderer::Render(std::vector<glm::mat4>& transforms, std::vector<glm::v
         std::string fullPath = std::string(location) + "\\" + std::string(filename);
         SaveToFile(fullPath, transforms, offsets);
     }
-
 
     ImGui::End();
 }
@@ -172,9 +179,8 @@ void TileRenderer::SaveToFile(const std::string& filepath, const std::vector<glm
         -1.0f, 2.0f                             // Near, Far
     );
 
-    // TODO: Allow user to specify pixil width per tile. 
-    int outputWidth = static_cast<int>(20 * 100);
-    int outputHeight = static_cast<int>(20 * 100);
+    int outputWidth = static_cast<int>(20 * m_TileResolution);
+    int outputHeight = static_cast<int>(20 * m_TileResolution);
 
     // Create texture for saving
     GL::Texture saveTexture;
