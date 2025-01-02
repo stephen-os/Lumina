@@ -46,6 +46,9 @@ private:
     float m_Padding;
     float m_TileSize;
 
+    // File 
+    std::string m_CurrentScenePath;
+
     // Flags/Attributes
     bool m_EraserMode;
     bool m_FillMode;

@@ -14,7 +14,8 @@
 TileEditor::TileEditor()
     : m_NumLayers(0), m_ActiveLayer(0), 
     m_Width(0), m_Height(0), m_Padding(0.0), m_TileSize(0.0),
-    m_EraserMode(false), m_FillMode(false), m_Opacity(1.0f), m_SelectedTextureIndex(-1) 
+    m_EraserMode(false), m_FillMode(false), m_Opacity(1.0f), 
+    m_SelectedTextureIndex(-1), m_CurrentScenePath("res/maps/tiles.json")
 {
     InitEditor(20, 20);
 }
@@ -33,7 +34,7 @@ void TileEditor::InitEditor(int width, int height)
     m_Padding = 0.0f;
     m_TileSize = 40.0f;
 
-    m_TileLayers = TileSerializer::Deserialize("res/maps/tiles.json");
+    m_TileLayers = TileSerializer::Deserialize(m_CurrentScenePath);
 
     if (m_TileLayers.size() == 0)
     {
@@ -51,7 +52,7 @@ void TileEditor::InitEditor(int width, int height)
 
 void TileEditor::Shutdown()
 {
-    TileSerializer::Serialize(m_TileLayers, "res/maps/tiles.json");
+    // TileSerializer::Serialize(m_TileLayers, m_CurrentScenePath);
 }
 
 void TileEditor::LoadTextures()
@@ -63,6 +64,35 @@ void TileEditor::LoadTextures()
 void TileEditor::Render()
 {
     ImGui::Begin("Tile Editor", nullptr, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+
+    // Scene management
+    ImGui::Text("Scene Management:");
+    static char scenePathBuffer[256];
+    strncpy_s(scenePathBuffer, m_CurrentScenePath.c_str(), sizeof(scenePathBuffer) - 1);
+    scenePathBuffer[sizeof(scenePathBuffer) - 1] = '\0';
+
+    if (ImGui::InputText("Scene Path", scenePathBuffer, sizeof(scenePathBuffer))) {
+        m_CurrentScenePath = std::string(scenePathBuffer);
+    }
+
+    if (ImGui::Button("Load Scene")) {
+        m_TileLayers = TileSerializer::Deserialize(m_CurrentScenePath);
+        if (m_TileLayers.size() == 0) {
+            AddLayer();
+        }
+        else {
+            m_NumLayers = (int)m_TileLayers.size();
+        }
+        UpdateMatrices();
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Save Scene")) {
+        TileSerializer::Serialize(m_TileLayers, m_CurrentScenePath);
+    }
+
+    ImGui::Separator();
 
     // Eraser tool.
     ImGui::Checkbox("Eraser Mode", &m_EraserMode);
