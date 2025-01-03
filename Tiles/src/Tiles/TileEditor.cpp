@@ -15,7 +15,8 @@ TileEditor::TileEditor()
     : m_NumLayers(0), m_ActiveLayer(0), 
     m_Width(0), m_Height(0), m_Padding(0.0), m_TileSize(0.0),
     m_EraserMode(false), m_FillMode(false), m_Opacity(1.0f), 
-    m_SelectedTextureIndex(-1), m_CurrentScenePath("res/maps/tiles.json")
+    m_SelectedTextureIndex(-1), m_CurrentScenePath("res/maps/tiles.json"),
+    m_TileAtlasPath("res/texture/world_tileset.png")
 {
     InitEditor(20, 20);
 }
@@ -58,7 +59,14 @@ void TileEditor::Shutdown()
 void TileEditor::LoadTextures()
 {
     // Need a check here to check if there is a texture loaded. 
-    m_Atlas.SetData("res/texture/world_tileset.png", 16, 16);
+    if (!m_TileAtlasPath.empty())
+    {
+        m_Atlas.SetData(m_TileAtlasPath, 16, 16);
+    }
+    else
+    {
+        std::cerr << "Tile atlas path is empty!" << std::endl;
+    }
 }
 
 void TileEditor::Render()
@@ -90,6 +98,21 @@ void TileEditor::Render()
 
     if (ImGui::Button("Save Scene")) {
         TileSerializer::Serialize(m_TileLayers, m_CurrentScenePath);
+    }
+
+    ImGui::Separator();
+
+    ImGui::Text("Tile Atlas Path:");
+    static char atlasPathBuffer[256];
+    strncpy_s(atlasPathBuffer, m_TileAtlasPath.c_str(), sizeof(atlasPathBuffer) - 1);
+    atlasPathBuffer[sizeof(atlasPathBuffer) - 1] = '\0';
+
+    if (ImGui::InputText("Atlas Path", atlasPathBuffer, sizeof(atlasPathBuffer))) {
+        m_TileAtlasPath = std::string(atlasPathBuffer);
+    }
+
+    if (ImGui::Button("Reload Atlas")) {
+        LoadTextures();
     }
 
     ImGui::Separator();

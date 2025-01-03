@@ -48,6 +48,7 @@ private:
 
     // File 
     std::string m_CurrentScenePath;
+    std::string m_TileAtlasPath;
 
     // Flags/Attributes
     bool m_EraserMode;
