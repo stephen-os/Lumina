@@ -1,4 +1,5 @@
 #include <vector>
+#include <stack>
 #include <glm/glm.hpp>
 
 #include "imgui.h"
@@ -7,6 +8,13 @@
 #include "Lumina/Renderer/TextureAtlas.h"
 
 #include "TileLayer.h"
+
+struct TileAction {
+    int x, y;                          
+    Tile previousState;                
+    Tile newState;                     
+};
+
 
 class TileEditor
 {
@@ -32,6 +40,10 @@ private:
     void ResetTile(int x, int y);
 
     void UpdateMatrices();
+
+    void RecordAction(int x, int y, const Tile& previous, const Tile& current);
+    void Undo();
+    void Redo();
 private:
     TextureAtlas m_Atlas;
 
@@ -55,6 +67,9 @@ private:
     bool m_FillMode;
     float m_Opacity;
     int m_SelectedTextureIndex;
+
+    std::stack<TileAction> m_UndoStack;  // Stack for undo actions
+    std::stack<TileAction> m_RedoStack;  // Stack for redo actions
 
     // Render Data
     std::vector<glm::mat4> m_Matrices;

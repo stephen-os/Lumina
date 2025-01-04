@@ -117,6 +117,18 @@ void TileEditor::Render()
 
     ImGui::Separator();
 
+    if (ImGui::Button("Undo")) {
+        Undo();
+    }
+
+    ImGui::SameLine();
+
+    if (ImGui::Button("Redo")) {
+        Redo();
+    }
+
+    ImGui::Separator();
+
     // Eraser tool.
     ImGui::Checkbox("Eraser Mode", &m_EraserMode);
 
@@ -226,28 +238,25 @@ void TileEditor::Render()
             ImVec2 tileMax = ImVec2(tileMin.x + m_TileSize, tileMin.y + m_TileSize);
 
             // Mouse interaction for painting
-            if (ImGui::IsMouseHoveringRect(tileMin, tileMax) && ImGui::IsMouseDown(0))
-            {
+            if (ImGui::IsMouseHoveringRect(tileMin, tileMax) && ImGui::IsMouseDown(0)) {
+                Tile previousTile = tile;
                 tile.m_Opacity = m_Opacity;
 
-                if (m_SelectedTextureIndex >= 0)
-                {
-                    if (m_FillMode)
-                    {
+                if (m_SelectedTextureIndex >= 0) {
+                    if (m_FillMode) {
                         FillLayer(x, y);
                     }
-                    else
-                    {
+                    else {
                         tile.m_UseTexture = true;
                         tile.m_TextureIndex = m_SelectedTextureIndex;
                     }
                 }
 
-                if (m_EraserMode)
-                {
+                if (m_EraserMode) {
                     ResetTile(x, y);
                 }
 
+                RecordAction(x, y, previousTile, tile);
                 UpdateMatrices();
             }
 
@@ -424,4 +433,58 @@ void TileEditor::UpdateMatrices()
             }
         }
     }
+}
+
+void TileEditor::RecordAction(int x, int y, const Tile& previous, const Tile& current) {
+    // Check if the stack is not empty and the top action matches the new action
+    if (!m_UndoStack.empty()) {
+        const TileAction& topAction = m_UndoStack.top();
+        if (topAction.x == x && topAction.y == y &&
+            topAction.newState.m_TextureIndex == current.m_TextureIndex &&
+            topAction.newState.m_UseTexture == current.m_UseTexture &&
+            topAction.newState.m_Opacity == current.m_Opacity) {
+            // If the action is redundant, do not push it to the stack
+            return;
+        }
+    }
+
+    // Push the new action if it represents a meaningful change
+    m_UndoStack.push({ x, y, previous, current });
+
+    // Clear redo stack since this is a new action
+    while (!m_RedoStack.empty()) {
+        m_RedoStack.pop();
+    }
+}
+
+void TileEditor::Undo() {
+    if (m_UndoStack.empty()) {
+        std::cerr << "No actions to undo!" << std::endl;
+        return;
+    }
+
+    TileAction lastAction = m_UndoStack.top();
+    m_UndoStack.pop();
+
+    Tile& tile = GetTile(lastAction.x, lastAction.y);
+    tile = lastAction.previousState;  // Restore the previous state
+    UpdateMatrices();
+
+    m_RedoStack.push(lastAction);  // Optional: Push to redo stack
+}
+
+void TileEditor::Redo() {
+    if (m_RedoStack.empty()) {
+        std::cerr << "No actions to redo!" << std::endl;
+        return;
+    }
+
+    TileAction lastAction = m_RedoStack.top();
+    m_RedoStack.pop();
+
+    Tile& tile = GetTile(lastAction.x, lastAction.y);
+    tile = lastAction.newState;  // Restore the new state
+    UpdateMatrices();
+
+    m_UndoStack.push(lastAction);  // Push back to undo stack
 }
