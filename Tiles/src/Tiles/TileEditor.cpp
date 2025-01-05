@@ -373,8 +373,6 @@ void TileEditor::FillLayer(int x, int y)
 
     int originalTextureIndex = m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex;
 
-    std::cout << originalTextureIndex << std::endl;
-
     if (originalTextureIndex == m_SelectedTextureIndex)
         return;
 
@@ -383,9 +381,6 @@ void TileEditor::FillLayer(int x, int y)
     tileQueue.push({ x, y });
 
     const std::vector<std::pair<int, int>> directions = { {1, 0}, {0, 1}, {-1, 0}, {0, -1} };
-
-    std::cout << "x: " << x << ", y: " << y << std::endl;
-    std::cout << m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex << std::endl;
 
     while (!tileQueue.empty())
     {
@@ -397,8 +392,6 @@ void TileEditor::FillLayer(int x, int y)
 
         if (m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex != originalTextureIndex)
            continue;
-
-        std::cout << "x: " << x << ", y: " << y << std::endl;
 
         m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_TextureIndex = m_SelectedTextureIndex;
         m_TileLayers[m_ActiveLayer].m_Tiles[y][x].m_UseTexture = true;
