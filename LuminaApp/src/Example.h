@@ -4,12 +4,21 @@
 #include "imgui.h"
 
 #include "Lumina/Layer.h"
-
 #include "Lumina/Utils/Timer.h"
 
 class Example : public Lumina::Layer
 {
 public:
+    virtual void OnAttach() override
+    {
+
+    }
+
+    virtual void OnDetach() override
+    {
+
+    }
+
     virtual void OnUpdate(float timestep) override
     {
         float elapsedTime = m_FrameTimer.Elapsed();
@@ -28,16 +37,7 @@ public:
         ImGui::End();
     }
 
-    virtual void OnAttach() override
-    {
-       
-    }
-
-    virtual void OnDetach() override
-    {
-  
-    }
 private:
     Lumina::Timer m_FrameTimer;
-    float m_FPS = 0;
+    float m_FPS = 0.0f;
 };

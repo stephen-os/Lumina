@@ -11,8 +11,4 @@ include "LuminaExternal.lua"
 -- Project Template
 
 include "LuminaApp"
-
--- Example Projects
-
-include "Tiles"
-include "Minecraft"
+include "LuminaTestApp"

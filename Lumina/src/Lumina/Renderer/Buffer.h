@@ -117,7 +117,7 @@ namespace Lumina
 
 		void SetData(const void* data, uint32_t size);
 
-		const BufferLayout& GetInfo() const { return m_BufferLayout; }
+		const BufferLayout& GetLayout() const { return m_BufferLayout; }
 		void SetLayout(const BufferLayout& layout) { m_BufferLayout = layout; }
 	private:
 		uint32_t m_BufferID;
