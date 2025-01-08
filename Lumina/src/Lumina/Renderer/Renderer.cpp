@@ -4,6 +4,10 @@
 
 namespace Lumina 
 {
+    void Renderer::Init()
+    {
+        m_FrameBuffer = Lumina::CreateRef<FrameBuffer>();
+    }
 
     void Renderer::Begin()
     {
@@ -21,18 +25,33 @@ namespace Lumina
         glDisable(GL_DEPTH_TEST);
     }
 
-    void Clear()
+    void Renderer::Clear()
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
 
-    void OnWindowResize(uint32_t width, uint32_t height)
+    void Renderer::ClearColor(float r, float g, float b, float a)
+    {
+
+        glClearColor(r, g, b, a);
+    }
+
+    void Renderer::Enable(RenderState param)
+    {
+        uint32_t state = ConvertToGLEnum(param);
+        glEnable(state); 
+    }
+
+    void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     {
         glViewport(0, 0, width, height);
+        m_FrameBuffer->Resize(width, height);
     }
 
     void Renderer::Draw(const Ref<VertexArray>& vertexArray)
     {
+        m_FrameBuffer->Bind();
+
         vertexArray->Bind();
 
         const auto& attributes = vertexArray->GetAttributes();
@@ -41,6 +60,10 @@ namespace Lumina
         {
             glDrawElements(GL_TRIANGLES, indexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
         }
+
+        vertexArray->Unbind();
+
+        m_FrameBuffer->Unbind(); 
 
         // ToDo DrawArrays. 
     }

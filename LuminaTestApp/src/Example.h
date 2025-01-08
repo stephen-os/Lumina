@@ -75,9 +75,9 @@ public:
             }
         )";
 
-        m_FrameBuffer = Lumina::CreateRef<Lumina::FrameBuffer>();
-
         m_Shader = Lumina::CreateRef<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
+
+        m_Renderer.Init(); 
     }
 
     virtual void OnDetach() override
@@ -98,33 +98,18 @@ public:
         // Begin rendering
         ImGui::Begin("Example Window");
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-        m_FrameBuffer->Resize(viewportSize.x, viewportSize.y);
+        m_Renderer.OnWindowResize(viewportSize.x, viewportSize.y);
+        m_Renderer.Clear(); 
+        m_Renderer.ClearColor(0.1f, 0.1f, 0.1f);
+        m_Renderer.Enable(Lumina::RenderState::DepthTest);
+        m_Renderer.Enable(Lumina::RenderState::CullFace);
 
-        GLCALL(glViewport(0, 0, viewportSize.x, viewportSize.y));
-        GLCALL(glClearColor(1.0f, 0.3f, 0.3f, 1.0f));
-        GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GLCALL(glEnable(GL_DEPTH_TEST));
-        GLCALL(glEnable(GL_CULL_FACE));
-
-        m_FrameBuffer->Bind();
-
-        // Bind shader and set uniforms (if any)
         m_Shader->Bind();
 
-        // Draw the square
+        m_Renderer.Draw(m_VertexArray);
 
-        m_VertexArray->Bind();
+        ImGui::Image((void*)(intptr_t)m_Renderer.GetID(), viewportSize);
 
-        const auto& attributes = m_VertexArray->GetAttributes();
-        const auto& indexBuffer = attributes.GetIndexBuffer();
-        if (indexBuffer)
-        {
-            glDrawElements(GL_TRIANGLES, indexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
-        }
-
-        ImGui::Image((void*)(intptr_t)m_FrameBuffer->GetColorAttachment(), viewportSize);
-
-        m_FrameBuffer->Unbind();
 
         // End rendering
         ImGui::End();
@@ -135,9 +120,10 @@ public:
     }
 
 private:
+    Lumina::Renderer m_Renderer;
+
     Lumina::Ref<Lumina::VertexArray> m_VertexArray;
     Lumina::Ref<Lumina::ShaderProgram> m_Shader;
-    Lumina::Ref<Lumina::FrameBuffer> m_FrameBuffer;
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 };
