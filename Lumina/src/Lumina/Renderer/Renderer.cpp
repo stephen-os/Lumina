@@ -1,6 +1,9 @@
 #include "Renderer.h"
 
 #include <glad/glad.h>
+#include <iostream>
+
+#include <stb_image_write.h>
 
 namespace Lumina 
 {
@@ -46,6 +49,17 @@ namespace Lumina
     {
         glViewport(0, 0, width, height);
         m_FrameBuffer->Resize(width, height);
+    }
+
+    void Renderer::SaveFrameBufferToImage(std::string& path)
+    {
+        std::vector<unsigned char> pixels(m_FrameBuffer->GetWidth() * m_FrameBuffer->GetHeight() * 4);
+        glReadPixels(0, 0, m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+
+        if (!stbi_write_png(path.c_str(), m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight(), 4, pixels.data(), m_FrameBuffer->GetWidth() * 4))
+        {
+            std::cout << "[Renderer] Faild to write FrameBuffer to file.";
+        }
     }
 
     void Renderer::Draw(const Ref<VertexArray>& vertexArray)

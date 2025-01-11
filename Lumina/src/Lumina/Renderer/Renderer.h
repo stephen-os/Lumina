@@ -45,6 +45,8 @@ namespace Lumina
 		void Begin(); 
 		void End(); 
 
+        void SaveFrameBufferToImage(std::string& path); 
+
 		void Draw(const Ref<VertexArray>& vertexArray);
 		uint32_t GetID() { return m_FrameBuffer->GetColorAttachment(); }
 	private:
