@@ -23,6 +23,8 @@ namespace Lumina
         m_TexWidth = 1.0f / static_cast<float>(m_GridWidth);
         m_TexHeight = 1.0f / static_cast<float>(m_GridHeight);
 
+        m_TexCoords.clear();
+
         m_TexCoords.reserve(m_GridWidth * m_GridHeight);
         for (int y = 0; y < m_GridHeight; ++y) 
         {

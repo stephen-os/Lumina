@@ -29,6 +29,12 @@ namespace Lumina
 
     bool Texture::SetData(std::string source)
     {
+        if (m_BufferID > 0)
+        {
+            GLCALL(glDeleteTextures(1, &m_BufferID));
+            GLCALL(glGenTextures(1, &m_BufferID));
+        }
+
         Bind(m_Slot);
 
         int channels;
