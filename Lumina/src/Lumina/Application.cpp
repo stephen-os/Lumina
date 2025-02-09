@@ -44,8 +44,6 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
         return;
     }
 
-    std::cout << glGetString(GL_VERSION) << std::endl;
-
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
 
