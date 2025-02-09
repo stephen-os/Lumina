@@ -11,6 +11,7 @@ group "Dependencies"
    include "Dependencies/glfw"
    include "Dependencies/glad"
    include "Dependencies/tinygltf"
+   include "Dependencies/imguifd"
 group ""
 
 group "Core"

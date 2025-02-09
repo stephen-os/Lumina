@@ -15,7 +15,8 @@ project "Lumina"
       "../Dependencies/glm",
       "../Dependencies/stb_image",
       "../Dependencies/glad/include",
-      "../Dependencies/tinygltf"
+      "../Dependencies/tinygltf",
+      "../Dependencies/imguifd"
    }
 
    links
@@ -24,6 +25,7 @@ project "Lumina"
        "GLFW",
        "Glad",
        "TinyGLTF",
+       "ImGuiFD",
 
        "opengl32.lib"
    }

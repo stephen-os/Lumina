@@ -16,7 +16,8 @@ project "LuminaApp"
       "../Dependencies/glfw/include",
       "../Dependencies/glm",
       "../Dependencies/glad/include",
-      "../Dependencies/tinygltf"
+      "../Dependencies/tinygltf",
+      "../Dependencies/imguifd"
    }
 
     links
@@ -26,7 +27,8 @@ project "LuminaApp"
         "ImGui",
         "GLFW",
         "Glad",
-        "TinyGLTF", 
+        "TinyGLTF",
+        "ImGuiFD", 
  
         "opengl32.lib"
     }

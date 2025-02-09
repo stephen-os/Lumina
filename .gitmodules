@@ -13,3 +13,6 @@
 [submodule "Dependencies/imgui"]
 	path = Dependencies/imgui
 	url = https://github.com/Resetss/imgui.git
+[submodule "Dependencies/imguifd"]
+	path = Dependencies/imguifd
+	url = https://github.com/Resetss/ImGuiFileDialog.git
