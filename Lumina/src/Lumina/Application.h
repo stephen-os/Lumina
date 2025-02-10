@@ -41,7 +41,6 @@ namespace Lumina
 			m_LayerStack.emplace_back(std::make_shared<T>())->OnAttach();
 		}
 
-		void ApplyDarkTheme();
 		void SetWindowFullscreen();
 
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
