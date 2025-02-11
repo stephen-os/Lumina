@@ -4,17 +4,19 @@
 namespace Lumina
 {
     TextureAtlas::TextureAtlas()
-        : m_GridWidth(1), m_GridHeight(1), m_TexWidth(0.0f), m_TexHeight(0.0f) {}
+        : m_GridWidth(1), m_GridHeight(1), m_TexWidth(0.0f), m_TexHeight(0.0f),m_IsCreated(false), m_Path("") {}
 
     void TextureAtlas::CreateAtlas(const std::string& path, int width, int height)
     { 
-        m_Path = path;
-
         if (!m_Texture.SetData(path)) 
         {
             std::cerr << "[Texture Atlas] Failed to load texture atlas: " << path << std::endl;
             return;
         }
+
+        m_Path = path;
+        m_IsCreated = true;
+
         CalculateTexCoords(width, height);
     }
 

@@ -21,10 +21,14 @@ namespace Lumina
 
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        m_FrameBuffer->Bind();
     }
 
     void Renderer::End()
     {
+        m_FrameBuffer->Unbind();
+
         glDisable(GL_DEPTH_TEST);
     }
 
@@ -53,6 +57,8 @@ namespace Lumina
 
     void Renderer::SaveFrameBufferToImage(std::string& path)
     {
+        m_FrameBuffer->Bind();
+
         std::vector<unsigned char> pixels(m_FrameBuffer->GetWidth() * m_FrameBuffer->GetHeight() * 4);
         glReadPixels(0, 0, m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 
@@ -60,12 +66,12 @@ namespace Lumina
         {
             std::cout << "[Renderer] Faild to write FrameBuffer to file.";
         }
+
+        m_FrameBuffer->Unbind();
     }
 
     void Renderer::Draw(const Ref<VertexArray>& vertexArray)
     {
-        m_FrameBuffer->Bind();
-
         vertexArray->Bind();
 
         const auto& attributes = vertexArray->GetAttributes();
@@ -76,8 +82,6 @@ namespace Lumina
         }
 
         vertexArray->Unbind();
-
-        m_FrameBuffer->Unbind(); 
 
         // ToDo DrawArrays. 
     }

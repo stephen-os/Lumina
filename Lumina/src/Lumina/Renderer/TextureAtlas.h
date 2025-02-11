@@ -21,6 +21,8 @@ namespace Lumina
         void Bind() const;
         void Unbind() const;
 
+        bool IsCreated() const { return m_IsCreated; }
+
         int GetGridWidth() const { return m_GridWidth; }
         int GetGridHeight() const { return m_GridHeight; }
         std::string GetPath() const { return m_Path; }
@@ -34,6 +36,7 @@ namespace Lumina
         int m_GridHeight;                   // Number of textures along the height
         float m_TexWidth;                   // Width of a single texture in UV space
         float m_TexHeight;                  // Height of a single texture in UV space
+        bool m_IsCreated;                   // Is the atlas created
         std::vector<glm::vec4> m_TexCoords; // Precomputed texture coordinates
         std::string m_Path;                 // Atlas path
     };
