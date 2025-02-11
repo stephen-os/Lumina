@@ -8,14 +8,20 @@ namespace Lumina
 
     void TextureAtlas::CreateAtlas(const std::string& path, int width, int height)
     { 
-        m_GridWidth = width;
-        m_GridHeight = height;
+        m_Path = path;
 
         if (!m_Texture.SetData(path)) 
         {
             std::cerr << "[Texture Atlas] Failed to load texture atlas: " << path << std::endl;
             return;
         }
+        CalculateTexCoords(width, height);
+    }
+
+    void TextureAtlas::CalculateTexCoords(int width, int height)
+    {
+        m_GridWidth = width;
+        m_GridHeight = height;
 
         int texturePixelWidth = m_Texture.GetWidth();
         int texturePixelHeight = m_Texture.GetHeight();
@@ -26,9 +32,9 @@ namespace Lumina
         m_TexCoords.clear();
 
         m_TexCoords.reserve(m_GridWidth * m_GridHeight);
-        for (int y = 0; y < m_GridHeight; ++y) 
+        for (int y = 0; y < m_GridHeight; ++y)
         {
-            for (int x = 0; x < m_GridWidth; ++x) 
+            for (int x = 0; x < m_GridWidth; ++x)
             {
                 float uMin = x * m_TexWidth;
                 float vMin = y * m_TexHeight;
