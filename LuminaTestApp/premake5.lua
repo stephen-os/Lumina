@@ -17,7 +17,8 @@ project "LuminaTestApp"
       "../Dependencies/glm",
       "../Dependencies/glad/include",
       "../Dependencies/tinygltf",
-      "../Dependencies/imguifd"
+      "../Dependencies/imguifd",
+      "../Dependencies/spdlog/include"
    }
 
     links
@@ -32,6 +33,8 @@ project "LuminaTestApp"
  
         "opengl32.lib"
     }
+
+    buildoptions { "/utf-8" }
 
    targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
    objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")

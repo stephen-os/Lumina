@@ -16,7 +16,8 @@ project "Lumina"
       "../Dependencies/stb_image",
       "../Dependencies/glad/include",
       "../Dependencies/tinygltf",
-      "../Dependencies/imguifd"
+      "../Dependencies/imguifd",
+      "../Dependencies/spdlog/include"
    }
 
    links
@@ -34,6 +35,8 @@ project "Lumina"
    {
       "GLEW_STATIC"
    }
+
+   buildoptions { "/utf-8" }
 
    targetdir ("bin/" .. outputdir .. "/%{prj.name}")
    objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")

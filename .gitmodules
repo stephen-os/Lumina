@@ -16,3 +16,6 @@
 [submodule "Dependencies/imguifd"]
 	path = Dependencies/imguifd
 	url = https://github.com/Resetss/ImGuiFileDialog.git
+[submodule "Dependencies/spdlog"]
+	path = Dependencies/spdlog
+	url = https://github.com/Resetss/spdlog.git

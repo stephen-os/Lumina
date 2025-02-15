@@ -2,6 +2,7 @@
 
 IncludeDir = {}
 IncludeDir["glm"] = "../Dependencies/glm"
+IncludeDir["spdlog"] = "../Dependencies/spdlog/include"
 
 Library = {}
 Library["OpenGL"] = "opengl32.lib"

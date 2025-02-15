@@ -14,11 +14,15 @@
 #include "Lumina/Renderer/FrameBuffer.h"
 #include "Lumina/Renderer/RendererDebug.h"
 
+#include "spdlog/spdlog.h"
+
 class Dialog : public Lumina::Layer
 {
 public:
     virtual void OnAttach() override
     {
+        spdlog::info("Welcome to spdlog!");
+
         float vertices[] = {
             // Positions       // Colors
             -0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // Bottom-left
