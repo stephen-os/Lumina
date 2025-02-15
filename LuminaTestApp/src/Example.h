@@ -98,6 +98,7 @@ public:
         // Begin rendering
         ImGui::Begin("Example Window");
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
+        m_Renderer.Begin(); 
         m_Renderer.OnWindowResize(viewportSize.x, viewportSize.y);
         m_Renderer.Clear(); 
         m_Renderer.ClearColor(0.1f, 0.1f, 0.1f);
@@ -110,6 +111,7 @@ public:
 
         ImGui::Image((void*)(intptr_t)m_Renderer.GetID(), viewportSize);
 
+        m_Renderer.End();
 
         // End rendering
         ImGui::End();
