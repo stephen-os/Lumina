@@ -82,8 +82,19 @@ namespace Lumina
         }
 
         vertexArray->Unbind();
-
-        // ToDo DrawArrays. 
     }
 
+    void Renderer::DrawInstanced(const Ref<VertexArray>& vertexArray, uint32_t instances)
+    {
+        vertexArray->Bind();
+
+        const auto& attributes = vertexArray->GetAttributes();
+        const auto& indexBuffer = attributes.GetIndexBuffer();
+        if (indexBuffer)
+        {
+            glDrawElementsInstanced(GL_TRIANGLES, indexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr, instances);
+        }
+
+        vertexArray->Unbind();
+    }
 }
