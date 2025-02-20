@@ -74,11 +74,12 @@ public:
         )";
 
         m_Shader = Lumina::CreateRef<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
-        m_Renderer.Init();
+        Lumina::Renderer::Init();
     }
 
     virtual void OnDetach() override
     {
+        Lumina::Renderer::Shutdown(); 
     }
 
     virtual void OnUpdate(float ts) override
@@ -92,17 +93,17 @@ public:
     {
         ImGui::Begin("Example Window");
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-        m_Renderer.Begin();
-        m_Renderer.OnWindowResize(viewportSize.x, viewportSize.y);
-        m_Renderer.Clear();
-        m_Renderer.ClearColor(0.1f, 0.1f, 0.1f);
-        m_Renderer.Enable(Lumina::RenderState::DepthTest);
-        m_Renderer.Enable(Lumina::RenderState::CullFace);
+        Lumina::Renderer::Begin();
+        Lumina::Renderer::OnWindowResize(viewportSize.x, viewportSize.y);
+        Lumina::Renderer::Clear();
+        Lumina::Renderer::ClearColor(0.1f, 0.1f, 0.1f);
+        Lumina::Renderer::Enable(Lumina::State::DEPTH_TEST);
+        Lumina::Renderer::Enable(Lumina::State::CULL_FACE);
 
         m_Shader->Bind();
-        m_Renderer.Draw(m_VertexArray);
-        ImGui::Image((void*)(intptr_t)m_Renderer.GetID(), viewportSize);
-        m_Renderer.End();
+        Lumina::Renderer::Draw(m_VertexArray);
+        ImGui::Image((void*)(intptr_t)Lumina::Renderer::GetID(), viewportSize);
+        Lumina::Renderer::End();
         ImGui::End();
 
         ImGui::Begin("File Dialog");
@@ -131,7 +132,6 @@ public:
     }
 
 private:
-    Lumina::Renderer m_Renderer;
     Lumina::Ref<Lumina::VertexArray> m_VertexArray;
     Lumina::Ref<Lumina::ShaderProgram> m_Shader;
     Lumina::Timer m_FrameTimer;
