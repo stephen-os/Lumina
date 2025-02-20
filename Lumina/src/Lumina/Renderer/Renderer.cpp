@@ -5,11 +5,18 @@
 
 #include <stb_image_write.h>
 
-namespace Lumina 
+namespace Lumina
 {
+    Ref<FrameBuffer> Renderer::s_FrameBuffer;
+
     void Renderer::Init()
     {
-        m_FrameBuffer = Lumina::CreateRef<FrameBuffer>();
+        s_FrameBuffer = Lumina::CreateRef<FrameBuffer>();
+    }
+
+    void Renderer::Shutdown()
+    {
+        s_FrameBuffer.reset();
     }
 
     void Renderer::Begin()
@@ -22,12 +29,12 @@ namespace Lumina
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-        m_FrameBuffer->Bind();
+        s_FrameBuffer->Bind();
     }
 
     void Renderer::End()
     {
-        m_FrameBuffer->Unbind();
+        s_FrameBuffer->Unbind();
 
         glDisable(GL_DEPTH_TEST);
     }
@@ -39,35 +46,34 @@ namespace Lumina
 
     void Renderer::ClearColor(float r, float g, float b, float a)
     {
-
         glClearColor(r, g, b, a);
     }
 
-    void Renderer::Enable(RenderState param)
+    void Renderer::Enable(State param)
     {
         uint32_t state = ConvertToGLEnum(param);
-        glEnable(state); 
+        glEnable(state);
     }
 
     void Renderer::OnWindowResize(uint32_t width, uint32_t height)
     {
         glViewport(0, 0, width, height);
-        m_FrameBuffer->Resize(width, height);
+        s_FrameBuffer->Resize(width, height);
     }
 
     void Renderer::SaveFrameBufferToImage(std::string& path)
     {
-        m_FrameBuffer->Bind();
+        s_FrameBuffer->Bind();
 
-        std::vector<unsigned char> pixels(m_FrameBuffer->GetWidth() * m_FrameBuffer->GetHeight() * 4);
-        glReadPixels(0, 0, m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+        std::vector<unsigned char> pixels(s_FrameBuffer->GetWidth() * s_FrameBuffer->GetHeight() * 4);
+        glReadPixels(0, 0, s_FrameBuffer->GetWidth(), s_FrameBuffer->GetHeight(), GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
 
-        if (!stbi_write_png(path.c_str(), m_FrameBuffer->GetWidth(), m_FrameBuffer->GetHeight(), 4, pixels.data(), m_FrameBuffer->GetWidth() * 4))
+        if (!stbi_write_png(path.c_str(), s_FrameBuffer->GetWidth(), s_FrameBuffer->GetHeight(), 4, pixels.data(), s_FrameBuffer->GetWidth() * 4))
         {
-            std::cout << "[Renderer] Faild to write FrameBuffer to file.";
+            std::cout << "[Renderer] Failed to write FrameBuffer to file.";
         }
 
-        m_FrameBuffer->Unbind();
+        s_FrameBuffer->Unbind();
     }
 
     void Renderer::Draw(const Ref<VertexArray>& vertexArray)

@@ -10,48 +10,53 @@
 
 namespace Lumina
 {
-    enum class RenderState {
-        DepthTest,
-        CullFace,
-        Blend,
+    enum class State
+    {
+        DEPTH_TEST,
+        CULL_FACE,
+        BLEND,
     };
 
-    inline uint32_t ConvertToGLEnum(RenderState state) {
-        static const std::unordered_map<RenderState, uint32_t> stateMap = {
-            { RenderState::DepthTest, GL_DEPTH_TEST },
-            { RenderState::CullFace, GL_CULL_FACE },
-            { RenderState::Blend, GL_BLEND }
+    inline uint32_t ConvertToGLEnum(State state) 
+    {
+        static const std::unordered_map<State, uint32_t> stateMap = 
+        {
+            { State::DEPTH_TEST, GL_DEPTH_TEST },
+            { State::CULL_FACE, GL_CULL_FACE },
+            { State::BLEND, GL_BLEND }
         };
 
         auto it = stateMap.find(state);
-        if (it != stateMap.end()) {
+        if (it != stateMap.end()) 
+        {
             return it->second;
         }
 
         throw std::invalid_argument("Invalid RenderState");
     }
 
-	class Renderer
-	{
-	public:
-        void Init(); 
+    class Renderer
+    {
+    public:
+        static void Init();
+        static void Shutdown();
 
-		void OnWindowResize(uint32_t width, uint32_t height);
+        static void OnWindowResize(uint32_t width, uint32_t height);
 
-		void Clear();
-		void ClearColor(float r, float g, float b, float a = 1.0f);
-		void Enable(RenderState param);
+        static void Clear();
+        static void ClearColor(float r, float g, float b, float a = 1.0f);
+        static void Enable(State param);
 
-		void Begin(); 
-		void End(); 
+        static void Begin();
+        static void End();
 
-        void SaveFrameBufferToImage(std::string& path); 
+        static void SaveFrameBufferToImage(std::string& path);
 
-		void Draw(const Ref<VertexArray>& vertexArray);
-        void DrawInstanced(const Ref<VertexArray>& vertexArray, uint32_t instances);
+        static void Draw(const Ref<VertexArray>& vertexArray);
+        static void DrawInstanced(const Ref<VertexArray>& vertexArray, uint32_t instances);
 
-		uint32_t GetID() { return m_FrameBuffer->GetColorAttachment(); }
-	private:
-		Ref<FrameBuffer> m_FrameBuffer; 
-	};
+        static uint32_t GetID() { return s_FrameBuffer->GetColorAttachment(); }; 
+    private:
+        static Ref<FrameBuffer> s_FrameBuffer;
+    };
 }
