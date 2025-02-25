@@ -16,6 +16,15 @@ namespace Lumina
         GLCALL(glDeleteTextures(1, &m_BufferID));
     }
 
+    void Texture::Reset()
+    {
+        if (m_BufferID > 0)
+        {
+            GLCALL(glDeleteTextures(1, &m_BufferID));
+            GLCALL(glGenTextures(1, &m_BufferID));
+        }
+    }
+
     void Texture::Bind(uint32_t slot) const
     {
         GLCALL(glActiveTexture(GL_TEXTURE0 + slot));

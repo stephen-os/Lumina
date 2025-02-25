@@ -13,6 +13,8 @@ namespace Lumina
 		Texture(); 
 		~Texture();
 
+		void Reset();
+
 		void Bind(uint32_t slot = 0) const;
 		void Unbind() const;
 
