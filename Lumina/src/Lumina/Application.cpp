@@ -31,21 +31,6 @@ Lumina::Application::Application(const ApplicationSpecification& applicationSpec
     glfwMakeContextCurrent(m_Window);
     glfwSwapInterval(1);
 
-    // This isnt really docking to the monitor, but its close enough. 
-    // I cant seem to figure out how to get the window to acutally dock.
-    if (m_Specifications.Dock)
-    {
-        GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
-        if (primaryMonitor)
-        {
-            int xpos, ypos, width, height;
-            glfwGetMonitorWorkarea(primaryMonitor, &xpos, &ypos, &width, &height);
-
-            glfwSetWindowPos(m_Window, xpos, ypos + 25);
-            glfwSetWindowSize(m_Window, width, height - 25);
-        }
-    }
-
     // Fullscreen
     if (m_Specifications.Fullscreen)
     {
