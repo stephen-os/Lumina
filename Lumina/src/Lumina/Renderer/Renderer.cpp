@@ -7,11 +7,11 @@
 
 namespace Lumina
 {
-    Ref<FrameBuffer> Renderer::s_FrameBuffer;
+    Shared<FrameBuffer> Renderer::s_FrameBuffer;
 
     void Renderer::Init()
     {
-        s_FrameBuffer = Lumina::CreateRef<FrameBuffer>();
+        s_FrameBuffer = Lumina::MakeShared<FrameBuffer>();
     }
 
     void Renderer::Shutdown()
@@ -76,7 +76,7 @@ namespace Lumina
         s_FrameBuffer->Unbind();
     }
 
-    void Renderer::Draw(const Ref<VertexArray>& vertexArray)
+    void Renderer::Draw(const Shared<VertexArray>& vertexArray)
     {
         vertexArray->Bind();
 
@@ -90,7 +90,7 @@ namespace Lumina
         vertexArray->Unbind();
     }
 
-    void Renderer::DrawInstanced(const Ref<VertexArray>& vertexArray, uint32_t instances)
+    void Renderer::DrawInstanced(const Shared<VertexArray>& vertexArray, uint32_t instances)
     {
         vertexArray->Bind();
 

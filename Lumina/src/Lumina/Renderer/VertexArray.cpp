@@ -4,7 +4,7 @@
 #include <iostream>
 
 #include <glad/glad.h>
-#include "../base.h"
+#include "../Core/Aliases.h"
 
 namespace Lumina {
 
@@ -14,7 +14,7 @@ namespace Lumina {
 
     VertexAttributes::~VertexAttributes() = default;
 
-    void VertexAttributes::AddVertexBuffer(Ref<VertexBuffer> vertexBuffer)
+    void VertexAttributes::AddVertexBuffer(Shared<VertexBuffer> vertexBuffer)
     {
         const auto& layout = vertexBuffer->GetLayout();
         for (const auto& element : layout)
@@ -100,7 +100,7 @@ namespace Lumina {
         m_Vertices.push_back(vertexBuffer);
     }
 
-    void VertexAttributes::SetIndexBuffer(Ref<IndexBuffer> indexBuffer)
+    void VertexAttributes::SetIndexBuffer(Shared<IndexBuffer> indexBuffer)
     {
         GLCALL(indexBuffer->Bind());
         m_IndexBuffer = indexBuffer;
@@ -128,14 +128,14 @@ namespace Lumina {
         GLCALL(glBindVertexArray(0));
     }
 
-    void VertexArray::AddVertexBuffer(Ref<VertexBuffer> vertexBuffer)
+    void VertexArray::AddVertexBuffer(Shared<VertexBuffer> vertexBuffer)
     {
         Bind();
         vertexBuffer->Bind();
         m_Attributes.AddVertexBuffer(vertexBuffer);
     }
 
-    void VertexArray::SetIndexBuffer(Ref<IndexBuffer> indexBuffer)
+    void VertexArray::SetIndexBuffer(Shared<IndexBuffer> indexBuffer)
     {
         Bind();
         indexBuffer->Bind();

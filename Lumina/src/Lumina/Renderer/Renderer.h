@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <stdexcept>
 
-#include "../base.h"
+#include "../Core/Aliases.h"
 
 namespace Lumina
 {
@@ -52,11 +52,11 @@ namespace Lumina
 
         static void SaveFrameBufferToImage(std::string& path);
 
-        static void Draw(const Ref<VertexArray>& vertexArray);
-        static void DrawInstanced(const Ref<VertexArray>& vertexArray, uint32_t instances);
+        static void Draw(const Shared<VertexArray>& vertexArray);
+        static void DrawInstanced(const Shared<VertexArray>& vertexArray, uint32_t instances);
 
         static uint32_t GetID() { return s_FrameBuffer->GetColorAttachment(); }; 
     private:
-        static Ref<FrameBuffer> s_FrameBuffer;
+        static Shared<FrameBuffer> s_FrameBuffer;
     };
 }

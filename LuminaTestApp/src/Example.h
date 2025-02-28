@@ -3,7 +3,8 @@
 
 #include "imgui.h"
 
-#include "Lumina/Layer.h"
+#include "Lumina/Core/Layer.h"
+#include "Lumina/Core/Aliases.h"
 #include "Lumina/Utils/Timer.h"
 #include "Lumina/Renderer/Renderer.h"
 #include "Lumina/Renderer/VertexArray.h"
@@ -31,10 +32,10 @@ public:
         };
 
         // Create Vertex Array
-        m_VertexArray = Lumina::CreateRef<Lumina::VertexArray>();
+        m_VertexArray = Lumina::MakeShared<Lumina::VertexArray>();
 
         // Create Vertex Buffer
-        auto vertexBuffer = Lumina::CreateRef<Lumina::VertexBuffer>(vertices, sizeof(vertices));
+        auto vertexBuffer = Lumina::MakeShared<Lumina::VertexBuffer>(vertices, sizeof(vertices));
 
         // Define the layout of the vertex data
         vertexBuffer->SetLayout({
@@ -46,7 +47,7 @@ public:
         m_VertexArray->AddVertexBuffer(vertexBuffer);
 
         // Create Index Buffer
-        auto indexBuffer = Lumina::CreateRef<Lumina::IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
+        auto indexBuffer = Lumina::MakeShared<Lumina::IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
         // Create Shader
@@ -75,7 +76,7 @@ public:
             }
         )";
 
-        m_Shader = Lumina::CreateRef<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
+        m_Shader = Lumina::MakeShared<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
 
         Lumina::Renderer::Init();
     }
@@ -122,8 +123,8 @@ public:
     }
 
 private:
-    Lumina::Ref<Lumina::VertexArray> m_VertexArray;
-    Lumina::Ref<Lumina::ShaderProgram> m_Shader;
+    Lumina::Shared<Lumina::VertexArray> m_VertexArray;
+    Lumina::Shared<Lumina::ShaderProgram> m_Shader;
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 };

@@ -20,7 +20,7 @@ namespace Lumina
         };
 
         // Create Vertex Buffer
-        Lumina::Ref<Lumina::VertexBuffer> vertexBuffer = std::make_shared<Lumina::VertexBuffer>(
+        Lumina::Shared<Lumina::VertexBuffer> vertexBuffer = std::make_shared<Lumina::VertexBuffer>(
             vertices.data(),
             static_cast<uint32_t>(vertices.size() * sizeof(float))
         );
@@ -34,7 +34,7 @@ namespace Lumina
         vertexBuffer->SetLayout(layout);
 
         // Create Index Buffer
-        Lumina::Ref<Lumina::IndexBuffer> indexBuffer = std::make_shared<Lumina::IndexBuffer>(
+        Lumina::Shared<Lumina::IndexBuffer> indexBuffer = std::make_shared<Lumina::IndexBuffer>(
             indices.data(),
             static_cast<uint32_t>(indices.size())
         );

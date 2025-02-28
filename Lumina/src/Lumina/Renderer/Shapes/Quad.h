@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "../VertexArray.h"
-#include "../../Base.h"
+#include "../../Core/Aliases.h"
 
 namespace Lumina 
 {
@@ -16,8 +16,8 @@ class Quad
         Quad();
         ~Quad() = default;
 
-        const Lumina::Ref<Lumina::VertexArray>& GetVertexArray() { return m_VertexArray; }
+        const Lumina::Shared<Lumina::VertexArray>& GetVertexArray() { return m_VertexArray; }
     private:
-        Lumina::Ref<Lumina::VertexArray> m_VertexArray;
+        Lumina::Shared<Lumina::VertexArray> m_VertexArray;
     };
 }

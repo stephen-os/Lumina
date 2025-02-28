@@ -5,7 +5,7 @@
 #include "imgui.h"
 #include "ImGuiFileDialog.h"
 
-#include "Lumina/Layer.h"
+#include "Lumina/Core/Layer.h"
 #include "Lumina/Utils/Timer.h"
 #include "Lumina/Renderer/Renderer.h"
 #include "Lumina/Renderer/VertexArray.h"
@@ -36,8 +36,8 @@ public:
             2, 3, 0   // Second triangle
         };
 
-        m_VertexArray = Lumina::CreateRef<Lumina::VertexArray>();
-        auto vertexBuffer = Lumina::CreateRef<Lumina::VertexBuffer>(vertices, sizeof(vertices));
+        m_VertexArray = Lumina::MakeShared<Lumina::VertexArray>();
+        auto vertexBuffer = Lumina::MakeShared<Lumina::VertexBuffer>(vertices, sizeof(vertices));
 
         vertexBuffer->SetLayout({
             { Lumina::BufferDataType::Float3, "a_Position" },
@@ -45,7 +45,7 @@ public:
             });
 
         m_VertexArray->AddVertexBuffer(vertexBuffer);
-        auto indexBuffer = Lumina::CreateRef<Lumina::IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
+        auto indexBuffer = Lumina::MakeShared<Lumina::IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
         const std::string vertexSrc = R"(
@@ -73,7 +73,7 @@ public:
             }
         )";
 
-        m_Shader = Lumina::CreateRef<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
+        m_Shader = Lumina::MakeShared<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
         Lumina::Renderer::Init();
     }
 
@@ -132,8 +132,8 @@ public:
     }
 
 private:
-    Lumina::Ref<Lumina::VertexArray> m_VertexArray;
-    Lumina::Ref<Lumina::ShaderProgram> m_Shader;
+    Lumina::Shared<Lumina::VertexArray> m_VertexArray;
+    Lumina::Shared<Lumina::ShaderProgram> m_Shader;
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
     std::string m_SelectedFile;
