@@ -2,7 +2,7 @@
 
 #include "Application.h"
 
-#ifdef WL_PLATFORM_WINDOWS
+#ifdef LUMINA_PLATFORM_WINDOWS
 
 extern Lumina::Application* Lumina::CreateApplication(int argc, char** argv);
 
@@ -18,7 +18,7 @@ namespace Lumina
 	}
 }
 
-#ifdef WL_DIST
+#ifdef LUMINA_DIST
 
 #include <Windows.h>
 
@@ -34,6 +34,6 @@ int main(int argc, char** argv)
 	return Lumina::Main(argc, argv); 
 }
 
-#endif // WL_DIST
+#endif // LUMINA_DIST
 
-#endif // WL_PLATFORM_WINDOWS
+#endif // LUMINA_PLATFORM_WINDOWS
