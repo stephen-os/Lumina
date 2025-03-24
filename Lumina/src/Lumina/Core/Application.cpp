@@ -107,11 +107,22 @@ namespace Lumina
             style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
 
-        ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
+        // OpenGL  
+        if (m_Specifications.Api == API::OPENGL)
+        {
+            ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
+            const char* glsl_version = "#version 130";
+            ImGui_ImplOpenGL3_Init(glsl_version);
+        }
 
-        const char* glsl_version = "#version 130";
-        ImGui_ImplOpenGL3_Init(glsl_version);
+        // Vulkan
+        if (m_Specifications.Api == API::VULKAN)
+        {
+            // TODO
+        }
 
+    
+        // Apply Theme
         if (m_Specifications.Theme)
             ApplyLuminaTheme(); 
     }
@@ -123,8 +134,19 @@ namespace Lumina
             layer->OnDetach();
 
         m_LayerStack.clear(); 
+        
+        // OpenGL
+        if (m_Specifications.Api == API::OPENGL)
+        {
+            ImGui_ImplOpenGL3_Shutdown();
+        }
 
-        ImGui_ImplOpenGL3_Shutdown();
+        // Vulkan
+        if (m_Specifications.Api == API::VULKAN)
+        {
+            // TODO 
+        }
+
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
 
@@ -142,8 +164,19 @@ namespace Lumina
 
             glfwPollEvents();
 
+            // OpenGL
+            if (m_Specifications.Api == API::OPENGL)
+            {
+                ImGui_ImplOpenGL3_NewFrame();
+            }
+
+            // Vulkan
+            if (m_Specifications.Api == API::VULKAN)
+            {
+                // TODO
+            }
+
             // ImGui new frame
-            ImGui_ImplOpenGL3_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             ImGui::DockSpaceOverViewport();
@@ -180,7 +213,18 @@ namespace Lumina
             // Render ImGui
             ImGui::Render();
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+            // OpenGL Draw
+            if (m_Specifications.Api == API::OPENGL)
+            {
+                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+            }
+
+            // Vulkan Draw
+            if (m_Specifications.Api == API::VULKAN)
+            {
+
+            }
 
             // Handle ImGui viewport if enabled
             ImGuiIO& io = ImGui::GetIO();

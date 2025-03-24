@@ -17,6 +17,11 @@
 namespace Lumina 
 {
 
+	enum class API {
+		OPENGL, 
+		VULKAN
+	};
+
 	struct ApplicationSpecification
 	{
 		std::string Name = "Lumina App";
@@ -25,6 +30,7 @@ namespace Lumina
 		bool Fullscreen = false;
 		bool Dock = false;
 		bool Theme = true; 
+		API Api = API::OPENGL;
 	};
 
 	class Application
