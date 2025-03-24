@@ -24,6 +24,7 @@ namespace Lumina
 		uint32_t Height = 900;
 		bool Fullscreen = false;
 		bool Dock = false;
+		bool Theme = true; 
 	};
 
 	class Application
@@ -43,6 +44,8 @@ namespace Lumina
 		}
 
 		void SetWindowFullscreen();
+
+		void ApplyLuminaTheme();
 
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
