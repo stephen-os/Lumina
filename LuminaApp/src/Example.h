@@ -5,13 +5,14 @@
 
 #include "Lumina/Core/Layer.h"
 #include "Lumina/Utils/Timer.h"
+#include "Lumina/Utils/UUID.h"
 
 class Example : public Lumina::Layer
 {
 public:
     virtual void OnAttach() override
     {
-
+        m_UniqueID = Lumina::UUID::Generate(); 
     }
 
     virtual void OnDetach() override
@@ -30,6 +31,7 @@ public:
     {
         ImGui::Begin("Example Window");
         ImGui::Text("Hello World!");
+        ImGui::Text("Unique ID: %d", m_UniqueID);
         ImGui::End();
 
         ImGui::Begin("FPS Counter");
@@ -40,4 +42,6 @@ public:
 private:
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
+
+    uint64_t m_UniqueID = 0; 
 };
