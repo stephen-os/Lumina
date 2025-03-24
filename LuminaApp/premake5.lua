@@ -18,7 +18,9 @@ project "LuminaApp"
       "../Dependencies/glad/include",
       "../Dependencies/tinygltf",
       "../Dependencies/imguifd",
-      "../Dependencies/spdlog/include"
+      "../Dependencies/spdlog/include",
+
+      "%{IncludeDir.VulkanSDK}"
    }
 
     links
@@ -31,6 +33,7 @@ project "LuminaApp"
         "TinyGLTF",
         "ImGuiFD", 
  
+       "%{Library.Vulkan}",
         "opengl32.lib"
     }
 
