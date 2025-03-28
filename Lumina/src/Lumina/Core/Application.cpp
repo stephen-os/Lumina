@@ -225,7 +225,7 @@ namespace Lumina
         // Vulkan
         if (m_Specifications.Api == API::VULKAN)
         {
-            // TODO 
+            ImGui_ImplVulkan_Shutdown();
         }
 
         ImGui_ImplGlfw_Shutdown();
