@@ -3,10 +3,17 @@
 #include <iostream>
 #include <vector> 
 
+#include <spdlog/spdlog.h>
+
 #include <fstream>
 #include <filesystem>
+#include <stdlib.h>
 
-#include <vulkan/vulkan.h>
+#include "../Renderer/Vulkan/VulkanContext.h"
+#include <backends/imgui_impl_glfw.h>
+
+
+#include "../ImGui/Roboto-Regular.embed"
 
 namespace Lumina
 {
@@ -45,7 +52,7 @@ namespace Lumina
 
     Application::Application(const ApplicationSpecification& applicationSpecification)
     {
-        TestVulkan(); 
+        // TestVulkan(); 
 
         m_Specifications = applicationSpecification;
 
@@ -54,6 +61,9 @@ namespace Lumina
         if (!glfwInit())
             return;
 
+        if (m_Specifications.Api == API::VULKAN)
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
         m_Window = glfwCreateWindow(m_Specifications.Width, m_Specifications.Height, m_Specifications.Name.c_str(), NULL, NULL);
         if (!m_Window)
         {
@@ -61,12 +71,149 @@ namespace Lumina
             return;
         }
 
-        glfwMakeContextCurrent(m_Window);
-        glfwSwapInterval(1);
+        // Vulkan
+        if (m_Specifications.Api == API::VULKAN)
+        {
+            if (!glfwVulkanSupported())
+            {
+                std::cerr << "GLFW: Vulkan not supported!\n";
+                return;
+            }
 
+            uint32_t extensions_count = 0;
+            const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
+            Vulkan::SetupVulkan(extensions, extensions_count);
+
+
+            // Create Window Surface
+            VkSurfaceKHR surface;
+            VkResult err = glfwCreateWindowSurface(Vulkan::g_Instance, m_Window, Vulkan::g_Allocator, &surface);
+            Vulkan::CheckResult(err);
+
+            // Create Framebuffers
+            int w, h;
+            glfwGetFramebufferSize(m_Window, &w, &h);
+            ImGui_ImplVulkanH_Window* wd = &Vulkan::g_MainWindowData;
+            Vulkan::SetupVulkanWindow(wd, surface, w, h);
+
+            Vulkan::s_AllocatedCommandBuffers.resize(wd->ImageCount);
+            Vulkan::s_ResourceFreeQueue.resize(wd->ImageCount);
+
+            spdlog::info("[Application] Finished Setting Up Vulkan.");
+
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+
+            ImGuiIO& io = ImGui::GetIO(); (void)io;
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+
+            ImGuiStyle& style = ImGui::GetStyle();
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                style.WindowRounding = 0.0f;
+                style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+            }
+
+            ImGui_ImplGlfw_InitForVulkan(m_Window, true);
+            ImGui_ImplVulkan_InitInfo init_info = {};
+            init_info.Instance = Vulkan::g_Instance;
+            init_info.PhysicalDevice = Vulkan::g_PhysicalDevice;
+            init_info.Device = Vulkan::g_Device;
+            init_info.QueueFamily = Vulkan::g_QueueFamily;
+            init_info.Queue = Vulkan::g_Queue;
+            init_info.PipelineCache = Vulkan::g_PipelineCache;
+            init_info.DescriptorPool = Vulkan::g_DescriptorPool;
+            init_info.Subpass = 0;
+            init_info.MinImageCount = Vulkan::g_MinImageCount;
+            init_info.ImageCount = wd->ImageCount;
+            init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+            init_info.Allocator = Vulkan::g_Allocator;
+            init_info.CheckVkResultFn = Vulkan::CheckResult;
+            init_info.RenderPass = wd->RenderPass; 
+            ImGui_ImplVulkan_Init(&init_info);
+
+            ImFontConfig fontConfig;
+            fontConfig.FontDataOwnedByAtlas = false;
+            ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
+            io.FontDefault = robotoFont;
+
+            // Upload Fonts
+            {
+                // Use any command queue
+                VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
+                VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
+
+                err = vkResetCommandPool(Vulkan::g_Device, command_pool, 0);
+                Vulkan::CheckResult(err);
+                VkCommandBufferBeginInfo begin_info = {};
+                begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+                begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+                err = vkBeginCommandBuffer(command_buffer, &begin_info);
+                Vulkan::CheckResult(err);
+
+                ImGui_ImplVulkan_CreateFontsTexture(); 
+                // ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
+
+                VkSubmitInfo end_info = {};
+                end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+                end_info.commandBufferCount = 1;
+                end_info.pCommandBuffers = &command_buffer;
+                err = vkEndCommandBuffer(command_buffer);
+                Vulkan::CheckResult(err);
+                err = vkQueueSubmit(Vulkan::g_Queue, 1, &end_info, VK_NULL_HANDLE);
+                Vulkan::CheckResult(err);
+
+                err = vkDeviceWaitIdle(Vulkan::g_Device);
+                Vulkan::CheckResult(err);
+                // ImGui_ImplVulkan_DestroyFontUploadObjects();
+            }
+
+            spdlog::info("[Application] Vulkan Initialization Complete");
+            exit(1);
+        }
+
+        // OpenGL  
+        if (m_Specifications.Api == API::OPENGL)
+        {
+
+            glfwMakeContextCurrent(m_Window);
+            glfwSwapInterval(1);
+
+            if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+            {
+                std::cerr << "[GLAD ERROR]\n";
+                std::cerr << "Failed to initialize GLAD.\n";
+                return;
+            }
+
+            IMGUI_CHECKVERSION();
+            ImGui::CreateContext();
+
+            ImGuiIO& io = ImGui::GetIO(); (void)io;
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
+            io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
+            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
+
+            ImGuiStyle& style = ImGui::GetStyle();
+            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+            {
+                style.WindowRounding = 0.0f;
+                style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+            }
+
+
+            ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
+            const char* glsl_version = "#version 130";
+            ImGui_ImplOpenGL3_Init(glsl_version);
+        }
+    
         // Fullscreen with taskbar
-	    if (m_Specifications.Dock)
-	    {
+        if (m_Specifications.Dock)
+        {
             GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
             if (primaryMonitor)
             {
@@ -76,7 +223,7 @@ namespace Lumina
                 glfwSetWindowPos(m_Window, xpos, ypos);
                 glfwSetWindowSize(m_Window, width, height);
             }
-	    }
+        }
 
         // Fullscreen
         if (m_Specifications.Fullscreen)
@@ -84,44 +231,6 @@ namespace Lumina
             SetWindowFullscreen();
         }
 
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        {
-            std::cerr << "[GLAD ERROR]\n";
-            std::cerr << "Failed to initialize GLAD.\n";
-            return;
-        }
-
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-
-        ImGuiIO& io = ImGui::GetIO(); (void)io;
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-        io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-
-        ImGuiStyle& style = ImGui::GetStyle();
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            style.WindowRounding = 0.0f;
-            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-        }
-
-        // OpenGL  
-        if (m_Specifications.Api == API::OPENGL)
-        {
-            ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
-            const char* glsl_version = "#version 130";
-            ImGui_ImplOpenGL3_Init(glsl_version);
-        }
-
-        // Vulkan
-        if (m_Specifications.Api == API::VULKAN)
-        {
-            // TODO
-        }
-
-    
         // Apply Theme
         if (m_Specifications.Theme)
             ApplyLuminaTheme(); 
