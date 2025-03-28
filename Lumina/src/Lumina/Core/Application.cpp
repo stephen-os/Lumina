@@ -225,6 +225,18 @@ namespace Lumina
         // Vulkan
         if (m_Specifications.Api == API::VULKAN)
         {
+            // Cleanup
+            VkResult err = vkDeviceWaitIdle(Vulkan::g_Device);
+            Vulkan::CheckResult(err);
+
+            // Free resources in queue
+            for (auto& queue : Vulkan::s_ResourceFreeQueue)
+            {
+                for (auto& func : queue)
+                    func();
+            }
+            Vulkan::s_ResourceFreeQueue.clear();
+
             ImGui_ImplVulkan_Shutdown();
         }
 
