@@ -144,7 +144,7 @@ namespace Lumina
             }
 
             spdlog::info("[Application] Vulkan Initialization Complete");
-            exit(1);
+            // exit(1);
         }
 
         // OpenGL  
@@ -249,6 +249,9 @@ namespace Lumina
 
     void Application::Run()
     {
+        // Only for Vulkan 
+        ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+
         // Main loop
         while (!glfwWindowShouldClose(m_Window))
         {
@@ -266,7 +269,26 @@ namespace Lumina
             // Vulkan
             if (m_Specifications.Api == API::VULKAN)
             {
-                // TODO
+                // Resize swap chain?
+                if (Vulkan::g_SwapChainRebuild)
+                {
+                    int width, height;
+                    glfwGetFramebufferSize(m_Window, &width, &height);
+                    if (width > 0 && height > 0)
+                    {
+                        ImGui_ImplVulkan_SetMinImageCount(Vulkan::g_MinImageCount);
+                        ImGui_ImplVulkanH_CreateOrResizeWindow(Vulkan::g_Instance, Vulkan::g_PhysicalDevice, Vulkan::g_Device, &Vulkan::g_MainWindowData, Vulkan::g_QueueFamily, Vulkan::g_Allocator, width, height, Vulkan::g_MinImageCount);
+                        Vulkan::g_MainWindowData.FrameIndex = 0;
+
+                        // Clear allocated command buffers from here since entire pool is destroyed
+                        Vulkan::s_AllocatedCommandBuffers.clear();
+                        Vulkan::s_AllocatedCommandBuffers.resize(Vulkan::g_MainWindowData.ImageCount);
+
+                        Vulkan::g_SwapChainRebuild = false;
+                    }
+                }
+
+                ImGui_ImplVulkan_NewFrame();
             }
 
             // ImGui new frame
@@ -305,18 +327,25 @@ namespace Lumina
 
             // Render ImGui
             ImGui::Render();
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             // OpenGL Draw
             if (m_Specifications.Api == API::OPENGL)
             {
+                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
                 ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
             }
 
             // Vulkan Draw
             if (m_Specifications.Api == API::VULKAN)
             {
-
+                ImDrawData* main_draw_data = ImGui::GetDrawData();
+                const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+                Vulkan::g_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
+                Vulkan::g_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
+                Vulkan::g_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
+                Vulkan::g_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
+                if (!main_is_minimized)
+                    Vulkan::FrameRender(&Vulkan::g_MainWindowData, main_draw_data);
             }
 
             // Handle ImGui viewport if enabled
@@ -329,7 +358,18 @@ namespace Lumina
                 glfwMakeContextCurrent(backup_current_context);
             }
 
-            glfwSwapBuffers(m_Window);
+            if (m_Specifications.Api == API::OPENGL)
+            {
+                glfwSwapBuffers(m_Window);
+            }
+
+            if (m_Specifications.Api == API::VULKAN)
+            {
+                ImDrawData* main_draw_data = ImGui::GetDrawData();
+                const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
+                if (!main_is_minimized)
+                    Vulkan::FramePresent(&Vulkan::g_MainWindowData);
+            }
         }
     }
 
