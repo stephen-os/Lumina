@@ -71,8 +71,40 @@ namespace Lumina
 
 		VkResult err;
 
+		// Get current frame's index
+		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MainWindowData.ImageCount;
+
+		// Wait for the previous operations with this frame to complete first
+		ImGui_ImplVulkanH_Frame* fd = &m_MainWindowData.Frames[m_MainWindowData.SemaphoreIndex];
+		{
+			err = vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);
+			CheckResult(err);
+
+			err = vkResetFences(m_Device, 1, &fd->Fence);
+			CheckResult(err);
+		}
+
+		// Now create new semaphores for this frame or reset existing ones
+		VkSemaphoreCreateInfo semaphoreInfo = {};
+		semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+		// Destroy old semaphores if they exist
+		if (m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore != VK_NULL_HANDLE)
+			vkDestroySemaphore(m_Device, m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore, m_Allocator);
+		if (m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore != VK_NULL_HANDLE)
+			vkDestroySemaphore(m_Device, m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore, m_Allocator);
+
+		// Create new semaphores
+		err = vkCreateSemaphore(m_Device, &semaphoreInfo, m_Allocator, &m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore);
+		CheckResult(err);
+		err = vkCreateSemaphore(m_Device, &semaphoreInfo, m_Allocator, &m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore);
+		CheckResult(err);
+
+		// Now use the newly created semaphores
 		VkSemaphore image_acquired_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
 		VkSemaphore render_complete_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
+
+		// Acquire the next image
 		err = vkAcquireNextImageKHR(m_Device, m_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &m_MainWindowData.FrameIndex);
 		if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 		{
@@ -81,16 +113,8 @@ namespace Lumina
 		}
 		CheckResult(err);
 
-		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MainWindowData.ImageCount;
-
-		ImGui_ImplVulkanH_Frame* fd = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
-		{
-			err = vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
-			CheckResult(err);
-
-			err = vkResetFences(m_Device, 1, &fd->Fence);
-			CheckResult(err);
-		}
+		// Get frame data for the acquired image
+		fd = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
 
 		{
 			// Free resources in queue
@@ -111,12 +135,14 @@ namespace Lumina
 
 			err = vkResetCommandPool(m_Device, fd->CommandPool, 0);
 			CheckResult(err);
+
 			VkCommandBufferBeginInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 			err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
 			CheckResult(err);
 		}
+
 		{
 			VkRenderPassBeginInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -128,7 +154,6 @@ namespace Lumina
 			info.pClearValues = &m_MainWindowData.ClearValue;
 			vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 		}
-
 
 		ImDrawData* draw_data = ImGui::GetDrawData();
 		// Record dear imgui primitives into command buffer
@@ -150,6 +175,7 @@ namespace Lumina
 
 			err = vkEndCommandBuffer(fd->CommandBuffer);
 			CheckResult(err);
+
 			err = vkQueueSubmit(m_Queue, 1, &info, fd->Fence);
 			CheckResult(err);
 		}
