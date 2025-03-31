@@ -12,9 +12,6 @@
 #include "../Renderer/Vulkan/VulkanContext.h"
 #include <backends/imgui_impl_glfw.h>
 
-
-#include "../ImGui/Roboto-Regular.embed"
-
 namespace Lumina
 {
 
@@ -52,99 +49,9 @@ namespace Lumina
                 return;
             }
 
-            uint32_t extensions_count = 0;
-            const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
-            Vulkan::SetupVulkan(extensions, extensions_count);
-
-
-            // Create Window Surface
-            VkSurfaceKHR surface;
-            VkResult err = glfwCreateWindowSurface(Vulkan::g_Instance, m_Window, Vulkan::g_Allocator, &surface);
-            Vulkan::CheckResult(err);
-
-            // Create Framebuffers
-            int w, h;
-            glfwGetFramebufferSize(m_Window, &w, &h);
-            ImGui_ImplVulkanH_Window* wd = &Vulkan::g_MainWindowData;
-            Vulkan::SetupVulkanWindow(wd, surface, w, h);
-
-            Vulkan::s_AllocatedCommandBuffers.resize(wd->ImageCount);
-            Vulkan::s_ResourceFreeQueue.resize(wd->ImageCount);
-
-            spdlog::info("[Application] Finished Setting Up Vulkan.");
-
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-
-            ImGuiIO& io = ImGui::GetIO(); (void)io;
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-
-            ImGuiStyle& style = ImGui::GetStyle();
-            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-            {
-                style.WindowRounding = 0.0f;
-                style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-            }
-
-            ImGui_ImplGlfw_InitForVulkan(m_Window, true);
-            ImGui_ImplVulkan_InitInfo init_info = {};
-            init_info.Instance = Vulkan::g_Instance;
-            init_info.PhysicalDevice = Vulkan::g_PhysicalDevice;
-            init_info.Device = Vulkan::g_Device;
-            init_info.QueueFamily = Vulkan::g_QueueFamily;
-            init_info.Queue = Vulkan::g_Queue;
-            init_info.PipelineCache = Vulkan::g_PipelineCache;
-            init_info.DescriptorPool = Vulkan::g_DescriptorPool;
-            init_info.Subpass = 0;
-            init_info.MinImageCount = Vulkan::g_MinImageCount;
-            init_info.ImageCount = wd->ImageCount;
-            init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-            init_info.Allocator = Vulkan::g_Allocator;
-            init_info.CheckVkResultFn = Vulkan::CheckResult;
-            init_info.RenderPass = wd->RenderPass; 
-            ImGui_ImplVulkan_Init(&init_info);
-
-            ImFontConfig fontConfig;
-            fontConfig.FontDataOwnedByAtlas = false;
-            ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
-            io.FontDefault = robotoFont;
-
-            // Upload Fonts
-            {
-                // Use any command queue
-                VkCommandPool command_pool = wd->Frames[wd->FrameIndex].CommandPool;
-                VkCommandBuffer command_buffer = wd->Frames[wd->FrameIndex].CommandBuffer;
-
-                err = vkResetCommandPool(Vulkan::g_Device, command_pool, 0);
-                Vulkan::CheckResult(err);
-                VkCommandBufferBeginInfo begin_info = {};
-                begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-                begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-                err = vkBeginCommandBuffer(command_buffer, &begin_info);
-                Vulkan::CheckResult(err);
-
-                ImGui_ImplVulkan_CreateFontsTexture(); 
-                // ImGui_ImplVulkan_CreateFontsTexture(command_buffer);
-
-                VkSubmitInfo end_info = {};
-                end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-                end_info.commandBufferCount = 1;
-                end_info.pCommandBuffers = &command_buffer;
-                err = vkEndCommandBuffer(command_buffer);
-                Vulkan::CheckResult(err);
-                err = vkQueueSubmit(Vulkan::g_Queue, 1, &end_info, VK_NULL_HANDLE);
-                Vulkan::CheckResult(err);
-
-                err = vkDeviceWaitIdle(Vulkan::g_Device);
-                Vulkan::CheckResult(err);
-                // ImGui_ImplVulkan_DestroyFontUploadObjects();
-            }
-
-            spdlog::info("[Application] Vulkan Initialization Complete");
-            // exit(1);
+            // Create vulkan
+            m_Context = MakeUnique<VulkanContext>();
+            m_Context->Init(m_Window);
         }
 
         // OpenGL  
@@ -225,19 +132,7 @@ namespace Lumina
         // Vulkan
         if (m_Specifications.Api == API::VULKAN)
         {
-            // Cleanup
-            VkResult err = vkDeviceWaitIdle(Vulkan::g_Device);
-            Vulkan::CheckResult(err);
-
-            // Free resources in queue
-            for (auto& queue : Vulkan::s_ResourceFreeQueue)
-            {
-                for (auto& func : queue)
-                    func();
-            }
-            Vulkan::s_ResourceFreeQueue.clear();
-
-            ImGui_ImplVulkan_Shutdown();
+            m_Context->Shutdown(); 
         }
 
         ImGui_ImplGlfw_Shutdown();
@@ -269,26 +164,7 @@ namespace Lumina
             // Vulkan
             if (m_Specifications.Api == API::VULKAN)
             {
-                // Resize swap chain?
-                if (Vulkan::g_SwapChainRebuild)
-                {
-                    int width, height;
-                    glfwGetFramebufferSize(m_Window, &width, &height);
-                    if (width > 0 && height > 0)
-                    {
-                        ImGui_ImplVulkan_SetMinImageCount(Vulkan::g_MinImageCount);
-                        ImGui_ImplVulkanH_CreateOrResizeWindow(Vulkan::g_Instance, Vulkan::g_PhysicalDevice, Vulkan::g_Device, &Vulkan::g_MainWindowData, Vulkan::g_QueueFamily, Vulkan::g_Allocator, width, height, Vulkan::g_MinImageCount);
-                        Vulkan::g_MainWindowData.FrameIndex = 0;
-
-                        // Clear allocated command buffers from here since entire pool is destroyed
-                        Vulkan::s_AllocatedCommandBuffers.clear();
-                        Vulkan::s_AllocatedCommandBuffers.resize(Vulkan::g_MainWindowData.ImageCount);
-
-                        Vulkan::g_SwapChainRebuild = false;
-                    }
-                }
-
-                ImGui_ImplVulkan_NewFrame();
+                m_Context->PreRender(); 
             }
 
             // ImGui new frame
@@ -340,12 +216,10 @@ namespace Lumina
             {
                 ImDrawData* main_draw_data = ImGui::GetDrawData();
                 const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-                Vulkan::g_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-                Vulkan::g_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-                Vulkan::g_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-                Vulkan::g_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
+                
                 if (!main_is_minimized)
-                    Vulkan::FrameRender(&Vulkan::g_MainWindowData, main_draw_data);
+                    m_Context->Render(); 
+                    // Vulkan::FrameRender(&Vulkan::g_MainWindowData, main_draw_data);
             }
 
             // Handle ImGui viewport if enabled
@@ -368,7 +242,8 @@ namespace Lumina
                 ImDrawData* main_draw_data = ImGui::GetDrawData();
                 const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
                 if (!main_is_minimized)
-                    Vulkan::FramePresent(&Vulkan::g_MainWindowData);
+                    m_Context->PostRender(); 
+                    // Vulkan::FramePresent(&Vulkan::g_MainWindowData);
             }
         }
     }

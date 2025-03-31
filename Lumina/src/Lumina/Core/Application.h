@@ -15,10 +15,14 @@
 #include <vector>
 #include <memory>
 
+#include "Context.h"
+#include "Aliases.h"
+
 namespace Lumina 
 {
 
-	enum class API {
+	enum class API 
+	{
 		OPENGL, 
 		VULKAN
 	};
@@ -57,6 +61,8 @@ namespace Lumina
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
 		GLFWwindow* m_Window = nullptr;
+
+		Unique<Context> m_Context;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		ApplicationSpecification m_Specifications;
