@@ -56,7 +56,6 @@ namespace Lumina
 		void CreateDescriptorPools();
 		void CreateFramebuffer();
 		void CreateContext();
-		void UploadFont(); 
 	private:
 		GLFWwindow* m_Window = nullptr;
 

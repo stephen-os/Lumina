@@ -463,46 +463,4 @@ namespace Lumina
 			ImGui_ImplVulkan_Init(&init_info);			
 		}
 	}
-
-	void VulkanContext::UploadFont()
-	{
-		VkResult err;
-
-		ImGuiIO& io = ImGui::GetIO(); (void)io;
-
-		ImFontConfig fontConfig;
-		fontConfig.FontDataOwnedByAtlas = false;
-		ImFont* robotoFont = io.Fonts->AddFontFromMemoryTTF((void*)g_RobotoRegular, sizeof(g_RobotoRegular), 20.0f, &fontConfig);
-		io.FontDefault = robotoFont;
-
-
-		// Upload Fonts
-		{
-			// Use any command queue
-			VkCommandPool command_pool = m_MainWindowData.Frames[m_MainWindowData.FrameIndex].CommandPool;
-			VkCommandBuffer command_buffer = m_MainWindowData.Frames[m_MainWindowData.FrameIndex].CommandBuffer;
-
-			err = vkResetCommandPool(m_Device, command_pool, 0);
-			CheckResult(err);
-			VkCommandBufferBeginInfo begin_info = {};
-			begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			err = vkBeginCommandBuffer(command_buffer, &begin_info);
-			CheckResult(err);
-
-			ImGui_ImplVulkan_CreateFontsTexture();
-
-			VkSubmitInfo end_info = {};
-			end_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-			end_info.commandBufferCount = 1;
-			end_info.pCommandBuffers = &command_buffer;
-			err = vkEndCommandBuffer(command_buffer);
-			CheckResult(err);
-			err = vkQueueSubmit(m_Queue, 1, &end_info, VK_NULL_HANDLE);
-			CheckResult(err);
-
-			err = vkDeviceWaitIdle(m_Device);
-			CheckResult(err);
-		}
-	}
 }
