@@ -36,6 +36,7 @@ project "Lumina"
 
    defines
    {
+      "GLFW_INCLUDE_NONE",
       "GLEW_STATIC"
    }
 

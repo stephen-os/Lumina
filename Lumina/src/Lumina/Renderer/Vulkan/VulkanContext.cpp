@@ -15,6 +15,12 @@ namespace Lumina
 	{
 		m_Window = window; 
 
+		if (!glfwVulkanSupported())
+		{
+			spdlog::error("[Vulkan Context] GLFW: Vulkan not supported!");
+			return;
+		}
+
 		CreateInstance();
 
 		SelectGPU();

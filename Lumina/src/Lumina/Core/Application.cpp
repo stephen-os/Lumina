@@ -9,8 +9,8 @@
 #include <filesystem>
 #include <stdlib.h>
 
-#include "../Renderer/Vulkan/VulkanContext.h"
 #include <backends/imgui_impl_glfw.h>
+#include "ContextFactory.h"
 
 namespace Lumina
 {
@@ -40,56 +40,9 @@ namespace Lumina
             return;
         }
 
-        // Vulkan
-        if (m_Specifications.Api == API::VULKAN)
-        {
-            if (!glfwVulkanSupported())
-            {
-                std::cerr << "GLFW: Vulkan not supported!\n";
-                return;
-            }
+        m_Context = ContextFactory::Create(m_Specifications.Api);
+        m_Context->Init(m_Window);
 
-            // Create vulkan
-            m_Context = MakeUnique<VulkanContext>();
-            m_Context->Init(m_Window);
-        }
-
-        // OpenGL  
-        if (m_Specifications.Api == API::OPENGL)
-        {
-
-            glfwMakeContextCurrent(m_Window);
-            glfwSwapInterval(1);
-
-            if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-            {
-                std::cerr << "[GLAD ERROR]\n";
-                std::cerr << "Failed to initialize GLAD.\n";
-                return;
-            }
-
-            IMGUI_CHECKVERSION();
-            ImGui::CreateContext();
-
-            ImGuiIO& io = ImGui::GetIO(); (void)io;
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-            io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
-            io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;         // Enable Docking
-            io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;       // Enable Multi-Viewport / Platform Windows
-
-            ImGuiStyle& style = ImGui::GetStyle();
-            if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-            {
-                style.WindowRounding = 0.0f;
-                style.Colors[ImGuiCol_WindowBg].w = 1.0f;
-            }
-
-
-            ImGui_ImplGlfw_InitForOpenGL(m_Window, true);
-            const char* glsl_version = "#version 130";
-            ImGui_ImplOpenGL3_Init(glsl_version);
-        }
-    
         // Fullscreen with taskbar
         if (m_Specifications.Dock)
         {
@@ -123,17 +76,7 @@ namespace Lumina
 
         m_LayerStack.clear(); 
         
-        // OpenGL
-        if (m_Specifications.Api == API::OPENGL)
-        {
-            ImGui_ImplOpenGL3_Shutdown();
-        }
-
-        // Vulkan
-        if (m_Specifications.Api == API::VULKAN)
-        {
-            m_Context->Shutdown(); 
-        }
+        m_Context->Shutdown(); 
 
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
@@ -155,17 +98,7 @@ namespace Lumina
 
             glfwPollEvents();
 
-            // OpenGL
-            if (m_Specifications.Api == API::OPENGL)
-            {
-                ImGui_ImplOpenGL3_NewFrame();
-            }
-
-            // Vulkan
-            if (m_Specifications.Api == API::VULKAN)
-            {
-                m_Context->PreRender(); 
-            }
+            m_Context->PreRender(); 
 
             // ImGui new frame
             ImGui_ImplGlfw_NewFrame();
@@ -204,23 +137,12 @@ namespace Lumina
             // Render ImGui
             ImGui::Render();
 
-            // OpenGL Draw
-            if (m_Specifications.Api == API::OPENGL)
-            {
-                glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-                ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-            }
+            ImDrawData* main_draw_data = ImGui::GetDrawData();
+            const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
 
-            // Vulkan Draw
-            if (m_Specifications.Api == API::VULKAN)
-            {
-                ImDrawData* main_draw_data = ImGui::GetDrawData();
-                const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-                
-                if (!main_is_minimized)
-                    m_Context->Render(); 
-                    // Vulkan::FrameRender(&Vulkan::g_MainWindowData, main_draw_data);
-            }
+            if (!main_is_minimized)
+                m_Context->Render();
+
 
             // Handle ImGui viewport if enabled
             ImGuiIO& io = ImGui::GetIO();
@@ -232,19 +154,8 @@ namespace Lumina
                 glfwMakeContextCurrent(backup_current_context);
             }
 
-            if (m_Specifications.Api == API::OPENGL)
-            {
-                glfwSwapBuffers(m_Window);
-            }
-
-            if (m_Specifications.Api == API::VULKAN)
-            {
-                ImDrawData* main_draw_data = ImGui::GetDrawData();
-                const bool main_is_minimized = (main_draw_data->DisplaySize.x <= 0.0f || main_draw_data->DisplaySize.y <= 0.0f);
-                if (!main_is_minimized)
-                    m_Context->PostRender(); 
-                    // Vulkan::FramePresent(&Vulkan::g_MainWindowData);
-            }
+            if (!main_is_minimized)
+                m_Context->PostRender();
         }
     }
 
