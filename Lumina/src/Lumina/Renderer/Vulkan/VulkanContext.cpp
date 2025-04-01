@@ -63,6 +63,13 @@ namespace Lumina
 
 	void VulkanContext::Render()
 	{
+		// Prepare the frame data
+		ImGui_ImplVulkanH_Frame* frameData = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
+
+		// wait indefinitely instead of periodically checking
+		VCheck(vkWaitForFences(m_Device, 1, &frameData->Fence, VK_TRUE, UINT64_MAX));
+		VCheck(vkResetFences(m_Device, 1, &frameData->Fence));
+
 		VkSemaphore image_acquired_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
 		VkSemaphore render_complete_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
 		
@@ -78,13 +85,6 @@ namespace Lumina
 
 		// Update the frame index (this is based on swapchain image count)
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MainWindowData.ImageCount;
-
-		// Prepare the frame data
-		ImGui_ImplVulkanH_Frame* frameData = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
-		
-		// wait indefinitely instead of periodically checking
-		VCheck(vkWaitForFences(m_Device, 1, &frameData->Fence, VK_TRUE, UINT64_MAX)); 
-		VCheck(vkResetFences(m_Device, 1, &frameData->Fence));
 
 		// Free resources in queue
 		for (auto& func : m_ResourceFreeQueue[m_CurrentFrameIndex])
