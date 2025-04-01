@@ -172,15 +172,12 @@ namespace Lumina
 		VkResult err = vkQueuePresentKHR(m_Queue, &info);
 		CheckResult(err);
 
-		vkDeviceWaitIdle(m_Device);
-		vkResetFences(m_Device, 1, &m_MainWindowData.Frames[m_MainWindowData.FrameIndex].Fence);
-		CheckResult(err);
-
 		if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 		{
 			m_SwapChainRebuild = true;
 			return;
 		}
+
 		m_MainWindowData.SemaphoreIndex = (m_MainWindowData.SemaphoreIndex + 1) % m_MainWindowData.ImageCount; // Now we can use the next set of semaphores
 	}
 	void VulkanContext::Shutdown()
