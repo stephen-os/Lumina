@@ -25,10 +25,7 @@ namespace Lumina
 		
 		CreateDescriptorPools(); 
 
-		// Create Suface 
-		{
-			VCheck(glfwCreateWindowSurface(m_Instance, m_Window, m_Allocator, &m_Surface));
-		}
+		VCheck(glfwCreateWindowSurface(m_Instance, m_Window, m_Allocator, &m_Surface));
 
 		CreateFramebuffer(); 
 
@@ -42,15 +39,20 @@ namespace Lumina
 		{
 			int width, height;
 			glfwGetFramebufferSize(m_Window, &width, &height);
+
 			if (width > 0 && height > 0)
 			{
 				ImGui_ImplVulkan_SetMinImageCount(m_MinImageCount);
 				ImGui_ImplVulkanH_CreateOrResizeWindow(m_Instance,m_PhysicalDevice, m_Device, &m_MainWindowData, m_QueueFamily, m_Allocator, width, height, m_MinImageCount);
+				
 				m_MainWindowData.FrameIndex = 0;
 
 				// Clear allocated command buffers from here since entire pool is destroyed
-				m_AllocatedCommandBuffers.clear();
-				m_AllocatedCommandBuffers.resize(m_MainWindowData.ImageCount);
+				if (m_AllocatedCommandBuffers.size() != m_MainWindowData.ImageCount)
+				{
+					m_AllocatedCommandBuffers.clear();
+					m_AllocatedCommandBuffers.resize(m_MainWindowData.ImageCount);
+				}
 
 				m_SwapChainRebuild = false;
 			}
@@ -61,16 +63,10 @@ namespace Lumina
 
 	void VulkanContext::Render()
 	{
-		// Temporary
-		ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-		m_MainWindowData.ClearValue.color.float32[0] = clear_color.x * clear_color.w;
-		m_MainWindowData.ClearValue.color.float32[1] = clear_color.y * clear_color.w;
-		m_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
-		m_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
-
 		VkSemaphore image_acquired_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
 		VkSemaphore render_complete_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
 		
+		// Acquire next image from swapchain
 		VkResult err = vkAcquireNextImageKHR(m_Device, m_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &m_MainWindowData.FrameIndex);
 		VCheck(err);
 
@@ -80,99 +76,106 @@ namespace Lumina
 			return;
 		}
 
-
+		// Update the frame index (this is based on swapchain image count)
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MainWindowData.ImageCount;
 
-		ImGui_ImplVulkanH_Frame* fd = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
+		// Prepare the frame data
+		ImGui_ImplVulkanH_Frame* frameData = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
 		
+		// wait indefinitely instead of periodically checking
+		VCheck(vkWaitForFences(m_Device, 1, &frameData->Fence, VK_TRUE, UINT64_MAX)); 
+		VCheck(vkResetFences(m_Device, 1, &frameData->Fence));
+
+		// Free resources in queue
+		for (auto& func : m_ResourceFreeQueue[m_CurrentFrameIndex])
 		{
-			VCheck(vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX));    // wait indefinitely instead of periodically checking
-			VCheck(vkResetFences(m_Device, 1, &fd->Fence));
+			func();
+		}
+		m_ResourceFreeQueue[m_CurrentFrameIndex].clear();
+
+		// Free command buffers allocated by Application::GetCommandBuffer
+		// These use g_MainWindowData.FrameIndex and not s_CurrentFrameIndex because they're tied to the swapchain image index
+		auto& allocatedCommandBuffers = m_AllocatedCommandBuffers[m_MainWindowData.FrameIndex];
+		if (!allocatedCommandBuffers.empty())
+		{
+			vkFreeCommandBuffers(m_Device, frameData->CommandPool, static_cast<uint32_t>(allocatedCommandBuffers.size()), allocatedCommandBuffers.data());
+			allocatedCommandBuffers.clear();
 		}
 
-		{
-			// Free resources in queue
-			for (auto& func : m_ResourceFreeQueue[m_CurrentFrameIndex])
-				func();
-			m_ResourceFreeQueue[m_CurrentFrameIndex].clear();
-		}
+		VCheck(vkResetCommandPool(m_Device, frameData->CommandPool, 0));
 
-		{
-			// Free command buffers allocated by Application::GetCommandBuffer
-			// These use g_MainWindowData.FrameIndex and not s_CurrentFrameIndex because they're tied to the swapchain image index
-			auto& allocatedCommandBuffers = m_AllocatedCommandBuffers[m_MainWindowData.FrameIndex];
-			if (allocatedCommandBuffers.size() > 0)
-			{
-				vkFreeCommandBuffers(m_Device, fd->CommandPool, (uint32_t)allocatedCommandBuffers.size(), allocatedCommandBuffers.data());
-				allocatedCommandBuffers.clear();
-			}
+		// Begin new command buffer recording
+		VkCommandBufferBeginInfo commandBufferInfo = {};
+		commandBufferInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		commandBufferInfo.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+		VCheck(vkBeginCommandBuffer(frameData->CommandBuffer, &commandBufferInfo));
 
-			VCheck(vkResetCommandPool(m_Device, fd->CommandPool, 0));
-			VkCommandBufferBeginInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			VCheck(vkBeginCommandBuffer(fd->CommandBuffer, &info));
-		}
-
-		{
-			VkRenderPassBeginInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			info.renderPass = m_MainWindowData.RenderPass;
-			info.framebuffer = fd->Framebuffer;
-			info.renderArea.extent.width = m_MainWindowData.Width;
-			info.renderArea.extent.height = m_MainWindowData.Height;
-			info.clearValueCount = 1;
-			info.pClearValues = &m_MainWindowData.ClearValue;
-			vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
-		}
-
-		// Record dear imgui primitives into command buffer
+		// Begin render pass
+		VkRenderPassBeginInfo renderPassInfo = {};
+		renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassInfo.renderPass = m_MainWindowData.RenderPass;
+		renderPassInfo.framebuffer = frameData->Framebuffer;
+		renderPassInfo.renderArea.extent.width = m_MainWindowData.Width;
+		renderPassInfo.renderArea.extent.height = m_MainWindowData.Height;
+		renderPassInfo.clearValueCount = 1;
+		renderPassInfo.pClearValues = &m_MainWindowData.ClearValue;
+		vkCmdBeginRenderPass(frameData->CommandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+		
+		// Render ImGui data into the command buffer
 		ImDrawData* draw_data = ImGui::GetDrawData();
-		ImGui_ImplVulkan_RenderDrawData(draw_data, fd->CommandBuffer);
+		ImGui_ImplVulkan_RenderDrawData(draw_data, frameData->CommandBuffer);
 
 		// Submit command buffer
-		vkCmdEndRenderPass(fd->CommandBuffer);
-		{
-			VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-			VkSubmitInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-			info.waitSemaphoreCount = 1;
-			info.pWaitSemaphores = &image_acquired_semaphore;
-			info.pWaitDstStageMask = &wait_stage;
-			info.commandBufferCount = 1;
-			info.pCommandBuffers = &fd->CommandBuffer;
-			info.signalSemaphoreCount = 1;
-			info.pSignalSemaphores = &render_complete_semaphore;
+		vkCmdEndRenderPass(frameData->CommandBuffer);
 
-			VCheck(vkEndCommandBuffer(fd->CommandBuffer)); 
-			VCheck(vkQueueSubmit(m_Queue, 1, &info, fd->Fence));
-		}
+		// Submit the command buffer to the queue 
+		VkPipelineStageFlags wait_stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		VkSubmitInfo submitInfo = {};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &image_acquired_semaphore;
+		submitInfo.pWaitDstStageMask = &wait_stage;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &frameData->CommandBuffer;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &render_complete_semaphore;
+
+		VCheck(vkEndCommandBuffer(frameData->CommandBuffer));
+		VCheck(vkQueueSubmit(m_Queue, 1, &submitInfo, frameData->Fence));
 	}
 
 	void VulkanContext::PostRender()
 	{
+		// If a swap chain rebuild is requested, skip the present step
 		if (m_SwapChainRebuild)
 			return;
+
 		VkSemaphore render_complete_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
-		VkPresentInfoKHR info = {};
-		info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-		info.waitSemaphoreCount = 1;
-		info.pWaitSemaphores = &render_complete_semaphore;
-		info.swapchainCount = 1;
-		info.pSwapchains = &m_MainWindowData.Swapchain;
-		info.pImageIndices = &m_MainWindowData.FrameIndex;
+
+		// Prepare present info structure
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &render_complete_semaphore;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &m_MainWindowData.Swapchain;
+		presentInfo.pImageIndices = &m_MainWindowData.FrameIndex;
 		
-		VkResult err = vkQueuePresentKHR(m_Queue, &info);
+		// Submit the present command to the queue
+		VkResult err = vkQueuePresentKHR(m_Queue, &presentInfo);
 		VCheck(err);
 
+		// Rebuild swap chain in case of error
 		if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 		{
 			m_SwapChainRebuild = true;
 			return;
 		}
 
+		// Update the semaphore index for the next frame
 		m_MainWindowData.SemaphoreIndex = (m_MainWindowData.SemaphoreIndex + 1) % m_MainWindowData.ImageCount; // Now we can use the next set of semaphores
 	}
+
 	void VulkanContext::Shutdown()
 	{
 		VCheck(vkDeviceWaitIdle(m_Device));
@@ -197,43 +200,47 @@ namespace Lumina
 		uint32_t extensions_count = 0;
 		const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
 
-		VkInstanceCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		create_info.enabledExtensionCount = extensions_count;
-		create_info.ppEnabledExtensionNames = extensions;
+		// Create the Vulkan instance create info structure
+		VkInstanceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+		createInfo.enabledExtensionCount = extensions_count;
+		createInfo.ppEnabledExtensionNames = extensions;
 
 #ifdef LUMINA_DEBUG
 		// Enabling validation layers
 		const char* layers[] = { "VK_LAYER_KHRONOS_validation" };
-		create_info.enabledLayerCount = 1;
-		create_info.ppEnabledLayerNames = layers;
+		createInfo.enabledLayerCount = 1;
+		createInfo.ppEnabledLayerNames = layers;
 
-		// Enable debug report extension (we need additional storage, so we duplicate the user array to add our new extension to it)
-		const char** extensions_ext = (const char**)malloc(sizeof(const char*) * (extensions_count + 1));
-		memcpy(extensions_ext, extensions, extensions_count * sizeof(const char*));
-		extensions_ext[extensions_count] = "VK_EXT_debug_report";
-		create_info.enabledExtensionCount = extensions_count + 1;
-		create_info.ppEnabledExtensionNames = extensions_ext;
+		// Dynamically allocate memory for extension list to include debug report extension 
+		std::vector<const char*> extensions_ext(extensions, extensions + extensions_count);
+		extensions_ext.push_back("VK_EXT_debug_report");
+
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions_ext.size());
+		createInfo.ppEnabledExtensionNames = extensions_ext.data();
 
 		// Create Vulkan Instance
-		VCheck(vkCreateInstance(&create_info, m_Allocator, &m_Instance));
-		free(extensions_ext);
-
+		VCheck(vkCreateInstance(&createInfo, m_Allocator, &m_Instance));
+	
 		// Get the function pointer (required for any extensions)
 		auto vkCreateDebugReportCallbackEXT = (PFN_vkCreateDebugReportCallbackEXT)vkGetInstanceProcAddr(m_Instance, "vkCreateDebugReportCallbackEXT");
-		IM_ASSERT(vkCreateDebugReportCallbackEXT != NULL);
+		if (vkCreateDebugReportCallbackEXT == nullptr)
+		{
+			spdlog::error("[Vulkan Context] Failed to get debug callback function pointer.");
+			return;
+		}
 
 		// Setup the debug report callback
-		VkDebugReportCallbackCreateInfoEXT debug_report_ci = {};
-		debug_report_ci.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
-		debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
-		debug_report_ci.pfnCallback = debug_report;
-		debug_report_ci.pUserData = NULL;
-		VCheck(vkCreateDebugReportCallbackEXT(m_Instance, &debug_report_ci, m_Allocator, &m_DebugReport));
+		VkDebugReportCallbackCreateInfoEXT debugReportCI = {};
+		debugReportCI.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+		debugReportCI.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
+		debugReportCI.pfnCallback = debug_report;
+		debugReportCI.pUserData = nullptr;
+		VCheck(vkCreateDebugReportCallbackEXT(m_Instance, &debugReportCI, m_Allocator, &m_DebugReport));
 
 #else
 		// Create Vulkan Instance without any debug feature
-		VCheck(vkCreateInstance(&create_info, m_Allocator, &m_Instance));
+		VCheck(vkCreateInstance(&createInfo, m_Allocator, &m_Instance));
 		IM_UNUSED(m_DebugReport);
 #endif
 	}
@@ -242,32 +249,39 @@ namespace Lumina
 	{
 		spdlog::info("[Vulkan Context] Select Physical Device.");
 
-		VkResult err;
+		uint32_t gpuCount;
+		VCheck(vkEnumeratePhysicalDevices(m_Instance, &gpuCount, nullptr));
+		
+		// Check if there are any GPUs
+		if (gpuCount == 0)
+		{
+			spdlog::error("[Vulkan Context] No GPUs found.");
+			return;
+		}
 
-		uint32_t gpu_count;
-		VCheck(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, NULL));
-		IM_ASSERT(gpu_count > 0);
-
-		VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpu_count);
-		VCheck(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, gpus));
-
-		// If a number >1 of GPUs got reported, find discrete GPU if present, or use first one available. This covers
-		// most common cases (multi-gpu/integrated+dedicated graphics). Handling more complicated setups (multiple
-		// dedicated GPUs) is out of scope of this sample.
-		int use_gpu = 0;
-		for (int i = 0; i < (int)gpu_count; i++)
+		std::vector<VkPhysicalDevice> gpus(gpuCount);
+		VCheck(vkEnumeratePhysicalDevices(m_Instance, &gpuCount, gpus.data()));
+		
+		// Select the first discrete GPU if available, or fallback to the first available GPU
+		m_PhysicalDevice = VK_NULL_HANDLE;
+		for (uint32_t i = 0; i < gpuCount; i++)
 		{
 			VkPhysicalDeviceProperties properties;
 			vkGetPhysicalDeviceProperties(gpus[i], &properties);
+
 			if (properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
 			{
-				use_gpu = i;
+				m_PhysicalDevice = gpus[i];
 				break;
 			}
 		}
 
-		m_PhysicalDevice = gpus[use_gpu];
-		free(gpus);
+		// Fallback to the first GPU if no discrete GPU is found
+		if (m_PhysicalDevice == VK_NULL_HANDLE)
+		{
+			m_PhysicalDevice = gpus[0];
+			spdlog::warn("[Vulkan Context] No discrete GPU found. Using the first available GPU.");
+		}
 	}
 
 	void VulkanContext::SelectQueueFamily()
@@ -275,38 +289,64 @@ namespace Lumina
 		spdlog::info("[Vulkan Context] Select Queue Family.");
 
 		uint32_t count;
-		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &count, NULL);
-		VkQueueFamilyProperties* queues = (VkQueueFamilyProperties*)malloc(sizeof(VkQueueFamilyProperties) * count);
-		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &count, queues);
+		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &count, nullptr);
+
+		// Use a vector instead of manually allocating memory
+		std::vector<VkQueueFamilyProperties> queues(count);
+		vkGetPhysicalDeviceQueueFamilyProperties(m_PhysicalDevice, &count, queues.data());
+
+		m_QueueFamily = static_cast<uint32_t>(-1); // Initialize to an invalid index
+
+		// Look for a queue with VK_QUEUE_GRAPHICS_BIT flag
 		for (uint32_t i = 0; i < count; i++)
+		{
 			if (queues[i].queueFlags & VK_QUEUE_GRAPHICS_BIT)
 			{
 				m_QueueFamily = i;
 				break;
 			}
-		free(queues);
-		IM_ASSERT(m_QueueFamily != (uint32_t)-1);
+		}
+
+		// Ensure we found a valid queue family
+		if (m_QueueFamily == static_cast<uint32_t>(-1))
+		{
+			spdlog::error("[Vulkan Context] No suitable queue family found.");
+		}
+
+		IM_ASSERT(m_QueueFamily != static_cast<uint32_t>(-1));
 	}
 
 	void VulkanContext::CreateLogicalDevice()
 	{
 		spdlog::info("[Vulkan Context] Create Logical Device.");
 
+		// Check if m_QueueFamily is valid
+		if (m_QueueFamily == static_cast<uint32_t>(-1))
+		{
+			spdlog::error("[Vulkan Context] Invalid queue family index.");
+			return; // Early exit since we can't create a device without a valid queue family
+		}
+
 		int device_extension_count = 1;
 		const char* device_extensions[] = { "VK_KHR_swapchain" };
+
 		const float queue_priority[] = { 1.0f };
-		VkDeviceQueueCreateInfo queue_info[1] = {};
-		queue_info[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-		queue_info[0].queueFamilyIndex = m_QueueFamily;
-		queue_info[0].queueCount = 1;
-		queue_info[0].pQueuePriorities = queue_priority;
-		VkDeviceCreateInfo create_info = {};
-		create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		create_info.queueCreateInfoCount = sizeof(queue_info) / sizeof(queue_info[0]);
-		create_info.pQueueCreateInfos = queue_info;
-		create_info.enabledExtensionCount = device_extension_count;
-		create_info.ppEnabledExtensionNames = device_extensions;
-		VCheck(vkCreateDevice(m_PhysicalDevice, &create_info, m_Allocator, &m_Device));
+		VkDeviceQueueCreateInfo queueInfo[1] = {};
+		queueInfo[0].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueInfo[0].queueFamilyIndex = m_QueueFamily;
+		queueInfo[0].queueCount = 1;
+		queueInfo[0].pQueuePriorities = queue_priority;
+
+		VkDeviceCreateInfo createInfo = {};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		createInfo.queueCreateInfoCount = sizeof(queueInfo) / sizeof(queueInfo[0]);
+		createInfo.pQueueCreateInfos = queueInfo;
+		createInfo.enabledExtensionCount = device_extension_count;
+		createInfo.ppEnabledExtensionNames = device_extensions;
+
+		VCheck(vkCreateDevice(m_PhysicalDevice, &createInfo, m_Allocator, &m_Device));
+
+		// Retrieve the device queue
 		vkGetDeviceQueue(m_Device, m_QueueFamily, 0, &m_Queue);
 	}
 
@@ -314,7 +354,7 @@ namespace Lumina
 	{
 		spdlog::info("[Vulkan Context] Create Descriptor Pools.");
 
-		VkDescriptorPoolSize pool_sizes[] =
+		VkDescriptorPoolSize poolSizes[] =
 		{
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -329,30 +369,27 @@ namespace Lumina
 			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
 		};
 
-		VkResult err;
-
-		VkDescriptorPoolCreateInfo pool_info = {};
-		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
-		pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
-		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
-		pool_info.pPoolSizes = pool_sizes;
-		VCheck(vkCreateDescriptorPool(m_Device, &pool_info, m_Allocator, &m_DescriptorPool));
+		VkDescriptorPoolCreateInfo poolInfo = {};
+		poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		poolInfo.maxSets = 1000 * IM_ARRAYSIZE(poolSizes);
+		poolInfo.poolSizeCount = (uint32_t)IM_ARRAYSIZE(poolSizes);
+		poolInfo.pPoolSizes = poolSizes;
+		VCheck(vkCreateDescriptorPool(m_Device, &poolInfo, m_Allocator, &m_DescriptorPool));
 	}
 
 	void VulkanContext::CreateFramebuffer()
 	{
 		spdlog::info("[Vulkan Context] Create Framebuffer.");
 
-		int w, h;
-		glfwGetFramebufferSize(m_Window, &w, &h);
-		ImGui_ImplVulkanH_Window* wd = &m_MainWindowData; // This doesnt need to be redeclared like this 
-
-		wd->Surface = m_Surface;
+		int width, height;
+		glfwGetFramebufferSize(m_Window, &width, &height);
+		
+		m_MainWindowData.Surface = m_Surface;
 
 		// Check for WSI support
 		VkBool32 res;
-		vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, m_QueueFamily, wd->Surface, &res);
+		VCheck(vkGetPhysicalDeviceSurfaceSupportKHR(m_PhysicalDevice, m_QueueFamily, m_MainWindowData.Surface, &res));
 		if (res != VK_TRUE)
 		{
 			fprintf(stderr, "Error no WSI support on physical device 0\n");
@@ -362,7 +399,7 @@ namespace Lumina
 		// Select Surface Format
 		const VkFormat requestSurfaceImageFormat[] = { VK_FORMAT_B8G8R8A8_UNORM, VK_FORMAT_R8G8B8A8_UNORM, VK_FORMAT_B8G8R8_UNORM, VK_FORMAT_R8G8B8_UNORM };
 		const VkColorSpaceKHR requestSurfaceColorSpace = VK_COLORSPACE_SRGB_NONLINEAR_KHR;
-		wd->SurfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(m_PhysicalDevice, wd->Surface, requestSurfaceImageFormat, (size_t)IM_ARRAYSIZE(requestSurfaceImageFormat), requestSurfaceColorSpace);
+		m_MainWindowData.SurfaceFormat = ImGui_ImplVulkanH_SelectSurfaceFormat(m_PhysicalDevice, m_MainWindowData.Surface, requestSurfaceImageFormat, (size_t)IM_ARRAYSIZE(requestSurfaceImageFormat), requestSurfaceColorSpace);
 
 		// Select Present Mode
 #ifdef IMGUI_UNLIMITED_FRAME_RATE
@@ -370,15 +407,14 @@ namespace Lumina
 #else
 		VkPresentModeKHR present_modes[] = { VK_PRESENT_MODE_FIFO_KHR };
 #endif
-		wd->PresentMode = ImGui_ImplVulkanH_SelectPresentMode(m_PhysicalDevice, wd->Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
-		//printf("[vulkan] Selected PresentMode = %d\n", wd->PresentMode);
+		m_MainWindowData.PresentMode = ImGui_ImplVulkanH_SelectPresentMode(m_PhysicalDevice, m_MainWindowData.Surface, &present_modes[0], IM_ARRAYSIZE(present_modes));
 
 		// Create SwapChain, RenderPass, Framebuffer, etc.
 		IM_ASSERT(m_MinImageCount >= 2);
-		ImGui_ImplVulkanH_CreateOrResizeWindow(m_Instance, m_PhysicalDevice, m_Device, wd, m_QueueFamily, m_Allocator, w, h, m_MinImageCount);
+		ImGui_ImplVulkanH_CreateOrResizeWindow(m_Instance, m_PhysicalDevice, m_Device, &m_MainWindowData, m_QueueFamily, m_Allocator, width, height, m_MinImageCount);
 
-		m_AllocatedCommandBuffers.resize(wd->ImageCount);
-		m_ResourceFreeQueue.resize(wd->ImageCount);
+		m_AllocatedCommandBuffers.resize(m_MainWindowData.ImageCount);
+		m_ResourceFreeQueue.resize(m_MainWindowData.ImageCount);
 	}
 
 	void VulkanContext::CreateContext()
@@ -404,22 +440,22 @@ namespace Lumina
 		// Init Vulkan and upload font
 		{
 			ImGui_ImplGlfw_InitForVulkan(m_Window, true);
-			ImGui_ImplVulkan_InitInfo init_info = {};
-			init_info.Instance = m_Instance;
-			init_info.PhysicalDevice = m_PhysicalDevice;
-			init_info.Device = m_Device;
-			init_info.QueueFamily = m_QueueFamily;
-			init_info.Queue = m_Queue;
-			init_info.PipelineCache = m_PipelineCache;
-			init_info.DescriptorPool = m_DescriptorPool;
-			init_info.Subpass = 0;
-			init_info.MinImageCount = m_MinImageCount;
-			init_info.ImageCount = m_MainWindowData.ImageCount;
-			init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
-			init_info.Allocator = m_Allocator;
-			init_info.CheckVkResultFn = VCheck;
-			init_info.RenderPass = m_MainWindowData.RenderPass;
-			ImGui_ImplVulkan_Init(&init_info);			
+			ImGui_ImplVulkan_InitInfo initInfo = {};
+			initInfo.Instance = m_Instance;
+			initInfo.PhysicalDevice = m_PhysicalDevice;
+			initInfo.Device = m_Device;
+			initInfo.QueueFamily = m_QueueFamily;
+			initInfo.Queue = m_Queue;
+			initInfo.PipelineCache = m_PipelineCache;
+			initInfo.DescriptorPool = m_DescriptorPool;
+			initInfo.Subpass = 0;
+			initInfo.MinImageCount = m_MinImageCount;
+			initInfo.ImageCount = m_MainWindowData.ImageCount;
+			initInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+			initInfo.Allocator = m_Allocator;
+			initInfo.CheckVkResultFn = VCheck;
+			initInfo.RenderPass = m_MainWindowData.RenderPass;
+			ImGui_ImplVulkan_Init(&initInfo);
 		}
 	}
 }
