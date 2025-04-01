@@ -18,15 +18,6 @@
 
 namespace Lumina
 {
-	static void CheckResult(VkResult err)
-	{
-		if (err == 0)
-			return;
-		fprintf(stderr, "[Vulkan Context] Error: VkResult = %d\n", err);
-		if (err < 0)
-			abort();
-	}
-
 #ifdef LUMINA_DEBUG
 	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
 		VkDebugReportFlagsEXT flags,

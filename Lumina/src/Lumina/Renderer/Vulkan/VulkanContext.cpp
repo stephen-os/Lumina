@@ -6,6 +6,8 @@
 
 #include <backends/imgui_impl_glfw.h>
 
+#include "VulkanCheck.h"
+
 namespace Lumina 
 {
 
@@ -128,7 +130,6 @@ namespace Lumina
 			info.pClearValues = &m_MainWindowData.ClearValue;
 			vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 		}
-
 
 		ImDrawData* draw_data = ImGui::GetDrawData();
 		// Record dear imgui primitives into command buffer
