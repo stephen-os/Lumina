@@ -163,7 +163,6 @@ namespace Lumina
 		
 		// Submit the present command to the queue
 		VkResult err = vkQueuePresentKHR(m_Queue, &presentInfo);
-		VCheck(err);
 
 		// Rebuild swap chain in case of error
 		if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
