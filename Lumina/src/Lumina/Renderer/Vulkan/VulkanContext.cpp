@@ -15,10 +15,8 @@ namespace Lumina
 	{
 		m_Window = window; 
 
-		VkResult err;
-
 		CreateInstance();
-		
+
 		SelectGPU();
 
 		SelectQueueFamily(); 
@@ -29,8 +27,7 @@ namespace Lumina
 
 		// Create Suface 
 		{
-			err = glfwCreateWindowSurface(m_Instance, m_Window, m_Allocator, &m_Surface);
-			CheckResult(err);
+			VCheck(glfwCreateWindowSurface(m_Instance, m_Window, m_Allocator, &m_Surface));
 		}
 
 		CreateFramebuffer(); 
@@ -71,27 +68,26 @@ namespace Lumina
 		m_MainWindowData.ClearValue.color.float32[2] = clear_color.z * clear_color.w;
 		m_MainWindowData.ClearValue.color.float32[3] = clear_color.w;
 
-		VkResult err;
-
 		VkSemaphore image_acquired_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].ImageAcquiredSemaphore;
 		VkSemaphore render_complete_semaphore = m_MainWindowData.FrameSemaphores[m_MainWindowData.SemaphoreIndex].RenderCompleteSemaphore;
-		err = vkAcquireNextImageKHR(m_Device, m_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &m_MainWindowData.FrameIndex);
+		
+		VkResult err = vkAcquireNextImageKHR(m_Device, m_MainWindowData.Swapchain, UINT64_MAX, image_acquired_semaphore, VK_NULL_HANDLE, &m_MainWindowData.FrameIndex);
+		VCheck(err);
+
 		if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 		{
 			m_SwapChainRebuild = true;
 			return;
 		}
-		CheckResult(err);
+
 
 		m_CurrentFrameIndex = (m_CurrentFrameIndex + 1) % m_MainWindowData.ImageCount;
 
 		ImGui_ImplVulkanH_Frame* fd = &m_MainWindowData.Frames[m_MainWindowData.FrameIndex];
+		
 		{
-			err = vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX);    // wait indefinitely instead of periodically checking
-			CheckResult(err);
-
-			err = vkResetFences(m_Device, 1, &fd->Fence);
-			CheckResult(err);
+			VCheck(vkWaitForFences(m_Device, 1, &fd->Fence, VK_TRUE, UINT64_MAX));    // wait indefinitely instead of periodically checking
+			VCheck(vkResetFences(m_Device, 1, &fd->Fence));
 		}
 
 		{
@@ -111,14 +107,13 @@ namespace Lumina
 				allocatedCommandBuffers.clear();
 			}
 
-			err = vkResetCommandPool(m_Device, fd->CommandPool, 0);
-			CheckResult(err);
+			VCheck(vkResetCommandPool(m_Device, fd->CommandPool, 0));
 			VkCommandBufferBeginInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 			info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-			err = vkBeginCommandBuffer(fd->CommandBuffer, &info);
-			CheckResult(err);
+			VCheck(vkBeginCommandBuffer(fd->CommandBuffer, &info));
 		}
+
 		{
 			VkRenderPassBeginInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -131,8 +126,8 @@ namespace Lumina
 			vkCmdBeginRenderPass(fd->CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
 		}
 
-		ImDrawData* draw_data = ImGui::GetDrawData();
 		// Record dear imgui primitives into command buffer
+		ImDrawData* draw_data = ImGui::GetDrawData();
 		ImGui_ImplVulkan_RenderDrawData(draw_data, fd->CommandBuffer);
 
 		// Submit command buffer
@@ -149,10 +144,8 @@ namespace Lumina
 			info.signalSemaphoreCount = 1;
 			info.pSignalSemaphores = &render_complete_semaphore;
 
-			err = vkEndCommandBuffer(fd->CommandBuffer);
-			CheckResult(err);
-			err = vkQueueSubmit(m_Queue, 1, &info, fd->Fence);
-			CheckResult(err);
+			VCheck(vkEndCommandBuffer(fd->CommandBuffer)); 
+			VCheck(vkQueueSubmit(m_Queue, 1, &info, fd->Fence));
 		}
 	}
 
@@ -170,7 +163,7 @@ namespace Lumina
 		info.pImageIndices = &m_MainWindowData.FrameIndex;
 		
 		VkResult err = vkQueuePresentKHR(m_Queue, &info);
-		CheckResult(err);
+		VCheck(err);
 
 		if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR)
 		{
@@ -182,8 +175,7 @@ namespace Lumina
 	}
 	void VulkanContext::Shutdown()
 	{
-		VkResult err = vkDeviceWaitIdle(m_Device);
-		CheckResult(err);
+		VCheck(vkDeviceWaitIdle(m_Device));
 
 		// Free resources in queue
 		for (auto& queue : m_ResourceFreeQueue)
@@ -201,8 +193,6 @@ namespace Lumina
 	void VulkanContext::CreateInstance()
 	{
 		spdlog::info("[Vulkan Context] Creating Vulkan Instance.");
-
-		VkResult err;
 
 		uint32_t extensions_count = 0;
 		const char** extensions = glfwGetRequiredInstanceExtensions(&extensions_count);
@@ -226,8 +216,7 @@ namespace Lumina
 		create_info.ppEnabledExtensionNames = extensions_ext;
 
 		// Create Vulkan Instance
-		err = vkCreateInstance(&create_info, m_Allocator, &m_Instance);
-		CheckResult(err);
+		VCheck(vkCreateInstance(&create_info, m_Allocator, &m_Instance));
 		free(extensions_ext);
 
 		// Get the function pointer (required for any extensions)
@@ -240,13 +229,11 @@ namespace Lumina
 		debug_report_ci.flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT | VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT;
 		debug_report_ci.pfnCallback = debug_report;
 		debug_report_ci.pUserData = NULL;
-		err = vkCreateDebugReportCallbackEXT(m_Instance, &debug_report_ci, m_Allocator, &m_DebugReport);
-		CheckResult(err);
+		VCheck(vkCreateDebugReportCallbackEXT(m_Instance, &debug_report_ci, m_Allocator, &m_DebugReport));
 
 #else
 		// Create Vulkan Instance without any debug feature
-		err = vkCreateInstance(&create_info, m_Allocator, &m_Instance);
-		CheckResult(err);
+		VCheck(vkCreateInstance(&create_info, m_Allocator, &m_Instance));
 		IM_UNUSED(m_DebugReport);
 #endif
 	}
@@ -258,13 +245,11 @@ namespace Lumina
 		VkResult err;
 
 		uint32_t gpu_count;
-		err = vkEnumeratePhysicalDevices(m_Instance, &gpu_count, NULL);
-		CheckResult(err);
+		VCheck(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, NULL));
 		IM_ASSERT(gpu_count > 0);
 
 		VkPhysicalDevice* gpus = (VkPhysicalDevice*)malloc(sizeof(VkPhysicalDevice) * gpu_count);
-		err = vkEnumeratePhysicalDevices(m_Instance, &gpu_count, gpus);
-		CheckResult(err);
+		VCheck(vkEnumeratePhysicalDevices(m_Instance, &gpu_count, gpus));
 
 		// If a number >1 of GPUs got reported, find discrete GPU if present, or use first one available. This covers
 		// most common cases (multi-gpu/integrated+dedicated graphics). Handling more complicated setups (multiple
@@ -307,8 +292,6 @@ namespace Lumina
 	{
 		spdlog::info("[Vulkan Context] Create Logical Device.");
 
-		VkResult err;
-
 		int device_extension_count = 1;
 		const char* device_extensions[] = { "VK_KHR_swapchain" };
 		const float queue_priority[] = { 1.0f };
@@ -323,8 +306,7 @@ namespace Lumina
 		create_info.pQueueCreateInfos = queue_info;
 		create_info.enabledExtensionCount = device_extension_count;
 		create_info.ppEnabledExtensionNames = device_extensions;
-		err = vkCreateDevice(m_PhysicalDevice, &create_info, m_Allocator, &m_Device);
-		CheckResult(err);
+		VCheck(vkCreateDevice(m_PhysicalDevice, &create_info, m_Allocator, &m_Device));
 		vkGetDeviceQueue(m_Device, m_QueueFamily, 0, &m_Queue);
 	}
 
@@ -355,8 +337,7 @@ namespace Lumina
 		pool_info.maxSets = 1000 * IM_ARRAYSIZE(pool_sizes);
 		pool_info.poolSizeCount = (uint32_t)IM_ARRAYSIZE(pool_sizes);
 		pool_info.pPoolSizes = pool_sizes;
-		err = vkCreateDescriptorPool(m_Device, &pool_info, m_Allocator, &m_DescriptorPool);
-		CheckResult(err);
+		VCheck(vkCreateDescriptorPool(m_Device, &pool_info, m_Allocator, &m_DescriptorPool));
 	}
 
 	void VulkanContext::CreateFramebuffer()
@@ -436,7 +417,7 @@ namespace Lumina
 			init_info.ImageCount = m_MainWindowData.ImageCount;
 			init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
 			init_info.Allocator = m_Allocator;
-			init_info.CheckVkResultFn = CheckResult;
+			init_info.CheckVkResultFn = VCheck;
 			init_info.RenderPass = m_MainWindowData.RenderPass;
 			ImGui_ImplVulkan_Init(&init_info);			
 		}
