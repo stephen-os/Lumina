@@ -8,16 +8,13 @@
 #include <stdlib.h>
 #include <vector>
 #include <functional>
+#include <inttypes.h>
 
 #include <imgui.h>
 
 #include "backends/imgui_impl_vulkan.h"
 
 #include "../../Core/Context.h"
-
-#ifdef LUMINA_DEBUG
-    #define IMGUI_VULKAN_DEBUG_REPORT
-#endif
 
 namespace Lumina
 {
@@ -30,12 +27,36 @@ namespace Lumina
 			abort();
 	}
 
-#ifdef IMGUI_VULKAN_DEBUG_REPORT
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(VkDebugReportFlagsEXT flags, VkDebugReportObjectTypeEXT objectType, uint64_t object,
-		size_t location, int32_t messageCode, const char* pLayerPrefix, const char* pMessage, void* pUserData)
+#ifdef LUMINA_DEBUG
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debug_report(
+		VkDebugReportFlagsEXT flags,
+		VkDebugReportObjectTypeEXT objectType,
+		uint64_t object,
+		size_t location,
+		int32_t messageCode,
+		const char* pLayerPrefix,
+		const char* pMessage,
+		void* pUserData)
 	{
-		(void)flags; (void)object; (void)location; (void)messageCode; (void)pUserData; (void)pLayerPrefix; // Unused arguments
-		fprintf(stderr, "[vulkan] Debug report from ObjectType: %i\nMessage: %s\n\n", objectType, pMessage);
+		(void)flags; (void)object; (void)location;
+		(void)messageCode; (void)pUserData; (void)pLayerPrefix; // Unused arguments
+
+		const char* severity = (flags & VK_DEBUG_REPORT_ERROR_BIT_EXT) ? "ERROR" :
+			(flags & VK_DEBUG_REPORT_WARNING_BIT_EXT) ? "WARNING" :
+			(flags & VK_DEBUG_REPORT_PERFORMANCE_WARNING_BIT_EXT) ? "PERFORMANCE" :
+			(flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT) ? "INFO" : "DEBUG";
+
+		fprintf(stderr,
+			"[Vulkan Debug Report]\n"
+			"Severity: %s\n"
+			"Layer: %s\n"
+			"Object Type: %d\n"
+			"Object: 0x%" PRIx64 "\n"
+			"Location: %zu\n"
+			"Message Code: %d\n"
+			"Message: %s\n\n",
+			severity, pLayerPrefix, objectType, object, location, messageCode, pMessage);
+
 		return VK_FALSE;
 	}
 #endif
