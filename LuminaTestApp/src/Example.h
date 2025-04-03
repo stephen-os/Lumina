@@ -6,12 +6,10 @@
 #include "Lumina/Core/Layer.h"
 #include "Lumina/Core/Aliases.h"
 #include "Lumina/Utils/Timer.h"
-#include "Lumina/Renderer/Renderer.h"
 #include "Lumina/Renderer/VertexArray.h"
 #include "Lumina/Renderer/Buffer.h"
 #include "Lumina/Renderer/ShaderProgram.h"
 #include "Lumina/Renderer/FrameBuffer.h"
-#include "Lumina/Renderer/RendererDebug.h"
 
 class Example : public Lumina::Layer
 {
@@ -32,10 +30,10 @@ public:
         };
 
         // Create Vertex Array
-        m_VertexArray = Lumina::MakeShared<Lumina::VertexArray>();
+        m_VertexArray = Lumina::VertexArray::Create();
 
         // Create Vertex Buffer
-        auto vertexBuffer = Lumina::MakeShared<Lumina::VertexBuffer>(vertices, sizeof(vertices));
+        auto vertexBuffer = Lumina::VertexBuffer::Create(vertices, sizeof(vertices));
 
         // Define the layout of the vertex data
         vertexBuffer->SetLayout({
@@ -47,7 +45,7 @@ public:
         m_VertexArray->AddVertexBuffer(vertexBuffer);
 
         // Create Index Buffer
-        auto indexBuffer = Lumina::MakeShared<Lumina::IndexBuffer>(indices, sizeof(indices) / sizeof(uint32_t));
+        auto indexBuffer = Lumina::IndexBuffer::Create(indices, sizeof(indices) / sizeof(uint32_t));
         m_VertexArray->SetIndexBuffer(indexBuffer);
 
         // Create Shader
@@ -76,14 +74,14 @@ public:
             }
         )";
 
-        m_Shader = Lumina::MakeShared<Lumina::ShaderProgram>(vertexSrc, fragmentSrc);
+        m_Shader = Lumina::ShaderProgram::Create(vertexSrc, fragmentSrc);
 
-        Lumina::Renderer::Init();
+        m_FrameBuffer = Lumina::FrameBuffer::Create(); 
     }
 
     virtual void OnDetach() override
     {
-        Lumina::Renderer::Shutdown();
+
     }
 
     virtual void OnUpdate(float ts) override
@@ -99,24 +97,50 @@ public:
         // Begin rendering
         ImGui::Begin("Example Window");
         ImVec2 viewportSize = ImGui::GetContentRegionAvail();
-        Lumina::Renderer::Begin(); 
-        Lumina::Renderer::OnWindowResize(viewportSize.x, viewportSize.y);
-        Lumina::Renderer::Clear();
-        Lumina::Renderer::ClearColor(0.1f, 0.1f, 0.1f);
-        Lumina::Renderer::Enable(Lumina::State::DEPTH_TEST);
-        Lumina::Renderer::Enable(Lumina::State::CULL_FACE);
+        
+        // Begin
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
+        glEnable(GL_CULL_FACE);
 
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+        m_FrameBuffer->Bind();
+
+        // Resize
+        glViewport(0, 0, viewportSize.x, viewportSize.y);
+        m_FrameBuffer->Resize(viewportSize.x, viewportSize.y);
+
+        // Clear 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // Clear Color
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+
+        // Enable
+        glEnable(GL_DEPTH_TEST);
+        glEnable(GL_CULL_FACE);
+        
+        // Bind Shader
         m_Shader->Bind();
 
-        Lumina::Renderer::Draw(m_VertexArray);
+        // Draw
+        m_VertexArray->Bind();
+        m_VertexArray->DrawIndexed();
+        m_VertexArray->Unbind(); 
 
-        ImGui::Image((void*)(intptr_t)Lumina::Renderer::GetID(), viewportSize);
+        // Present Image
+        ImGui::Image((void*)(intptr_t)m_FrameBuffer->GetColorAttachment(), viewportSize);
 
-        Lumina::Renderer::End();
+        // Unbind Framebuffer
+        m_FrameBuffer->Unbind(); 
 
         // End rendering
         ImGui::End();
 
+        // FPS Window
         ImGui::Begin("FPS Counter");
         ImGui::Text("FPS: %.1f", m_FPS);
         ImGui::End();
@@ -125,6 +149,7 @@ public:
 private:
     Lumina::Shared<Lumina::VertexArray> m_VertexArray;
     Lumina::Shared<Lumina::ShaderProgram> m_Shader;
+    Lumina::Shared<Lumina::FrameBuffer> m_FrameBuffer; 
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 };

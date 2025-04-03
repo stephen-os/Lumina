@@ -1,35 +1,26 @@
-#ifndef TEXTURE_H
-#define TEXTURE_H
-
-#include <glad/glad.h>
+#pragma once
 
 #include <string>
+#include <glad/glad.h>
+
+#include "../Core/Aliases.h"
 
 namespace Lumina
 {
-	class Texture
-	{
-	public:
-		Texture(); 
-		~Texture();
+    class Texture
+    {
+    public:
+        virtual ~Texture() = default;
 
-		void Reset();
+        virtual void Bind(uint32_t slot = 0) const = 0;
+        virtual void Unbind() const = 0;
 
-		void Bind(uint32_t slot = 0) const;
-		void Unbind() const;
+        virtual bool SetResolution(int width, int height) = 0;
 
-		bool SetData(std::string source);
-		bool SetResolution(int width, int height); 
+        virtual uint32_t GetID() const = 0;
+        virtual uint32_t GetWidth() const = 0;
+        virtual uint32_t GetHeight() const = 0;
 
-		uint32_t GetID() { return m_BufferID; };
-		uint32_t GetWidth() const { return m_Width; }
-		uint32_t GetHeight() const { return m_Height; }
-	private:
-		int m_Slot;
-		uint32_t m_Width;
-		uint32_t m_Height;
-		uint32_t m_BufferID;
-	};
+        static Shared<Texture> Create(std::string& source);
+    };
 }
-
-#endif 

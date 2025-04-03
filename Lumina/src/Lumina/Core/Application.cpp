@@ -25,6 +25,8 @@ namespace Lumina
     {
         m_Specifications = applicationSpecification;
 
+        RendererAPI::SetAPI(applicationSpecification.Api);
+
         glfwSetErrorCallback(GLFWErrorCallback);
 
         if (!glfwInit())

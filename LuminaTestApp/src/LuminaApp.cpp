@@ -1,8 +1,8 @@
 #include "Lumina/Core/Application.h"
 #include "Lumina/Core/EntryPoint.h"
 
-// #include "Example.h"
-#include "Dialog.h"
+#include "Example.h"
+// #include "Dialog.h"
 
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
 {
@@ -12,7 +12,7 @@ Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
     spec.Height = 900;
 
     Lumina::Application* app = new Lumina::Application(spec);
-    app->PushLayer<Dialog>();
+    app->PushLayer<Example>();
     
     return app;
 }
