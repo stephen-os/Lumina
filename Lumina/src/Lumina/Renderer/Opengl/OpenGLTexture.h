@@ -12,12 +12,15 @@ namespace Lumina
 	{
 	public:
 		OpenGLTexture(std::string& source);
+		OpenGLTexture(uint32_t width, uint32_t height); 
 		~OpenGLTexture();
 
 		void Bind(uint32_t slot = 0) const override;
 		void Unbind() const override;
 
 		bool SetResolution(int width, int height) override;
+
+		void SetData(void* data, uint32_t size); 
 
 		uint32_t GetID() const override { return m_BufferID; };
 		uint32_t GetWidth() const override { return m_Width; }

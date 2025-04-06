@@ -42,7 +42,7 @@ namespace Lumina
             switch (element.Type)
             {
             case BufferDataType::Float:
-            case BufferDataType::Float2:
+            {
                 GLCALL(glEnableVertexAttribArray(m_VertexBufferIndex));
                 GLCALL(glVertexAttribPointer(
                     m_VertexBufferIndex,
@@ -53,6 +53,21 @@ namespace Lumina
                     (const void*)element.Offset));
                 m_VertexBufferIndex++;
                 break;
+            }
+            case BufferDataType::Float2:
+            {
+
+                GLCALL(glEnableVertexAttribArray(m_VertexBufferIndex));
+                GLCALL(glVertexAttribPointer(
+                    m_VertexBufferIndex,
+                    element.GetComponentCount(),
+                    GL_FLOAT,
+                    element.Normalized ? GL_TRUE : GL_FALSE,
+                    layout.GetStride(),
+                    (const void*)element.Offset));
+                m_VertexBufferIndex++;
+                break;
+            }
             case BufferDataType::Float3:
             {
                 GLCALL(glEnableVertexAttribArray(m_VertexBufferIndex));
@@ -71,7 +86,7 @@ namespace Lumina
                 GLCALL(glEnableVertexAttribArray(m_VertexBufferIndex));
                 GLCALL(glVertexAttribPointer(m_VertexBufferIndex,
                     element.GetComponentCount(),
-                    CalculateDataTypeSize(element.Type),
+                    GL_FLOAT,
                     element.Normalized ? GL_TRUE : GL_FALSE,
                     layout.GetStride(),
                     (const void*)element.Offset));

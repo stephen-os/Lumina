@@ -39,6 +39,24 @@ namespace Lumina
         Unbind();
     }
 
+    OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height)
+    {
+        GLCALL(glGenTextures(1, &m_BufferID));
+        Bind();
+
+        m_Width = width;
+        m_Height = height;
+
+        GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
+        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+
+        Unbind();
+    }
+
     OpenGLTexture::~OpenGLTexture()
     {
         GLCALL(glDeleteTextures(1, &m_BufferID));
@@ -77,5 +95,22 @@ namespace Lumina
 
         Unbind();
         return true;
+    }
+
+    void OpenGLTexture::SetData(void* data, uint32_t size)
+    {
+        uint32_t expectedSize = m_Width * m_Height * 4; // Assuming 4 channels (RGBA)
+        if (size != expectedSize)
+        {
+            std::cerr << "OpenGLTexture::SetData - Data size mismatch. Expected: "
+                << expectedSize << ", got: " << size << std::endl;
+            return;
+        }
+
+        Bind(m_Slot);
+
+        GLCALL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, data));
+
+        Unbind();
     }
 }

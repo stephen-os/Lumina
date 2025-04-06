@@ -9,7 +9,7 @@ Lumina::Application* Lumina::CreateApplication(int argc, char** argv)
     spec.Name = "Lumina Application";
     spec.Width = 900;
     spec.Height = 900;
-    spec.Api = API::VULKAN;
+    // spec.Api = API::VULKAN;
 
     Lumina::Application* app = new Lumina::Application(spec);
     app->PushLayer<Example>();
