@@ -24,6 +24,9 @@ namespace Lumina
             return;
         }
 
+        const char* version = (const char*)glGetString(GL_VERSION);
+        spdlog::info("OpenGL Version: {}", version); 
+
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
