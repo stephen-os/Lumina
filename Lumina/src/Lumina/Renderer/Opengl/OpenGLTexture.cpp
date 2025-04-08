@@ -1,6 +1,5 @@
 #include "OpenGLTexture.h"
 #include "RendererDebug.h"
-
 #include <stb_image.h>
 #include <iostream>
 
@@ -8,9 +7,8 @@ namespace Lumina
 {
     OpenGLTexture::OpenGLTexture(std::string& source)
     {
-        GLCALL(glGenTextures(1, &m_BufferID));
-
-        Bind(m_Slot);
+        // Create texture using DSA
+        GLCALL(glCreateTextures(GL_TEXTURE_2D, 1, &m_BufferID));
 
         int channels;
         int width, height;
@@ -19,42 +17,43 @@ namespace Lumina
         {
             std::cerr << "Failed to load OpenGLTexture: " << source << std::endl;
         }
-
         m_Width = width;
         m_Height = height;
-
         GLenum format = (channels == 4) ? GL_RGBA : (channels == 3) ? GL_RGB : GL_RED;
+        GLenum internalFormat = GL_RGBA8;  // Could be more specific like GL_RGBA8 if needed
 
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        // Set texture parameters using DSA
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        // Allocate and upload texture data using DSA
+        GLCALL(glTextureStorage2D(m_BufferID, 1, internalFormat, m_Width, m_Height));
+        GLCALL(glTextureSubImage2D(m_BufferID, 0, 0, 0, m_Width, m_Height, format, GL_UNSIGNED_BYTE, data));
 
-        GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, format, m_Width, m_Height, 0, format, GL_UNSIGNED_BYTE, data));
-        GLCALL(glGenerateMipmap(GL_TEXTURE_2D));
+        // Generate mipmaps using DSA
+        GLCALL(glGenerateTextureMipmap(m_BufferID));
 
         stbi_image_free(data);
-
-        Unbind();
     }
 
     OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height)
     {
-        GLCALL(glGenTextures(1, &m_BufferID));
-        Bind();
+        // Create texture using DSA
+        GLCALL(glCreateTextures(GL_TEXTURE_2D, 1, &m_BufferID));
 
         m_Width = width;
         m_Height = height;
 
-        GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+        // Allocate texture storage using DSA
+        GLCALL(glTextureStorage2D(m_BufferID, 1, GL_RGBA8, width, height));
 
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-
-        Unbind();
+        // Set texture parameters using DSA
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_S, GL_REPEAT));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_T, GL_REPEAT));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
     }
 
     OpenGLTexture::~OpenGLTexture()
@@ -64,13 +63,15 @@ namespace Lumina
 
     void OpenGLTexture::Bind(uint32_t slot) const
     {
-        GLCALL(glActiveTexture(GL_TEXTURE0 + slot));
-        GLCALL(glBindTexture(GL_TEXTURE_2D, m_BufferID));
+        // Bind texture to texture unit using DSA
+        GLCALL(glBindTextureUnit(slot, m_BufferID));
+        // m_Slot = slot;
     }
 
     void OpenGLTexture::Unbind() const
     {
-        GLCALL(glBindTexture(GL_TEXTURE_2D, 0));
+        // In OpenGL 4.5+ with DSA, explicit unbinding is less necessary, but can still be done
+        // GLCALL(glBindTextureUnit(m_Slot, 0));
     }
 
     bool OpenGLTexture::SetResolution(int width, int height)
@@ -84,16 +85,17 @@ namespace Lumina
         m_Width = width;
         m_Height = height;
 
-        Bind(m_Slot);
+        // Reallocate texture storage using DSA
+        GLCALL(glDeleteTextures(1, &m_BufferID));
+        GLCALL(glCreateTextures(GL_TEXTURE_2D, 1, &m_BufferID));
+        GLCALL(glTextureStorage2D(m_BufferID, 1, GL_RGBA8, m_Width, m_Height));
 
-        GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+        // Set texture parameters using DSA
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_S, GL_REPEAT));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_T, GL_REPEAT));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-        GLCALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-
-        Unbind();
         return true;
     }
 
@@ -107,10 +109,7 @@ namespace Lumina
             return;
         }
 
-        Bind(m_Slot);
-
-        GLCALL(glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, data));
-
-        Unbind();
+        // Update texture data using DSA
+        GLCALL(glTextureSubImage2D(m_BufferID, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, data));
     }
 }

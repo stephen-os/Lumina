@@ -12,7 +12,6 @@
 #include "Buffer.h"
 #include "BufferLayout.h"
 #include "FrameBuffer.h"
-#include "Texture.h"
 
 #include "../Utils/FileReader.h"
 
@@ -188,6 +187,70 @@ namespace Lumina
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
     }
+
+    void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& tintColor)
+    {
+        if (s_Data.QuadIndexCount >= MaxIndices)
+            End(), Begin();
+
+        glm::vec3 pos = { position.x, position.y, 0.0f };
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), pos) * glm::scale(glm::mat4(1.0f), { size.x, size.y, 1.0f });
+
+        float texIndex = 0.0f;
+
+        // Check if the texture already exists in the batch's texture slots
+        for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+        {
+            if (s_Data.TextureSlots[i]->GetID() == texture->GetID())
+            {
+                texIndex = static_cast<float>(i);
+                break;
+            }
+        }
+
+        // If not found, bind a new one
+        if (texIndex == 0.0f)
+        {
+            if (s_Data.TextureSlotIndex >= MaxTextureSlots)
+            {
+                End(), Begin(); // Flush batch
+            }
+
+            texIndex = static_cast<float>(s_Data.TextureSlotIndex);
+            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+            s_Data.TextureSlotIndex++;
+        }
+
+        // Calculate texture coordinates for the quad based on its size
+        float texWidth = texture->GetWidth();
+        float texHeight = texture->GetHeight();
+
+        constexpr glm::vec2 texCoords[] = {
+            { 0.0f, 0.0f },
+            { 1.0f, 0.0f },
+            { 1.0f, 1.0f },
+            { 0.0f, 1.0f }
+        };
+
+        for (size_t i = 0; i < 4; i++)
+        {
+            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
+            s_Data.QuadVertexBufferPtr->Color = tintColor;
+
+            // Adjust texCoords based on the size of the quad and texture dimensions
+            glm::vec2 texCoord = texCoords[i];
+            texCoord.x *= texWidth / size.x;  // Scale based on quad size
+            texCoord.y *= texHeight / size.y; // Scale based on quad size
+
+            s_Data.QuadVertexBufferPtr->TexCoord = texCoord;
+            s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
+            s_Data.QuadVertexBufferPtr++;
+        }
+
+        s_Data.QuadIndexCount += 6;
+        s_Data.Stats.QuadCount++;
+    }
+
 
     void Renderer::ResetStats()
     {

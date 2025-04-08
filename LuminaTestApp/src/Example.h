@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <string>
 
 #include "imgui.h"
 
@@ -7,6 +8,7 @@
 #include "Lumina/Core/Aliases.h"
 #include "Lumina/Utils/Timer.h"
 #include "Lumina/Renderer/Renderer.h"
+#include "Lumina/Renderer/Texture.h" 
 
 class Example : public Lumina::Layer
 {
@@ -14,6 +16,9 @@ public:
     virtual void OnAttach() override
     {      
         Lumina::Renderer::Init();
+
+        std::string source = "res/texture/dirt.jpg";
+        m_Texture = Lumina::Texture::Create(source);
     }
 
     virtual void OnDetach() override
@@ -35,9 +40,7 @@ public:
         Lumina::Renderer::SetResolution(viewportSize.x, viewportSize.y);
 
         Lumina::Renderer::Begin();
-        Lumina::Renderer::DrawQuad({ 0, 0 }, { 1, 1 }, { 1, 0, 0, 1 });
-
-        Lumina::Renderer::DrawQuad({ 0, -1.2 }, { 1, 1 }, { 1, 0, 0, 1 });
+        Lumina::Renderer::DrawQuad({ 0, 0 }, { 1, 1 }, m_Texture, { 1, 1, 1, 1 });
         Lumina::Renderer::End(); 
 
         // Begin Window 
@@ -62,6 +65,7 @@ public:
     }
 
 private:
+    Lumina::Shared<Lumina::Texture> m_Texture; 
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 };

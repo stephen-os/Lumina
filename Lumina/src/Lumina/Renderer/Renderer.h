@@ -1,12 +1,13 @@
 #pragma once
 
 #include "VertexArray.h"
+#include "Texture.h"
 
 #include <glm/glm.hpp>
 
 namespace Lumina
 {
-	
+
 	class Renderer
 	{
 	public:
@@ -21,6 +22,7 @@ namespace Lumina
 		static uint32_t GetImage(); 
 
 		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
+		static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& tintColor);
 
 		struct Statistics
 		{
