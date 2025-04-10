@@ -10,9 +10,22 @@
 
 namespace Lumina 
 {
+	// Static members
+	VkInstance       VulkanContext::m_Instance;
+	VkPhysicalDevice VulkanContext::m_PhysicalDevice;
+	VkDevice         VulkanContext::m_Device;
+	uint32_t         VulkanContext::m_QueueFamily;
+	VkQueue          VulkanContext::m_Queue;
 
 	void VulkanContext::Init(GLFWwindow* window)
 	{
+		// Init static members
+		m_Instance = VK_NULL_HANDLE;
+		m_PhysicalDevice = VK_NULL_HANDLE;
+		m_Device = VK_NULL_HANDLE;
+		m_QueueFamily = (uint32_t) - 1;
+		m_Queue = VK_NULL_HANDLE;
+
 		m_Window = window; 
 
 		if (!glfwVulkanSupported())
