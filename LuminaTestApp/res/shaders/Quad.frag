@@ -6,7 +6,6 @@ in float v_TexIndex;
 
 out vec4 color;
 
-// uniform sampler2D u_Textures[32];
 layout (binding = 0) uniform sampler2D u_Textures[32];
 
 void main()

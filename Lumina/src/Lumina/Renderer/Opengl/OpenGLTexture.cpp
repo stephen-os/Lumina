@@ -17,8 +17,11 @@ namespace Lumina
         {
             std::cerr << "Failed to load OpenGLTexture: " << source << std::endl;
         }
+
         m_Width = width;
         m_Height = height;
+        m_Path = source;
+
         GLenum format = (channels == 4) ? GL_RGBA : (channels == 3) ? GL_RGB : GL_RED;
         GLenum internalFormat = GL_RGBA8;  // Could be more specific like GL_RGBA8 if needed
 

@@ -21,6 +21,7 @@ namespace Lumina
         virtual uint32_t GetID() const = 0;
         virtual uint32_t GetWidth() const = 0;
         virtual uint32_t GetHeight() const = 0;
+        virtual std::string GetPath() const = 0; 
 
         static Shared<Texture> Create(std::string& source);
         static Shared<Texture> Create(uint32_t width, uint32_t height);

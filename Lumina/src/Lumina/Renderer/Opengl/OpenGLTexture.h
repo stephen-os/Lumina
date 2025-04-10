@@ -22,11 +22,12 @@ namespace Lumina
 
 		void SetData(void* data, uint32_t size); 
 
-		uint32_t GetID() const override { return m_BufferID; };
+		uint32_t GetID() const override { return m_BufferID; }
 		uint32_t GetWidth() const override { return m_Width; }
 		uint32_t GetHeight() const override { return m_Height; }
+		std::string GetPath() const override { return m_Path; }
 	private:
-		int m_Slot = 0;
+		std::string m_Path; 
 		uint32_t m_Width = 0;
 		uint32_t m_Height = 0;
 		uint32_t m_BufferID = 0;

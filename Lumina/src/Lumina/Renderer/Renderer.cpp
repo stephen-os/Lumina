@@ -1,5 +1,7 @@
 #include "Renderer.h"
 
+#include <glad/glad.h>
+
 #include <array>
 #include <string>
 
@@ -151,6 +153,8 @@ namespace Lumina
 
     void Renderer::Begin(const glm::mat4& viewProjection)
     {
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
         // Store view-projection matrix
         s_Data.ViewProjectionMatrix = viewProjection;
 
@@ -276,6 +280,25 @@ namespace Lumina
     {
         // Use default texture coordinates
         DrawQuadInternal(transform, texture, s_Data.TexCoords, tintColor);
+    }
+
+    void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& texCoords, const glm::vec4& tintColor)
+    {
+        // Create custom texture coordinates for all four corners of the quad
+        glm::vec2 customTexCoords[4] = 
+        {
+            { texCoords[0], texCoords[1] },  // Bottom left
+            { texCoords[2], texCoords[1] },  // Bottom right
+            { texCoords[2], texCoords[3] },  // Top right
+            { texCoords[0], texCoords[3] }   // Top left
+        };
+
+        // Create transform
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), { position.x, position.y, 0.0 }) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
+
+        // Pass custom texture coordinates instead of s_Data.TexCoords
+        DrawQuadInternal(transform, texture, customTexCoords, tintColor);
     }
 
     void Renderer::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
