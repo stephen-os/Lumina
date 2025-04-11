@@ -27,11 +27,13 @@ namespace Lumina
 		void PostRender() override;
 		void Shutdown() override;
 		
+		static VkInstance GetInstance() { return m_Instance; }
 		static VkDevice GetDevice() { return m_Device; }
 		static VkPhysicalDevice GetPhysicalDevice() { return m_PhysicalDevice; }
-		static VkQueue GetQueue() { return m_Queue; }
 		static uint32_t GetQueueFamily() { return m_QueueFamily; }
-		static VkInstance GetInstance() { return m_Instance; }
+		static VkQueue GetQueue() { return m_Queue; }
+		static VkDescriptorPool GetDescriptorPool() { return m_DescriptorPool; }
+		static VkDescriptorSetLayout GetDescriptorSetLayout() { return m_DescriptorSetLayout; }
 	private:
 		void CreateInstance();
 		void SelectGPU(); 
@@ -51,8 +53,9 @@ namespace Lumina
 		static uint32_t				m_QueueFamily;
 		static VkQueue				m_Queue;
 		VkDebugReportCallbackEXT	m_DebugReport = VK_NULL_HANDLE;
-		VkPipelineCache				m_PipelineCache = VK_NULL_HANDLE;
-		VkDescriptorPool			m_DescriptorPool = VK_NULL_HANDLE;
+		static VkPipelineCache		m_PipelineCache;
+		static VkDescriptorPool		m_DescriptorPool;
+		static VkDescriptorSetLayout m_DescriptorSetLayout;
 		VkSurfaceKHR				m_Surface = VK_NULL_HANDLE;
 
 		ImGui_ImplVulkanH_Window	m_MainWindowData;
@@ -60,7 +63,7 @@ namespace Lumina
 		bool						m_SwapChainRebuild = false;
 
 		// Per-frame-in-flight
-		std::vector<std::vector<VkCommandBuffer>>		m_AllocatedCommandBuffers;
+		std::vector<std::vector<VkCommandBuffer>>	m_AllocatedCommandBuffers;
 		std::vector<std::vector<std::function<void()>>> m_ResourceFreeQueue;
 
 		// Unlike g_MainWindowData.FrameIndex, this is not the the swapchain image index

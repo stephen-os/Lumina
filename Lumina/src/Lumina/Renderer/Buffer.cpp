@@ -1,7 +1,7 @@
 #include "Buffer.h"
 
 #include "OpenGL/OpenGLBuffer.h"
-// #include "Vulkan/VulkanBuffer.h"
+#include "Vulkan/VulkanBuffer.h"
 
 #include "../Core/API.h"
 
@@ -12,7 +12,7 @@ namespace Lumina
         switch (RendererAPI::GetAPI())
         {
             case API::OPENGL: return MakeShared<OpenGLVertexBuffer>(size); 
-            case API::VULKAN: return nullptr;
+            case API::VULKAN: return MakeShared<VulkanVertexBuffer>(size);
             default: return nullptr; 
         }
     }
@@ -22,7 +22,7 @@ namespace Lumina
         switch (RendererAPI::GetAPI())
         {
         case API::OPENGL: return MakeShared<OpenGLVertexBuffer>(vertices, size);
-        case API::VULKAN: return nullptr;
+        case API::VULKAN: return MakeShared<VulkanVertexBuffer>(vertices, size);
         default: return nullptr;
         }
     }
@@ -32,7 +32,7 @@ namespace Lumina
         switch (RendererAPI::GetAPI())
         {
         case API::OPENGL: return MakeShared<OpenGLIndexBuffer>(indices, count);
-        case API::VULKAN: return nullptr;
+        case API::VULKAN: return MakeShared<VulkanIndexBuffer>(indices, count);
         default: return nullptr;
         }
     }

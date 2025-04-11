@@ -11,11 +11,14 @@
 namespace Lumina 
 {
 	// Static members
-	VkInstance       VulkanContext::m_Instance;
-	VkPhysicalDevice VulkanContext::m_PhysicalDevice;
-	VkDevice         VulkanContext::m_Device;
-	uint32_t         VulkanContext::m_QueueFamily;
-	VkQueue          VulkanContext::m_Queue;
+	VkInstance				VulkanContext::m_Instance;
+	VkDevice				VulkanContext::m_Device;
+	VkPhysicalDevice		VulkanContext::m_PhysicalDevice;
+	uint32_t				VulkanContext::m_QueueFamily;
+	VkQueue					VulkanContext::m_Queue;
+	VkDescriptorPool		VulkanContext::m_DescriptorPool;
+	VkDescriptorSetLayout	VulkanContext::m_DescriptorSetLayout;
+	VkPipelineCache			VulkanContext::m_PipelineCache; 
 
 	void VulkanContext::Init(GLFWwindow* window)
 	{
@@ -25,6 +28,8 @@ namespace Lumina
 		m_Device = VK_NULL_HANDLE;
 		m_QueueFamily = (uint32_t) - 1;
 		m_Queue = VK_NULL_HANDLE;
+		m_DescriptorPool = VK_NULL_HANDLE;
+		m_PipelineCache = VK_NULL_HANDLE;
 
 		m_Window = window; 
 
