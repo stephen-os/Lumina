@@ -14,18 +14,22 @@ namespace Lumina
 	class TextureAtlas
 	{
 	public:
+		TextureAtlas(int width, int height); 
 		TextureAtlas(std::string& source, int width, int height);
 		~TextureAtlas() = default;
 
 		void Resize(int width, int height);
+		void SetTexture(std::string& source); 
 
 		int GetWidth() const { return m_GridWidth; }
 		int GetHeight() const { return m_GridHeight; }
 
 		Shared<Texture>& GetTexture() { return m_Texture; }
+		uint32_t GetTextureID() { return m_Texture->GetID(); }
 
-		glm::vec4 GetTexCoods(int index) const;
+		glm::vec4 GetTextureCoords(int index) const;
 		glm::vec2 GetOffset(int index) const;
+		glm::vec2 GetPosition(int index) const; 
 	private:
 		Shared<Texture> m_Texture;
 		int m_GridWidth;					// Number of textures along the width

@@ -133,10 +133,10 @@ namespace Lumina
         s_Data.TextureSlots[0]->SetData(&whiteTextureData, sizeof(uint32_t));
 
         // Set up default quad vertex positions in object space
-        s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.0f };  // Bottom left
-        s_Data.QuadVertexPositions[1] = { 0.5f, -0.5f, 0.0f, 1.0f };   // Bottom right
-        s_Data.QuadVertexPositions[2] = { 0.5f,  0.5f, 0.0f, 1.0f };   // Top right
-        s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.0f };  // Top left
+        s_Data.QuadVertexPositions[0] = { -1.0f, -1.0f, 0.0f, 1.0f };  // Bottom left
+        s_Data.QuadVertexPositions[1] = {  1.0f, -1.0f, 0.0f, 1.0f };  // Bottom right
+        s_Data.QuadVertexPositions[2] = {  1.0f,  1.0f, 0.0f, 1.0f };  // Top right
+        s_Data.QuadVertexPositions[3] = { -1.0f,  1.0f, 0.0f, 1.0f };  // Top left
 
         // Set up default texture coordinates
         s_Data.TexCoords[0] = { 0.0f, 0.0f };  // Bottom left
@@ -153,6 +153,8 @@ namespace Lumina
 
     void Renderer::Begin(const glm::mat4& viewProjection)
     {
+        s_Data.RendererFB->Bind();
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Store view-projection matrix
@@ -174,6 +176,9 @@ namespace Lumina
             s_Data.QuadVB->SetData(s_Data.QuadVertexBufferBase, dataSize);
             Flush();
         }
+
+        // Very last thing we do
+        s_Data.RendererFB->Unbind();
     }
 
     void Renderer::Flush()
@@ -187,7 +192,6 @@ namespace Lumina
             s_Data.TextureSlots[i]->Bind(i);
 
         // Render to framebuffer
-        s_Data.RendererFB->Bind();
 
         // Set view-projection matrix
         s_Data.QuadShader->Bind();
@@ -195,8 +199,7 @@ namespace Lumina
         // Draw the batch
         s_Data.QuadVA->Bind();
         s_Data.QuadVA->DrawIndexed();
-
-        s_Data.RendererFB->Unbind();
+        s_Data.QuadVA->Unbind();
 
         // Update stats
         s_Data.Stats.DrawCalls++;
@@ -208,6 +211,8 @@ namespace Lumina
             std::cerr << "Invalid resolution: " << width << "x" << height << std::endl;
             return;
         }
+
+        glViewport(0, 0, width, height);
 
         s_Data.Width = width;
         s_Data.Height = height;

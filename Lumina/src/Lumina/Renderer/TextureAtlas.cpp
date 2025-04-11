@@ -4,10 +4,14 @@
 
 namespace Lumina
 {
+    TextureAtlas::TextureAtlas(int width, int height)
+    {
+        Resize(width, height); 
+    }
+
 	TextureAtlas::TextureAtlas(std::string& source, int width, int height) 
 	{
-		m_Texture = Texture::Create(source);
-
+        SetTexture(source);
 		Resize(width, height); 
 	}
 
@@ -15,9 +19,6 @@ namespace Lumina
 	{
 		m_GridWidth = width;
 		m_GridHeight = height;
-
-        int texturePixelWidth = m_Texture->GetWidth();
-        int texturePixelHeight = m_Texture->GetHeight();
 
         m_TexWidth = 1.0f / static_cast<float>(m_GridWidth);
         m_TexHeight = 1.0f / static_cast<float>(m_GridHeight);
@@ -39,7 +40,12 @@ namespace Lumina
         }
 	}
 
-    glm::vec4 TextureAtlas::GetTexCoods(int index) const
+    void TextureAtlas::SetTexture(std::string& source)
+    {
+        m_Texture = Texture::Create(source);
+    }
+
+    glm::vec4 TextureAtlas::GetTextureCoords(int index) const
     {
         if (index < 0 || index >= static_cast<int>(m_TexCoords.size()))
         {
@@ -59,5 +65,16 @@ namespace Lumina
         float yOffset = row * m_TexHeight;
 
         return glm::vec2(xOffset, yOffset);
+    }
+
+    glm::vec2 TextureAtlas::GetPosition(int index) const
+    {
+        if (index < 0 || index >= m_GridWidth * m_GridHeight)
+            return glm::vec2(0.0f);
+
+        int x = index % m_GridWidth;
+        int y = index / m_GridWidth;
+
+        return glm::vec2(x, y);
     }
 }
