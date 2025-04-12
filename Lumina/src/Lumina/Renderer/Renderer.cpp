@@ -5,11 +5,12 @@
 #include <array>
 #include <string>
 
+#include <spdlog/spdlog.h>
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "../Core/Aliases.h"
 
-#include "ShaderProgram.h"
 #include "VertexArray.h"
 #include "Buffer.h"
 #include "BufferLayout.h"
@@ -28,6 +29,7 @@ namespace Lumina
     constexpr uint32_t MaxVertices = MaxQuads * 4;
     constexpr uint32_t MaxIndices = MaxQuads * 6;
     constexpr uint32_t MaxTextureSlots = 16; // Depends on GPU
+	constexpr uint32_t MaxShaderSlots = 16;
 
     // Vertex structure
     struct QuadVertex
@@ -46,12 +48,16 @@ namespace Lumina
         Shared<VertexArray> QuadVA;
         Shared<VertexBuffer> QuadVB;
         Shared<IndexBuffer> QuadIB;
-        Shared<ShaderProgram> QuadShader;
 
         // Batch rendering data
         uint32_t QuadIndexCount = 0;
         QuadVertex* QuadVertexBufferBase = nullptr;
         QuadVertex* QuadVertexBufferPtr = nullptr;
+
+        // Shader management
+		std::array<Shared<ShaderProgram>, MaxShaderSlots> ShaderSlots;
+		uint32_t ShaderSlotIndex = 0; // 0 is default shader
+        uint32_t ShaderSlotSize = 1;
 
         // Texture management
         std::array<Shared<Texture>, MaxTextureSlots> TextureSlots;
@@ -89,7 +95,7 @@ namespace Lumina
             { BufferDataType::Float4, "a_Color" },
             { BufferDataType::Float2, "a_TexCoord" },
             { BufferDataType::Float,  "a_TexIndex" }
-            });
+        });
 
         s_Data.QuadVA->AddVertexBuffer(s_Data.QuadVB);
 
@@ -115,10 +121,10 @@ namespace Lumina
         // Allocate vertex buffer memory
         s_Data.QuadVertexBufferBase = new QuadVertex[MaxVertices];
 
-        // Load shaders
+        // Create a default shader at slot 0
         std::string vertexShader = ReadFile("res/shaders/Quad.vert");
         std::string fragmentShader = ReadFile("res/shaders/Quad.frag");
-        s_Data.QuadShader = ShaderProgram::Create(vertexShader, fragmentShader);
+		s_Data.ShaderSlots[0] = ShaderProgram::Create(vertexShader, fragmentShader);
 
         // Create a 1x1 white texture for basic colored quads
         uint32_t whiteTextureData = 0xffffffff;
@@ -153,26 +159,36 @@ namespace Lumina
         // Store view-projection matrix
         s_Data.ViewProjectionMatrix = viewProjection;
 
-        // Reset batch data
-        s_Data.QuadIndexCount = 0;
-        s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-        s_Data.TextureSlotIndex = 1; // 0 is reserved for white texture
+        StartBatch(); 
     }
 
     void Renderer::End()
     {
+		EndBatch();
+
+        s_Data.RendererFB->Unbind();
+    }
+
+	void Renderer::StartBatch()
+	{
+		s_Data.QuadIndexCount = 0;
+		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
+		s_Data.TextureSlotIndex = 1; // 0 is reserved for white texture
+		s_Data.ShaderSlotIndex = 0;  // 0 is reserved for default shader
+	}
+
+	void Renderer::EndBatch()
+	{
         // Calculate data size and upload to GPU
         uint32_t dataSize = static_cast<uint32_t>((uint8_t*)s_Data.QuadVertexBufferPtr -
             (uint8_t*)s_Data.QuadVertexBufferBase);
 
-        if (dataSize > 0) {
+        if (dataSize > 0) 
+        {
             s_Data.QuadVB->SetData(s_Data.QuadVertexBufferBase, dataSize);
             Flush();
         }
-
-        // Very last thing we do
-        s_Data.RendererFB->Unbind();
-    }
+	}
 
     void Renderer::Flush()
     {
@@ -184,10 +200,8 @@ namespace Lumina
         for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
             s_Data.TextureSlots[i]->Bind(i);
 
-        // Render to framebuffer
-
-        // Set view-projection matrix
-        s_Data.QuadShader->Bind();
+        // Bind the active shader
+		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->Bind();
 
         // Draw the batch
         s_Data.QuadVA->Bind();
@@ -200,7 +214,8 @@ namespace Lumina
 
     void Renderer::SetResolution(uint32_t width, uint32_t height)
     {
-        if (width == 0 || height == 0) {
+        if (width == 0 || height == 0) 
+        {
             std::cerr << "Invalid resolution: " << width << "x" << height << std::endl;
             return;
         }
@@ -226,8 +241,59 @@ namespace Lumina
     {
         if (s_Data.QuadIndexCount >= MaxIndices)
         {
-            End();
-            Begin(s_Data.ViewProjectionMatrix);
+            EndBatch();
+            StartBatch();
+        }
+
+        // We have a shader
+		if (attributes.Shader)
+		{
+            uint32_t shaderIndex = 0;
+
+			// Check if the shader is already in the slots
+            for (uint32_t i = 1; i < s_Data.ShaderSlotSize; i++)
+            {
+                // We have found the shader we want to use
+                if (s_Data.ShaderSlots[i] == attributes.Shader)
+                {
+					if (s_Data.ShaderSlotIndex != i)
+					{
+                        // Clear old batch
+                        EndBatch();
+                        StartBatch();
+
+						// Set the new shader slot index
+						s_Data.ShaderSlotIndex = i;
+						shaderIndex = i;
+                        break;
+					}
+                }
+            }
+
+            // Must be a new shader
+            if (shaderIndex == 0)
+            {
+                // Clear old batch
+                EndBatch();
+                StartBatch();
+
+                // Add new shader to the slots
+                s_Data.ShaderSlotIndex = s_Data.ShaderSlotSize;
+                s_Data.ShaderSlots[s_Data.ShaderSlotIndex] = attributes.Shader;
+                s_Data.ShaderSlotSize++;
+            }
+		}
+        // We dont have a new shader so use default
+        else
+        {
+            // If not already on default shader,
+            // clear batch and switch to it
+			if (s_Data.ShaderSlotIndex != 0)
+			{
+				EndBatch();
+				StartBatch();
+                s_Data.ShaderSlotIndex = 0;
+			}
         }
 
         // Compute transform

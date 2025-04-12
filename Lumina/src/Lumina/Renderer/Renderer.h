@@ -1,6 +1,8 @@
 #pragma once
 #include "VertexArray.h"
 #include "Texture.h"
+#include "ShaderProgram.h"
+
 #include <glm/glm.hpp>
 
 namespace Lumina
@@ -13,6 +15,7 @@ namespace Lumina
         Shared<Texture> Texture = nullptr;
 		glm::vec4 TextureCoords = { 0, 0, 1, 1 };
         glm::vec4 TintColor = glm::vec4(1.0f);
+		Shared<ShaderProgram> Shader = nullptr;
     };
 
     class Renderer
@@ -26,6 +29,9 @@ namespace Lumina
         static void Begin(const glm::mat4& viewProjection = glm::mat4(1.0f));
         static void End();
         
+        static void StartBatch();
+		static void EndBatch();
+
 		// Draw Batch
         static void Flush();
 
@@ -38,6 +44,7 @@ namespace Lumina
 
         // Basic Drawing Functions
         static void DrawQuad(const QuadAttributes& attributes);
+        // static void DrawQuad(const QuadAttributes& attributes, const Shared<ShaderProgram>& shader);
        
         // Statistics Tracking
         struct Statistics

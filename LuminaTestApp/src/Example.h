@@ -10,6 +10,8 @@
 #include "Lumina/Renderer/Renderer.h"
 #include "Lumina/Renderer/TextureAtlas.h"
 
+#include "Lumina/Utils/FileReader.h"
+
 class Example : public Lumina::Layer
 {
 public:
@@ -19,6 +21,13 @@ public:
 
         std::string source = "res/texture/factory_atlas.png";
         m_Atlas = Lumina::MakeShared<Lumina::TextureAtlas>(source, 16, 16);
+
+		// Create a shader program
+		std::string vertexShaderSource = Lumina::ReadFile("res/shaders/Background.vert");
+		std::string fragmentShaderSource = Lumina::ReadFile("res/shaders/Background.frag");
+		Lumina::Shared<Lumina::ShaderProgram> shader = Lumina::ShaderProgram::Create(vertexShaderSource, fragmentShaderSource);
+
+		m_BackgroundAttributes.Shader = shader;
 
 		m_QuadAttributes.Texture = m_Atlas->GetTexture();
 		m_QuadAttributes.Position = { 0.0f, 0.0f, 1.0f };
@@ -42,21 +51,13 @@ public:
         Lumina::Renderer::SetResolution(viewportSize.x, viewportSize.y);
 
         Lumina::Renderer::Begin();
-        for (int i = -10; i < 10; i++)
-        {
-			for (int j = -10; j < 10; j++)
-			{
-                Lumina::QuadAttributes background;
-				background.Position = { i * 0.1f, j * 0.1f, 0.0f };
-				background.Size = { 0.05f, 0.05f };
-				background.TintColor = { 1.0f, 1.0f, 1.0f, 1.0f };
-				background.Texture = m_Atlas->GetTexture();
-				background.TextureCoords = m_Atlas->GetTextureCoords(1);
-				Lumina::Renderer::DrawQuad(background);
-			}
-        }
 
+        m_BackgroundAttributes.Shader->Bind();
+		m_BackgroundAttributes.Shader->SetUniformMat4("u_ViewProjection", glm::mat4(1.0f));
+        m_BackgroundAttributes.Shader->SetUniformVec2("u_GridSize", { 100, 100 });
+        m_BackgroundAttributes.Shader->Unbind(); 
 
+		Lumina::Renderer::DrawQuad(m_BackgroundAttributes);
         Lumina::Renderer::DrawQuad(m_QuadAttributes);
         Lumina::Renderer::End();
 
@@ -74,7 +75,7 @@ public:
         ImGui::Text("FPS: %.1f", m_FPS);
         ImGui::End();
 
-        ImGui::Begin("DrawQuad Parameters");
+        ImGui::Begin("Quad Parameters");
         ImGui::DragFloat2("Position", &m_QuadAttributes.Position.x, 0.01f);
         ImGui::DragFloat2("Size", &m_QuadAttributes.Size.x, 0.01f);
         ImGui::ColorEdit4("Color", &m_QuadAttributes.TintColor.r);
@@ -83,14 +84,14 @@ public:
         if (m_TileIndex < 0) m_TileIndex = 0;
         int maxIndex = m_Atlas->GetWidth() * m_Atlas->GetHeight() - 1;
         if (m_TileIndex > maxIndex) m_TileIndex = maxIndex;
-        ImGui::End();
+        ImGui::End(); 
     }
-
 private:
     Lumina::Shared<Lumina::TextureAtlas> m_Atlas;
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 
     Lumina::QuadAttributes m_QuadAttributes;
+	Lumina::QuadAttributes m_BackgroundAttributes;
     int m_TileIndex = 0;
 };
