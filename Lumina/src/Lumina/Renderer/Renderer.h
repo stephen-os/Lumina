@@ -49,7 +49,7 @@ namespace Lumina
             uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
         };
 
-        static void ResetStats();
-        static Statistics GetStats();
+        static void ResetStats() { memset(&s_Data.Stats, 0, sizeof(Statistics)); };
+        static Statistics GetStats() { return s_Data.Stats; };
     };
 }
