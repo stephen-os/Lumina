@@ -286,4 +286,14 @@ namespace Lumina
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
     }
+
+	Renderer::Statistics Renderer::GetStats()
+	{
+		return s_Data.Stats;
+	}
+
+	void Renderer::ResetStats()
+	{
+		memset(&s_Data.Stats, 0, sizeof(Statistics));
+	}
 }
