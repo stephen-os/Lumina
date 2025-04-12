@@ -21,6 +21,8 @@ public:
         m_Atlas = Lumina::MakeShared<Lumina::TextureAtlas>(source, 16, 16);
 
 		m_QuadAttributes.Texture = m_Atlas->GetTexture();
+		m_QuadAttributes.Position = { 0.0f, 0.0f, 1.0f };
+		m_QuadAttributes.Size = { 0.2f, 0.2f };
     }
 
     virtual void OnDetach() override {}
@@ -40,6 +42,21 @@ public:
         Lumina::Renderer::SetResolution(viewportSize.x, viewportSize.y);
 
         Lumina::Renderer::Begin();
+        for (int i = -10; i < 10; i++)
+        {
+			for (int j = -10; j < 10; j++)
+			{
+                Lumina::QuadAttributes background;
+				background.Position = { i * 0.1f, j * 0.1f, 0.0f };
+				background.Size = { 0.05f, 0.05f };
+				background.TintColor = { 1.0f, 1.0f, 1.0f, 1.0f };
+				background.Texture = m_Atlas->GetTexture();
+				background.TextureCoords = m_Atlas->GetTextureCoords(1);
+				Lumina::Renderer::DrawQuad(background);
+			}
+        }
+
+
         Lumina::Renderer::DrawQuad(m_QuadAttributes);
         Lumina::Renderer::End();
 
