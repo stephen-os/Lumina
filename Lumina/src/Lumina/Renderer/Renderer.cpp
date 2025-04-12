@@ -229,179 +229,71 @@ namespace Lumina
         return { s_Data.Width, s_Data.Height };
     }
 
-    void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color)
+    void Renderer::DrawQuad(const QuadAttributes& attributes)
     {
-        DrawQuad(glm::vec3(position.x, position.y, 0.0f), size, color);
-    }
-
-    void Renderer::DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color)
-    {
-        // Create transform matrix
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-
-        DrawQuad(transform, color);
-    }
-
-    void Renderer::DrawQuad(const glm::mat4& transform, const glm::vec4& color)
-    {
-        // Check if we need to flush the batch
         if (s_Data.QuadIndexCount >= MaxIndices)
-            End(), Begin(s_Data.ViewProjectionMatrix);
+        {
+            End();
+            Begin(s_Data.ViewProjectionMatrix);
+        }
 
-        // Use white texture
+        // Compute transform
+        glm::mat4 transform = glm::translate(glm::mat4(1.0f), attributes.Position) *
+            glm::rotate(glm::mat4(1.0f), attributes.Rotation, glm::vec3(0.0f, 0.0f, 1.0f)) *
+            glm::scale(glm::mat4(1.0f), glm::vec3(attributes.Size, 1.0f));
+
+        // Handle texture slot
         float texIndex = 0.0f;
+        if (attributes.Texture)
+        {
+            for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+            {
+                if (s_Data.TextureSlots[i] == attributes.Texture)
+                {
+                    texIndex = static_cast<float>(i);
+                    break;
+                }
+            }
 
-        // Add vertices to batch
+            if (texIndex == 0.0f)
+            {
+                if (s_Data.TextureSlotIndex >= MaxTextureSlots)
+                {
+                    End();
+                    Begin(s_Data.ViewProjectionMatrix);
+                }
+
+                texIndex = static_cast<float>(s_Data.TextureSlotIndex);
+                s_Data.TextureSlots[s_Data.TextureSlotIndex] = attributes.Texture;
+                s_Data.TextureSlotIndex++;
+            }
+        }
+
+        // Extract custom UV bounds
+        glm::vec2 uvMin = { attributes.TextureCoords.x, attributes.TextureCoords.y };
+        glm::vec2 uvMax = { attributes.TextureCoords.z, attributes.TextureCoords.w };
+
+        // Map UVs per corner (same order as QuadVertexPositions: bottom-left, bottom-right, top-right, top-left)
+        glm::vec2 uvs[4] = {
+            { uvMin.x, uvMin.y },
+            { uvMax.x, uvMin.y },
+            { uvMax.x, uvMax.y },
+            { uvMin.x, uvMax.y }
+        };
+
         for (size_t i = 0; i < 4; i++)
         {
             s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-            s_Data.QuadVertexBufferPtr->Color = color;
-            s_Data.QuadVertexBufferPtr->TexCoord = s_Data.TexCoords[i];
+            s_Data.QuadVertexBufferPtr->Color = attributes.TintColor;
+            s_Data.QuadVertexBufferPtr->TexCoord = uvs[i];
             s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
             s_Data.QuadVertexBufferPtr++;
         }
 
-        // Update indices and stats
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
     }
 
-    void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& tintColor)
-    {
-        DrawQuad(glm::vec3(position.x, position.y, 0.0f), size, texture, tintColor);
-    }
-
-    void Renderer::DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& tintColor)
-    {
-        // Create transform matrix
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-
-        DrawQuad(transform, texture, tintColor);
-    }
-
-    void Renderer::DrawQuad(const glm::mat4& transform, const Shared<Texture>& texture, const glm::vec4& tintColor)
-    {
-        // Use default texture coordinates
-        DrawQuadInternal(transform, texture, s_Data.TexCoords, tintColor);
-    }
-
-    void Renderer::DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& texCoords, const glm::vec4& tintColor)
-    {
-        // Create custom texture coordinates for all four corners of the quad
-        glm::vec2 customTexCoords[4] = 
-        {
-            { texCoords[0], texCoords[1] },  // Bottom left
-            { texCoords[2], texCoords[1] },  // Bottom right
-            { texCoords[2], texCoords[3] },  // Top right
-            { texCoords[0], texCoords[3] }   // Top left
-        };
-
-        // Create transform
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), { position.x, position.y, 0.0 }) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-
-        // Pass custom texture coordinates instead of s_Data.TexCoords
-        DrawQuadInternal(transform, texture, customTexCoords, tintColor);
-    }
-
-    void Renderer::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color)
-    {
-        DrawRotatedQuad(glm::vec3(position.x, position.y, 0.0f), size, rotation, color);
-    }
-
-    void Renderer::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color)
-    {
-        // Create transform with rotation
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-            glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-
-        DrawQuad(transform, color);
-    }
-
-    void Renderer::DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Shared<Texture>& texture, const glm::vec4& tintColor)
-    {
-        DrawRotatedQuad(glm::vec3(position.x, position.y, 0.0f), size, rotation, texture, tintColor);
-    }
-
-    void Renderer::DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Shared<Texture>& texture, const glm::vec4& tintColor)
-    {
-        // Create transform with rotation
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), position) *
-            glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f, 0.0f, 1.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-
-        DrawQuad(transform, texture, tintColor);
-    }
-
-    void Renderer::DrawTexturedRect(const glm::vec2& position, const glm::vec2& size,
-        const Shared<Texture>& texture,
-        const glm::vec2& texCoordMin, const glm::vec2& texCoordMax,
-        const glm::vec4& tintColor)
-    {
-        // Create custom texture coordinates for sprite sheet/atlas support
-        glm::vec2 customTexCoords[4] = {
-            { texCoordMin.x, texCoordMin.y },  // Bottom left
-            { texCoordMax.x, texCoordMin.y },  // Bottom right
-            { texCoordMax.x, texCoordMax.y },  // Top right
-            { texCoordMin.x, texCoordMax.y }   // Top left
-        };
-
-        // Create transform
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), glm::vec3(position.x, position.y, 0.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(size.x, size.y, 1.0f));
-
-        DrawQuadInternal(transform, texture, customTexCoords, tintColor);
-    }
-
-    void Renderer::DrawQuadInternal(const glm::mat4& transform, const Shared<Texture>& texture,
-        const glm::vec2 texCoords[4], const glm::vec4& tintColor)
-    {
-        // Check if we need to flush the batch
-        if (s_Data.QuadIndexCount >= MaxIndices)
-            End(), Begin(s_Data.ViewProjectionMatrix);
-
-        float texIndex = 0.0f;
-
-        // Check if the texture already exists in the batch's texture slots
-        for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
-        {
-            if (s_Data.TextureSlots[i]->GetID() == texture->GetID())
-            {
-                texIndex = static_cast<float>(i);
-                break;
-            }
-        }
-
-        // If not found, bind a new one
-        if (texIndex == 0.0f)
-        {
-            if (s_Data.TextureSlotIndex >= MaxTextureSlots)
-            {
-                End(), Begin(s_Data.ViewProjectionMatrix); // Flush batch
-            }
-
-            texIndex = static_cast<float>(s_Data.TextureSlotIndex);
-            s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
-            s_Data.TextureSlotIndex++;
-        }
-
-        // Add vertices to batch
-        for (size_t i = 0; i < 4; i++)
-        {
-            s_Data.QuadVertexBufferPtr->Position = transform * s_Data.QuadVertexPositions[i];
-            s_Data.QuadVertexBufferPtr->Color = tintColor;
-            s_Data.QuadVertexBufferPtr->TexCoord = texCoords[i];
-            s_Data.QuadVertexBufferPtr->TexIndex = texIndex;
-            s_Data.QuadVertexBufferPtr++;
-        }
-
-        // Update indices and stats
-        s_Data.QuadIndexCount += 6;
-        s_Data.Stats.QuadCount++;
-    }
 
     void Renderer::ResetStats()
     {

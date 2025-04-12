@@ -5,43 +5,40 @@
 
 namespace Lumina
 {
+    struct QuadAttributes
+    {
+        glm::vec3 Position = { 0, 0, 0 };
+        glm::vec2 Size = { 1, 1 };
+        float Rotation = 0.0f;
+        Shared<Texture> Texture = nullptr;
+		glm::vec4 TextureCoords = { 0, 0, 1, 1 };
+        glm::vec4 TintColor = glm::vec4(1.0f);
+    };
+
     class Renderer
     {
     public:
         // Core Renderer Functions
         static void Init();
         static void Shutdown();
+
+		// Begin and End Batch
         static void Begin(const glm::mat4& viewProjection = glm::mat4(1.0f));
         static void End();
+        
+		// Draw Batch
         static void Flush();
 
         // Resolution Management
         static void SetResolution(uint32_t width, uint32_t height);
-        static uint32_t GetImage();
         static glm::vec2 GetResolution();
+        
+        // Get the image stored in the Framebuffer
+        static uint32_t GetImage();
 
         // Basic Drawing Functions
-        static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const glm::vec4& color);
-        static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& tintColor = glm::vec4(1.0f));
-        static void DrawQuad(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& texCoords, const glm::vec4& tintColor = glm::vec4(1.0f));
-
-        // Extended Drawing Functions
-        static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const glm::vec4& color);
-        static void DrawQuad(const glm::vec3& position, const glm::vec2& size, const Shared<Texture>& texture, const glm::vec4& tintColor = glm::vec4(1.0f));
-        static void DrawQuad(const glm::mat4& transform, const glm::vec4& color);
-        static void DrawQuad(const glm::mat4& transform, const Shared<Texture>& texture, const glm::vec4& tintColor = glm::vec4(1.0f));
-
-        // Rotated Quad Drawing
-        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-        static void DrawRotatedQuad(const glm::vec2& position, const glm::vec2& size, float rotation, const Shared<Texture>& texture, const glm::vec4& tintColor = glm::vec4(1.0f));
-        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const glm::vec4& color);
-        static void DrawRotatedQuad(const glm::vec3& position, const glm::vec2& size, float rotation, const Shared<Texture>& texture, const glm::vec4& tintColor = glm::vec4(1.0f));
-
-        // Textured Rect Drawing (for sprite sheets/atlases)
-        static void DrawTexturedRect(const glm::vec2& position, const glm::vec2& size, const Shared<Texture>& texture,
-            const glm::vec2& texCoordMin, const glm::vec2& texCoordMax,
-            const glm::vec4& tintColor = glm::vec4(1.0f));
-
+        static void DrawQuad(const QuadAttributes& attributes);
+       
         // Statistics Tracking
         struct Statistics
         {
@@ -54,10 +51,5 @@ namespace Lumina
 
         static void ResetStats();
         static Statistics GetStats();
-
-    private:
-        // Internal helper for drawing quads with custom texture coordinates
-        static void DrawQuadInternal(const glm::mat4& transform, const Shared<Texture>& texture,
-            const glm::vec2 texCoords[4], const glm::vec4& tintColor);
     };
 }

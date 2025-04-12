@@ -19,7 +19,8 @@ public:
 
         std::string source = "res/texture/factory_atlas.png";
         m_Atlas = Lumina::MakeShared<Lumina::TextureAtlas>(source, 16, 16);
-        m_TileIndex = 3;
+
+		m_QuadAttributes.Texture = m_Atlas->GetTexture();
     }
 
     virtual void OnDetach() override {}
@@ -39,7 +40,7 @@ public:
         Lumina::Renderer::SetResolution(viewportSize.x, viewportSize.y);
 
         Lumina::Renderer::Begin();
-        Lumina::Renderer::DrawQuad(m_Position, m_Size, m_Atlas->GetTexture(), m_Atlas->GetTexCoods(m_TileIndex), m_Color);
+        Lumina::Renderer::DrawQuad(m_QuadAttributes);
         Lumina::Renderer::End();
 
         ImGui::Image((void*)(intptr_t)Lumina::Renderer::GetImage(), viewportSize);
@@ -57,10 +58,11 @@ public:
         ImGui::End();
 
         ImGui::Begin("DrawQuad Parameters");
-        ImGui::DragFloat2("Position", &m_Position.x, 0.01f);
-        ImGui::DragFloat2("Size", &m_Size.x, 0.01f);
-        ImGui::ColorEdit4("Color", &m_Color.r);
+        ImGui::DragFloat2("Position", &m_QuadAttributes.Position.x, 0.01f);
+        ImGui::DragFloat2("Size", &m_QuadAttributes.Size.x, 0.01f);
+        ImGui::ColorEdit4("Color", &m_QuadAttributes.TintColor.r);
         ImGui::InputInt("Tile Index", &m_TileIndex);
+		m_QuadAttributes.TextureCoords = m_Atlas->GetTextureCoords(m_TileIndex);
         if (m_TileIndex < 0) m_TileIndex = 0;
         int maxIndex = m_Atlas->GetWidth() * m_Atlas->GetHeight() - 1;
         if (m_TileIndex > maxIndex) m_TileIndex = maxIndex;
@@ -72,8 +74,6 @@ private:
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 
-    glm::vec2 m_Position = { 0.0f, 0.0f };
-    glm::vec2 m_Size = { 1.0f, 1.0f };
-    glm::vec4 m_Color = { 1.0f, 1.0f, 1.0f, 1.0f };
+    Lumina::QuadAttributes m_QuadAttributes;
     int m_TileIndex = 0;
 };
