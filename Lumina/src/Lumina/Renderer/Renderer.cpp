@@ -74,13 +74,6 @@ namespace Lumina
 
     static RendererData s_Data;
 
-    // Helper function to check if a file exists
-    bool FileExists(const std::string& path)
-    {
-        std::ifstream file(path);
-        return file.good();
-    }
-
     void Renderer::Init()
     {
         // Create framebuffer
