@@ -142,9 +142,9 @@ namespace Lumina
             m_MoveLeft = false;
 
         if (m_MoveForward)
-            Advance(distance);
-        if (m_MoveBackward)
             Advance(-distance);
+        if (m_MoveBackward)
+            Advance(distance);
         if (m_MoveRight)
             Strafe(distance);
         if (m_MoveLeft)
