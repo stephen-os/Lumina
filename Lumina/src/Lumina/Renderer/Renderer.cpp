@@ -150,14 +150,14 @@ namespace Lumina
         delete[] s_Data.QuadVertexBufferBase;
     }
 
-    void Renderer::Begin(const glm::mat4& viewProjection)
+    void Renderer::Begin(Camera& camera)
     {
         s_Data.RendererFB->Bind();
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // Store view-projection matrix
-        s_Data.ViewProjectionMatrix = viewProjection;
+        s_Data.ViewProjectionMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
         StartBatch(); 
     }
@@ -202,6 +202,7 @@ namespace Lumina
 
         // Bind the active shader
 		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->Bind();
+		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->SetUniformMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
         // Draw the batch
         s_Data.QuadVA->Bind();
@@ -318,8 +319,8 @@ namespace Lumina
             {
                 if (s_Data.TextureSlotIndex >= MaxTextureSlots)
                 {
-                    End();
-                    Begin(s_Data.ViewProjectionMatrix);
+                    EndBatch();
+                    StartBatch();
                 }
 
                 texIndex = static_cast<float>(s_Data.TextureSlotIndex);

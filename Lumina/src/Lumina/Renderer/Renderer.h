@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 
+#include "Cameras/Camera.h"
+
 namespace Lumina
 {
     struct QuadAttributes
@@ -26,7 +28,7 @@ namespace Lumina
         static void Shutdown();
 
 		// Begin and End Batch
-        static void Begin(const glm::mat4& viewProjection = glm::mat4(1.0f));
+        static void Begin(Camera& camera);
         static void End();
         
         static void StartBatch();

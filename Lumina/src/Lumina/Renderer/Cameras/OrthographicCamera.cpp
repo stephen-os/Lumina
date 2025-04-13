@@ -1,194 +1,52 @@
 #include "OrthographicCamera.h"
 
-#include <sstream>
-#include <iomanip>
-#include <iostream>
-#include <imgui.h>
-#include <GLFW/glfw3.h>
-
-#define KEY_W GLFW_KEY_W
-#define KEY_S GLFW_KEY_S
-#define KEY_D GLFW_KEY_D
-#define KEY_A GLFW_KEY_A
-#define KEY_ESC GLFW_KEY_ESCAPE
-
-OrthographicCamera::OrthographicCamera()
-    : m_ProjectionMatrix(glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, -1.0f, 1.0f)),
-    m_ViewMatrix(1.0f),
-    m_Position(0.0f, 0.0f, 0.0f),
-    m_Front(0.0f, 0.0f, -1.0f),
-    m_Up(0.0f, 1.0f, 0.0f)
+namespace Lumina
 {
-    m_Right = glm::normalize(glm::cross(m_Front, m_Up));
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::SetProjectionMatrix(float left, float right, float bottom, float top, float near, float far)
-{
-    m_ProjectionMatrix = glm::ortho(left, right, bottom, top, near, far);
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::SetPosition(const glm::vec3& position)
-{
-    m_Position = position;
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::SetRotation(float pitch, float yaw)
-{
-    m_Front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-    m_Front.y = sin(glm::radians(pitch));
-    m_Front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    m_Front = glm::normalize(m_Front);
-    m_Right = glm::normalize(glm::cross(m_Front, m_Up)); // Update m_Right
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::Pitch(float degrees)
-{
-    float radians = glm::radians(degrees);
-    glm::vec3 right = glm::normalize(glm::cross(m_Front, m_Up));
-    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), radians, right);
-    m_Front = glm::normalize(glm::vec3(rotation * glm::vec4(m_Front, 0.0f)));
-    m_Right = glm::normalize(glm::cross(m_Front, m_Up)); // Update m_Right
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::Yaw(float degrees)
-{
-    float radians = glm::radians(degrees);
-    glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), radians, m_Up);
-    m_Front = glm::normalize(glm::vec3(rotation * glm::vec4(m_Front, 0.0f)));
-    m_Right = glm::normalize(glm::cross(m_Front, m_Up)); // Update m_Right
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::Strafe(float distance)
-{
-    m_Position += m_Right * distance;
-    UpdateViewMatrix();
-}
-
-void OrthographicCamera::Advance(float distance)
-{
-    m_Position += m_Front * distance;
-    UpdateViewMatrix();
-}
-
-const glm::mat4& OrthographicCamera::GetProjectionMatrix() const { return m_ProjectionMatrix; }
-const glm::mat4& OrthographicCamera::GetViewMatrix() const { return m_ViewMatrix; }
-
-std::string OrthographicCamera::GetProjMatrixToString() const
-{
-    return MatrixToString("Projection Matrix", m_ProjectionMatrix);
-}
-
-std::string OrthographicCamera::GetViewMatrixToString() const
-{
-    return MatrixToString("View Matrix", m_ViewMatrix);
-}
-
-std::string OrthographicCamera::MatrixToString(const std::string& name, const glm::mat4& matrix) const
-{
-    std::stringstream ss;
-    ss << std::fixed << std::setprecision(3);
-
-    ss << name << "\n";
-    ss << "|-----------------------------|\n";
-
-    for (int i = 0; i < 4; ++i)
+    OrthographicCamera::OrthographicCamera()
+        : Camera(),
+        m_Left(-10.0f), m_Right(10.0f),
+        m_Bottom(-10.0f), m_Top(10.0f),
+        m_Near(0.1f), m_Far(100.0f)
     {
-        ss << "| ";
-        for (int j = 0; j < 4; ++j)
-        {
-            float value = matrix[j][i];
-            ss << (value < 0 ? "-" : " ") << std::abs(value) << " ";
-        }
-        ss << "|\n";
+        SetOrthographicProjection(m_Left, m_Right, m_Bottom, m_Top, m_Near, m_Far);
     }
 
-    ss << "|-----------------------------|\n";
-
-    return ss.str();
-}
-
-void OrthographicCamera::UpdateViewMatrix()
-{
-    m_ViewMatrix = glm::lookAt(m_Position, m_Position + m_Front, m_Up);
-}
-
-void OrthographicCamera::HandleKeyInput(const float& distance)
-{
-    if (ImGui::IsKeyPressed((ImGuiKey)KEY_W))
-        m_MoveForward = true;
-    if (ImGui::IsKeyPressed((ImGuiKey)KEY_S))
-        m_MoveBackward = true;
-    if (ImGui::IsKeyPressed((ImGuiKey)KEY_D))
-        m_MoveRight = true;
-    if (ImGui::IsKeyPressed((ImGuiKey)KEY_A))
-        m_MoveLeft = true;
-
-    if (ImGui::IsKeyPressed((ImGuiKey)KEY_ESC))
-        glfwSetWindowShouldClose(glfwGetCurrentContext(), GLFW_TRUE);
-
-    if (ImGui::IsKeyReleased((ImGuiKey)KEY_W))
-        m_MoveForward = false;
-    if (ImGui::IsKeyReleased((ImGuiKey)KEY_S))
-        m_MoveBackward = false;
-    if (ImGui::IsKeyReleased((ImGuiKey)KEY_D))
-        m_MoveRight = false;
-    if (ImGui::IsKeyReleased((ImGuiKey)KEY_A))
-        m_MoveLeft = false;
-
-    if (m_MoveForward)
-        Advance(distance);
-    if (m_MoveBackward)
-        Advance(-distance);
-    if (m_MoveRight)
-        Strafe(distance);
-    if (m_MoveLeft)
-        Strafe(-distance);
-}
-
-void OrthographicCamera::HandleMouseInput(const float& sensitivity)
-{
-    double x, y;
-
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+    OrthographicCamera::OrthographicCamera(float left, float right, float bottom, float top, float near, float far)
+        : Camera(),
+        m_Left(left), m_Right(right),
+        m_Bottom(bottom), m_Top(top),
+        m_Near(near), m_Far(far)
     {
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Right))
-        {
-            ImGui::SetMouseCursor(ImGuiMouseCursor_None);
+        SetOrthographicProjection(left, right, bottom, top, near, far);
+    }
 
-            if (!m_IsMouseDown)
-            {
-                glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
+    void OrthographicCamera::SetProjectionMatrix(float fov, float aspect, float near, float far)
+    {
+        // Convert a perspective-style input into orthographic projection
+        // This is a convenience method that allows using the same interface as PerspectiveCamera
+        float size = fov * 0.05f; // Convert FOV to orthographic size (arbitrary scale)
+        float width = size * aspect;
+        float height = size;
 
-                m_OriginalMousePos = glm::vec2(x, y);
-                m_CurrentMousePos = glm::vec2(x, y);
-                m_IsMouseDown = true;
-            }
+        m_Left = -width;
+        m_Right = width;
+        m_Bottom = -height;
+        m_Top = height;
+        m_Near = near;
+        m_Far = far;
 
-            glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
-            float xOffset = (float)x - m_CurrentMousePos.x;
-            float yOffset = m_CurrentMousePos.y - (float)y;
+        SetOrthographicProjection(m_Left, m_Right, m_Bottom, m_Top, m_Near, m_Far);
+    }
 
-            xOffset *= sensitivity;
-            yOffset *= sensitivity;
+    void OrthographicCamera::SetOrthographicProjection(float left, float right, float bottom, float top, float near, float far)
+    {
+        m_Left = left;
+        m_Right = right;
+        m_Bottom = bottom;
+        m_Top = top;
+        m_Near = near;
+        m_Far = far;
 
-            Yaw(-xOffset);
-            Pitch(-yOffset);
-
-            glfwGetCursorPos(glfwGetCurrentContext(), &x, &y);
-            m_CurrentMousePos = glm::vec2(x, y);
-        }
-        else if (m_IsMouseDown)
-        {
-            glfwSetCursorPos(glfwGetCurrentContext(), m_OriginalMousePos.x, m_OriginalMousePos.y);
-            m_IsMouseDown = false;
-            m_IsFirstMouse = true;
-            ImGui::SetMouseCursor(ImGuiMouseCursor_Arrow);
-        }
+        m_ProjectionMatrix = glm::ortho(left, right, bottom, top, near, far);
     }
 }
