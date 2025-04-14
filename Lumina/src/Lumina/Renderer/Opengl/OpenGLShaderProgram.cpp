@@ -1,5 +1,7 @@
 #include "OpenGLShaderProgram.h"
 
+#include "../../Utils/FileReader.h"
+
 #include "RendererDebug.h"
 
 #include <iostream>
@@ -9,8 +11,11 @@ namespace Lumina
 {
     OpenGLShaderProgram::OpenGLShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
     {
-        m_VertexShaderID = CompileSource(GL_VERTEX_SHADER, vertexShader);
-        m_FragmentShaderID = CompileSource(GL_FRAGMENT_SHADER, fragmentShader);
+        std::string vertexSource = ReadFile(vertexShader);
+        std::string fragmentSource = ReadFile(fragmentShader); 
+
+        m_VertexShaderID = CompileSource(GL_VERTEX_SHADER, vertexSource);
+        m_FragmentShaderID = CompileSource(GL_FRAGMENT_SHADER, fragmentSource);
 
         m_ShaderProgramID = glCreateProgram();
         GLCALL(glAttachShader(m_ShaderProgramID, m_VertexShaderID));

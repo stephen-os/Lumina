@@ -17,8 +17,6 @@
 #include "FrameBuffer.h"
 #include "RenderCommands.h"
 
-#include "../Utils/FileReader.h"
-
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -125,8 +123,8 @@ namespace Lumina
         s_Data.QuadVertexBufferBase = new QuadVertex[MaxVertices];
 
         // Create a default shader at slot 0
-        std::string vertexShader = ReadFile("res/shaders/Quad.vert");
-        std::string fragmentShader = ReadFile("res/shaders/Quad.frag");
+        std::string vertexShader = "res/shaders/Quad.vert";
+        std::string fragmentShader = "res/shaders/Quad.frag";
 		s_Data.ShaderSlots[0] = ShaderProgram::Create(vertexShader, fragmentShader);
 
         // Create a 1x1 white texture for basic colored quads
