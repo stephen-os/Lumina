@@ -7,8 +7,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef LUMINA_DEBUG
-
 namespace Lumina
 {
 	static void VCheck(VkResult err)
@@ -53,5 +51,3 @@ namespace Lumina
 		return VK_FALSE;
 	}
 }
-
-#endif
