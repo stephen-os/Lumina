@@ -43,6 +43,13 @@ namespace Lumina
     void TextureAtlas::SetTexture(std::string& source)
     {
         m_Texture = Texture::Create(source);
+        m_HasTexture = true; 
+    }
+
+    void TextureAtlas::RemoveTexture()
+    {
+        m_Texture.reset();
+        m_HasTexture = false; 
     }
 
     glm::vec4 TextureAtlas::GetTextureCoords(int index) const

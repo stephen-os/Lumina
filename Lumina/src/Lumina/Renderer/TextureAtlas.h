@@ -24,18 +24,20 @@ namespace Lumina
 		int GetWidth() const { return m_GridWidth; }
 		int GetHeight() const { return m_GridHeight; }
 
-		Shared<Texture>& GetTexture() { return m_Texture; }
-		uint32_t GetTextureID() { return m_Texture->GetID(); }
+		bool HasTexture() const { return m_HasTexture; }
+		void RemoveTexture();
 
+		Shared<Texture>& GetTexture() { return m_Texture; }
 		glm::vec4 GetTextureCoords(int index) const;
 		glm::vec2 GetOffset(int index) const;
 		glm::vec2 GetPosition(int index) const; 
 	private:
-		Shared<Texture> m_Texture;
-		int m_GridWidth;					// Number of textures along the width
-		int m_GridHeight;					// Number of textures along the height
-		float m_TexWidth;					// Width of a single texture in UV space
-		float m_TexHeight;					// Height of a single texture in UV space
-		std::vector<glm::vec4> m_TexCoords; // Precomputed texture coordinates
+		Shared<Texture> m_Texture = nullptr;	// Shared pointer to Texture
+		int m_GridWidth = 1;					// Number of textures along the width
+		int m_GridHeight = 1;					// Number of textures along the height
+		float m_TexWidth = 1.0f;				// Width of a single texture in UV space
+		float m_TexHeight = 1.0f;				// Height of a single texture in UV space
+		bool m_HasTexture = false;				// Flag to keep track when atlas has texture or not
+		std::vector<glm::vec4> m_TexCoords;		// Precomputed texture coordinates
 	};
 }
