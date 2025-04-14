@@ -211,6 +211,8 @@ namespace Lumina
 
         // Update stats
         s_Data.Stats.DrawCalls++;
+        s_Data.Stats.TexturesUsed = s_Data.TextureSlotIndex - 1;
+        s_Data.Stats.ShadersUsed = s_Data.ShaderSlotSize;
     }
 
     void Renderer::SetResolution(uint32_t width, uint32_t height)
