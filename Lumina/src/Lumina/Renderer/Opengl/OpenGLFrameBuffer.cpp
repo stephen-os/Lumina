@@ -76,4 +76,11 @@ namespace Lumina
         GLCALL(glBindRenderbuffer(GL_RENDERBUFFER, m_DepthAttachment));
         GLCALL(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height));
     }
+
+    void OpenGLFrameBuffer::ReadPixels(int x, int y, uint32_t width, uint32_t height, void* data) const
+    {
+        Bind(); 
+        GLCALL(glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data));
+        Unbind(); 
+    }
 }

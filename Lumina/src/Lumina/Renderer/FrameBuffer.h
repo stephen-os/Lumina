@@ -20,6 +20,8 @@ namespace Lumina
 		virtual uint32_t GetWidth() const = 0;
 		virtual uint32_t GetHeight() const = 0;
 
+		virtual void ReadPixels(int x, int y, uint32_t width, uint32_t height, void* data) const = 0;
+
 		static Shared<FrameBuffer> Create();
 	};
 }

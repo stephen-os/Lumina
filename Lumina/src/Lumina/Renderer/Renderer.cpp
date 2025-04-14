@@ -2,14 +2,14 @@
 
 #include <glad/glad.h>
 
-#include <array>
-#include <string>
-
 #include <spdlog/spdlog.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include <stb_image_write.h>
+
 #include "../Core/Aliases.h"
+#include "../Core/Log.h"
 
 #include "VertexArray.h"
 #include "Buffer.h"
@@ -20,6 +20,7 @@
 #include <iostream>
 #include <fstream>
 #include <filesystem>
+#include <array>
 
 namespace Lumina
 {
@@ -161,6 +162,17 @@ namespace Lumina
         s_Data.ViewProjectionMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
 
         StartBatch(); 
+    }
+
+    void Renderer::Begin(glm::mat4& viewProjection)
+    {
+        s_Data.RendererFB->Bind();
+
+        RenderCommands::Clear();
+
+        s_Data.ViewProjectionMatrix = viewProjection;
+
+        StartBatch();
     }
 
     void Renderer::End()
@@ -355,6 +367,25 @@ namespace Lumina
 
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
+    }
+
+    void Renderer::SaveFrameBufferToFile(std::string& filename)
+    {
+        glm::vec2 resolution = GetResolution();
+        uint32_t width = static_cast<uint32_t>(resolution.x);
+        uint32_t height = static_cast<uint32_t>(resolution.y);
+
+        std::vector<uint8_t> pixels(width * height * 4);
+
+        s_Data.RendererFB->Bind();
+        s_Data.RendererFB->ReadPixels(0, 0, width, height, pixels.data());
+        
+        if (!stbi_write_png(filename.c_str(), width, height, 4, pixels.data(), width * 4))
+        {
+            LUMINA_LOG_ERROR("[Renderer] Failed to write FrameBuffer to file."); 
+        }
+
+        s_Data.RendererFB->Unbind();
     }
 
 	Renderer::Statistics Renderer::GetStats()

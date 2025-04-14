@@ -5,6 +5,8 @@
 
 #include <glm/glm.hpp>
 
+#include <string>
+
 #include "Cameras/Camera.h"
 
 namespace Lumina
@@ -29,6 +31,7 @@ namespace Lumina
 
 		// Begin and End Batch
         static void Begin(Camera& camera);
+        static void Begin(glm::mat4& viewProjection);
         static void End();
         
         static void StartBatch();
@@ -43,6 +46,7 @@ namespace Lumina
         
         // Get the image stored in the Framebuffer
         static uint32_t GetImage();
+        static void SaveFrameBufferToFile(std::string& filename);
 
         // Basic Drawing Functions
         static void DrawQuad(const QuadAttributes& attributes);

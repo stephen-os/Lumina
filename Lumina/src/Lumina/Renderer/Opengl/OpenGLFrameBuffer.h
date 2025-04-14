@@ -23,6 +23,8 @@ namespace Lumina
 
         uint32_t GetWidth() const override { return m_Width; }
         uint32_t GetHeight() const override { return m_Height; }
+
+        void ReadPixels(int x, int y, uint32_t width, uint32_t height, void* data) const override;
     private:
         uint32_t m_BufferID = 0;
         uint32_t m_ColorAttachment = 0;
