@@ -15,6 +15,7 @@
 #include "Buffer.h"
 #include "BufferLayout.h"
 #include "FrameBuffer.h"
+#include "RenderCommands.h"
 
 #include "../Utils/FileReader.h"
 
@@ -82,6 +83,8 @@ namespace Lumina
 
     void Renderer::Init()
     {
+        RenderCommands::Init(); 
+
         // Create framebuffer
         s_Data.RendererFB = FrameBuffer::Create();
 
@@ -154,7 +157,7 @@ namespace Lumina
     {
         s_Data.RendererFB->Bind();
 
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		RenderCommands::Clear();
 
         // Store view-projection matrix
         s_Data.ViewProjectionMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
@@ -223,7 +226,7 @@ namespace Lumina
             return;
         }
 
-        glViewport(0, 0, width, height);
+		RenderCommands::SetViewport(0, 0, width, height);
 
         s_Data.Width = width;
         s_Data.Height = height;
