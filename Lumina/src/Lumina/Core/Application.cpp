@@ -10,7 +10,10 @@
 #include <stdlib.h>
 
 #include <backends/imgui_impl_glfw.h>
+
 #include "ContextFactory.h"
+
+#include "Log.h"
 
 namespace Lumina
 {
@@ -27,6 +30,9 @@ namespace Lumina
 
         RendererAPI::SetAPI(applicationSpecification.Api);
 
+        Log::Init();
+        LUMINA_LOG_INFO("Starting Lumina Application: {}", m_Specifications.Name);
+        
         glfwSetErrorCallback(GLFWErrorCallback);
 
         if (!glfwInit())
