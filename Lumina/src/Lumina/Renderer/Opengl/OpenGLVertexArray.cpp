@@ -1,10 +1,11 @@
 #include "OpenGLVertexArray.h"
 #include "RendererDebug.h"
 
-#include <iostream>
-
 #include <glad/glad.h>
+
 #include "../../Core/Aliases.h"
+#include "../../Core/Assert.h"
+#include "../../Core/Log.h"
 
 #include "../BufferLayout.h"
 
@@ -14,15 +15,18 @@ namespace Lumina
     OpenGLVertexArray::OpenGLVertexArray()
     {
         GLCALL(glCreateVertexArrays(1, &m_BufferID));
+        LUMINA_ASSERT(m_BufferID != 0, "Failed to create OpenGL Vertex Array Object.");
     }
 
     OpenGLVertexArray::~OpenGLVertexArray()
     {
+        LUMINA_ASSERT(m_BufferID != 0, "Trying to delete an invalid Vertext Array Object.");
         GLCALL(glDeleteVertexArrays(1, &m_BufferID));
     }
 
     void OpenGLVertexArray::Bind() const
     {
+        LUMINA_ASSERT(m_BufferID != 0, "Cannot bind VAO with invalid ID.");
         GLCALL(glBindVertexArray(m_BufferID));
     }
 
@@ -33,10 +37,14 @@ namespace Lumina
 
     void OpenGLVertexArray::AddVertexBuffer(Shared<VertexBuffer> vertexBuffer)
     {
+        LUMINA_ASSERT(vertexBuffer != nullptr, "VertexBuffer passed to AddVertexBuffer is null.");
+
         Bind();
         vertexBuffer->Bind();
         
         const auto& layout = vertexBuffer->GetLayout();
+        LUMINA_ASSERT(layout.GetElements().size() > 0, "VertexBuffer has no layout elements defined.");
+
         for (const auto& element : layout)
         {
             switch (element.Type)
@@ -128,7 +136,7 @@ namespace Lumina
             }
             default:
                 // TODO: Logging system 
-                std::cout << "Unknown BufferDataType\n";
+				LUMINA_LOG_ERROR("Unknown BufferDataType: {0}", element.Name);
             }
         }
 
@@ -137,6 +145,8 @@ namespace Lumina
 
     void OpenGLVertexArray::SetIndexBuffer(Shared<IndexBuffer> indexBuffer)
     {
+        LUMINA_ASSERT(indexBuffer != nullptr, "IndexBuffer passed to SetIndexBuffer is null.");
+
         Bind();
         indexBuffer->Bind();
         m_IndexBuffer = indexBuffer;
@@ -144,8 +154,13 @@ namespace Lumina
 
     void OpenGLVertexArray::DrawIndexed()
     {
+        LUMINA_ASSERT(m_IndexBuffer != nullptr, "DrawIndexed called with no IndexBuffer set.");
+        LUMINA_ASSERT(m_IndexBuffer->GetCount() > 0, "IndexBuffer has zero indices.");
+
         for (auto& vertice : m_Vertices)
         {
+            LUMINA_ASSERT(vertice != nullptr, "VertexBuffer in DrawIndexed is null.");
+
             vertice->Bind();
             glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
             vertice->Unbind();

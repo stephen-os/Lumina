@@ -7,6 +7,10 @@
 #include <iostream>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../../Core/Assert.h"
+#include "../../Core/Log.h"
+
+
 namespace Lumina
 {
     OpenGLShaderProgram::OpenGLShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
@@ -15,9 +19,14 @@ namespace Lumina
         std::string fragmentSource = ReadFile(fragmentShader); 
 
         m_VertexShaderID = CompileSource(GL_VERTEX_SHADER, vertexSource);
+        LUMINA_ASSERT(m_VertexShaderID != 0, "Vertex shader compilation failed!");
+
         m_FragmentShaderID = CompileSource(GL_FRAGMENT_SHADER, fragmentSource);
+        LUMINA_ASSERT(m_FragmentShaderID != 0, "Fragment shader compilation failed!");
 
         m_ShaderProgramID = glCreateProgram();
+        LUMINA_ASSERT(m_ShaderProgramID != 0, "Failed to create shader program!");
+
         GLCALL(glAttachShader(m_ShaderProgramID, m_VertexShaderID));
         GLCALL(glAttachShader(m_ShaderProgramID, m_FragmentShaderID));
         GLCALL(glLinkProgram(m_ShaderProgramID));
@@ -31,7 +40,7 @@ namespace Lumina
             GLCALL(glDeleteProgram(m_ShaderProgramID));
             m_ShaderProgramID = 0;
 
-            std::cerr << "[Error] Program linking failed:\n" << message << "\n";
+			LUMINA_LOG_ERROR("Shader program linking error:\n{0}", message);
         }
 
         // Query uniforms
@@ -74,6 +83,8 @@ namespace Lumina
     {
         unsigned int shader;
         shader = glCreateShader(type);
+        LUMINA_ASSERT(shader != 0, "Failed to create shader!");
+
         const char* src = source.c_str();
         GLCALL(glShaderSource(shader, 1, &src, nullptr));
         GLCALL(glCompileShader(shader));
@@ -86,8 +97,8 @@ namespace Lumina
             GLCALL(glGetShaderInfoLog(shader, 512, nullptr, message));
             GLCALL(glDeleteShader(shader));
 
-            std::cerr << "[Error] " << (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment") << " shader compilation error.\n";
-            std::cerr << message << ".\n";
+
+			LUMINA_LOG_ERROR("Shader compilation error: {}\n{0}", (type == GL_VERTEX_SHADER ? "Vertex" : "Fragment"), message);
         }
 
         return shader;
@@ -97,11 +108,17 @@ namespace Lumina
     {
         int location;
         location = glGetAttribLocation(m_ShaderProgramID, name.c_str());
+		if (location == -1)
+		{
+			LUMINA_LOG_ERROR("Attribute location for {0} is not found", name);
+			return -1;
+		}
         return location;
     }
 
     void OpenGLShaderProgram::Bind() const
     {
+        LUMINA_ASSERT(m_ShaderProgramID != 0, "Cannot bind an invalid shader program!");
         GLCALL(glUseProgram(m_ShaderProgramID));
     }
 
@@ -114,7 +131,7 @@ namespace Lumina
     {
         if (m_Uniforms.find(name) == m_Uniforms.end())
         {
-            std::cerr << "[Error] " << name << " isn't a valid uniform.\n";
+			LUMINA_LOG_ERROR("{0} isn't a valid uniform.", name);
         }
     }
 

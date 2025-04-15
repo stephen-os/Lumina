@@ -30,7 +30,7 @@ namespace Lumina
         uint32_t m_ColorAttachment = 0;
         uint32_t m_DepthAttachment = 0;
 
-        uint32_t m_Width;
-        uint32_t m_Height;
+        uint32_t m_Width = 900;
+        uint32_t m_Height = 900;
     };
 }

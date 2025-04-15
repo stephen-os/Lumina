@@ -1,7 +1,10 @@
 #include "OpenGLTexture.h"
 #include "RendererDebug.h"
+
 #include <stb_image.h>
 #include <iostream>
+
+#include "../../Core/Assert.h"
 
 namespace Lumina
 {
@@ -13,10 +16,8 @@ namespace Lumina
         int channels;
         int width, height;
         unsigned char* data = stbi_load(source.c_str(), &width, &height, &channels, 0);
-        if (!data)
-        {
-            std::cerr << "Failed to load OpenGLTexture: " << source << std::endl;
-        }
+        
+        LUMINA_ASSERT(data, "Failed to load texture: {0}", source);
 
         m_Width = width;
         m_Height = height;
@@ -43,6 +44,8 @@ namespace Lumina
 
     OpenGLTexture::OpenGLTexture(uint32_t width, uint32_t height)
     {
+        LUMINA_ASSERT(width > 0 && height > 0, "Texture dimensions must be greater than zero");
+
         // Create texture using DSA
         GLCALL(glCreateTextures(GL_TEXTURE_2D, 1, &m_BufferID));
 
@@ -68,7 +71,6 @@ namespace Lumina
     {
         // Bind texture to texture unit using DSA
         GLCALL(glBindTextureUnit(slot, m_BufferID));
-        // m_Slot = slot;
     }
 
     void OpenGLTexture::Unbind() const
@@ -79,11 +81,8 @@ namespace Lumina
 
     bool OpenGLTexture::SetResolution(int width, int height)
     {
-        if (width <= 0 || height <= 0)
-        {
-            std::cerr << "Invalid resolution: " << width << "x" << height << std::endl;
-            return false;
-        }
+
+        LUMINA_ASSERT(width <= 0 || height <= 0, "Invalid resolution: {}, {}", width, height); 
 
         m_Width = width;
         m_Height = height;
@@ -104,13 +103,10 @@ namespace Lumina
 
     void OpenGLTexture::SetData(void* data, uint32_t size)
     {
+        LUMINA_ASSERT(data != nullptr, "SetData called with null data pointer");
+
         uint32_t expectedSize = m_Width * m_Height * 4; // Assuming 4 channels (RGBA)
-        if (size != expectedSize)
-        {
-            std::cerr << "OpenGLTexture::SetData - Data size mismatch. Expected: "
-                << expectedSize << ", got: " << size << std::endl;
-            return;
-        }
+        LUMINA_ASSERT(size == expectedSize, "OpenGLTexture::SetData - Data size mismatch. Expected: {0}, got: {1}", expectedSize, size);
 
         // Update texture data using DSA
         GLCALL(glTextureSubImage2D(m_BufferID, 0, 0, 0, m_Width, m_Height, GL_RGBA, GL_UNSIGNED_BYTE, data));

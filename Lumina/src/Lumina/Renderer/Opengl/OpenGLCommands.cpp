@@ -2,10 +2,14 @@
 
 #include <glad/glad.h>
 
+#include "../../Core/Assert.h"
+
 namespace Lumina
 {
     void OpenGLCommands::SetViewport(int x, int y, int width, int height)  
     {
+        LUMINA_ASSERT(width > 0 && height > 0, "Viewport dimensions must be greater than zero!");
+
         glViewport(x, y, width, height);
     }
 

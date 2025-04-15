@@ -14,14 +14,14 @@
 #include "ContextFactory.h"
 
 #include "Log.h"
+#include "Assert.h"
 
 namespace Lumina
 {
 
     static void GLFWErrorCallback(int error, const char* description)
     {
-        std::cerr << "[GLFW ERROR] \"" << error << "\".\n";
-        std::cerr << description << ".\n";
+        LUMINA_LOG_ERROR("[GLFW ERROR] {}: {}", error, description);
     }
 
     Application::Application(const ApplicationSpecification& applicationSpecification)
@@ -36,7 +36,10 @@ namespace Lumina
         glfwSetErrorCallback(GLFWErrorCallback);
 
         if (!glfwInit())
+        {
+            LUMINA_LOG_ERROR("GLFW failed to initialize.");
             return;
+        }
 
         if (m_Specifications.Api == API::VULKAN)
             glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -44,17 +47,20 @@ namespace Lumina
         m_Window = glfwCreateWindow(m_Specifications.Width, m_Specifications.Height, m_Specifications.Name.c_str(), NULL, NULL);
         if (!m_Window)
         {
+            LUMINA_LOG_ERROR("Failed to create GLFW window.");
             glfwTerminate();
             return;
         }
 
-        m_Context = ContextFactory::Create(m_Specifications.Api);
+        m_Context = ContextFactory::Create(RendererAPI::GetAPI());
+        LUMINA_ASSERT(m_Context, "Failed to create rendering context.");
         m_Context->Init(m_Window);
 
         // Fullscreen with taskbar
         if (m_Specifications.Dock)
         {
             GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
+            LUMINA_ASSERT(primaryMonitor, "Failed to get primary monitor.");
             if (primaryMonitor)
             {
                 int xpos, ypos, width, height;
@@ -170,10 +176,12 @@ namespace Lumina
     void Application::SetWindowFullscreen()
     {
         GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+        LUMINA_ASSERT(monitor, "Failed to get primary monitor.");
         if (!monitor) return;
 
         // Get the monitor's video mode
         const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+        LUMINA_ASSERT(mode, "Failed to get monitor video mode.");
 
         // Set the window to fullscreen
         glfwSetWindowMonitor(m_Window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);

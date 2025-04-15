@@ -9,23 +9,24 @@
 
 #include <spdlog/spdlog.h>
 
+#include "../../Core/Assert.h"
+#include "../../Core/Log.h"
+
 namespace Lumina
 {
 	void OpenGLContext::Init(GLFWwindow* window)
 	{
+        LUMINA_ASSERT(window, "[OpenGL Context] GLFW window is nullptr!");
         m_Window = window; 
 
         glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(1);
 
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-        {
-            spdlog::error("[Opengl Context] Failed to initialize GLAD."); 
-            return;
-        }
+        LUMINA_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "[OpenGL Context] Failed to initialize GLAD.");
 
         const char* version = (const char*)glGetString(GL_VERSION);
-        spdlog::info("OpenGL Version: {}", version); 
+        LUMINA_ASSERT(version, "[OpenGL Context] Failed to retrieve OpenGL version.");
+        LUMINA_LOG_INFO("OpenGL Version: {}", version); 
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
