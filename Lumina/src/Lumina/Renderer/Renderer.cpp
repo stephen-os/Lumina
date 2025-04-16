@@ -155,6 +155,7 @@ namespace Lumina
     void Renderer::Begin(Camera& camera)
     {
         s_Data.RendererFB->Bind();
+        s_Data.QuadVB->Bind(); 
 
 		RenderCommands::Clear();
 
@@ -167,6 +168,7 @@ namespace Lumina
     void Renderer::Begin(glm::mat4& viewProjection)
     {
         s_Data.RendererFB->Bind();
+        s_Data.QuadVB->Bind();
 
         RenderCommands::Clear();
 
@@ -184,6 +186,9 @@ namespace Lumina
 
 	void Renderer::StartBatch()
 	{
+        size_t bufferSize = MaxVertices * sizeof(QuadVertex);
+        memset(s_Data.QuadVertexBufferBase, 0, bufferSize);
+
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1; // 0 is reserved for white texture

@@ -1,6 +1,7 @@
 #include "OpenGLCommands.h"
 
 #include <glad/glad.h>
+#include "RendererDebug.h"
 
 #include "../../Core/Assert.h"
 
@@ -10,16 +11,17 @@ namespace Lumina
     {
         LUMINA_ASSERT(width > 0 && height > 0, "Viewport dimensions must be greater than zero!");
 
-        glViewport(x, y, width, height);
+        GLCALL(glViewport(x, y, width, height));
     }
 
     void OpenGLCommands::Clear()  
     {
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        GLCALL(glClearColor(0.0f, 0.0f, 0.0f, 0.0f));
+        GLCALL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     }
 
     void OpenGLCommands::EnableDepthTest()  
     {
-        glEnable(GL_DEPTH_TEST);
+        GLCALL(glEnable(GL_DEPTH_TEST));
     }
 }
