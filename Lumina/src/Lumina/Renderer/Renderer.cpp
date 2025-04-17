@@ -10,6 +10,7 @@
 
 #include "../Core/Aliases.h"
 #include "../Core/Log.h"
+#include "../Core/Assert.h"
 
 #include "VertexArray.h"
 #include "Buffer.h"
@@ -155,9 +156,8 @@ namespace Lumina
     void Renderer::Begin(Camera& camera)
     {
         s_Data.RendererFB->Bind();
-        s_Data.QuadVB->Bind(); 
-
-		RenderCommands::Clear();
+        RenderCommands::Clear();
+        s_Data.RendererFB->Unbind();
 
         // Store view-projection matrix
         s_Data.ViewProjectionMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
@@ -167,10 +167,10 @@ namespace Lumina
 
     void Renderer::Begin(glm::mat4& viewProjection)
     {
+        // Clear previous data
         s_Data.RendererFB->Bind();
-        s_Data.QuadVB->Bind();
-
         RenderCommands::Clear();
+        s_Data.RendererFB->Unbind();
 
         s_Data.ViewProjectionMatrix = viewProjection;
 
@@ -180,29 +180,26 @@ namespace Lumina
     void Renderer::End()
     {
 		EndBatch();
-
-        s_Data.RendererFB->Unbind();
     }
 
 	void Renderer::StartBatch()
 	{
-        size_t bufferSize = MaxVertices * sizeof(QuadVertex);
-        memset(s_Data.QuadVertexBufferBase, 0, bufferSize);
-
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1; // 0 is reserved for white texture
-		s_Data.ShaderSlotIndex = 0;  // 0 is reserved for default shader
+		s_Data.ShaderSlotIndex = 0;  // 0 is reserved for default shader 
+        
+        memset(s_Data.QuadVertexBufferBase, 0, MaxVertices * sizeof(QuadVertex));
 	}
 
 	void Renderer::EndBatch()
 	{
         // Calculate data size and upload to GPU
-        uint32_t dataSize = static_cast<uint32_t>((uint8_t*)s_Data.QuadVertexBufferPtr -
-            (uint8_t*)s_Data.QuadVertexBufferBase);
+        uint32_t dataSize = static_cast<uint32_t>((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
 
         if (dataSize > 0) 
         {
+            s_Data.Stats.DataSize += dataSize; 
             s_Data.QuadVB->SetData(s_Data.QuadVertexBufferBase, dataSize);
             Flush();
         }
@@ -222,11 +219,24 @@ namespace Lumina
 		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->Bind();
 		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->SetUniformMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
+        // Bind FB
+        s_Data.RendererFB->Bind();
+
         // Draw the batch
         s_Data.QuadVA->Bind();
         s_Data.QuadVA->DrawIndexed();
         s_Data.QuadVA->Unbind();
 
+        // Unbind FB
+        s_Data.RendererFB->Unbind();
+
+        // Unbind shader
+        s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->Bind();
+
+        // Unbind all textures
+        for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
+            s_Data.TextureSlots[i]->Unbind();
+        
         // Update stats
         s_Data.Stats.DrawCalls++;
         s_Data.Stats.TexturesUsed = s_Data.TextureSlotIndex - 1;
@@ -241,11 +251,14 @@ namespace Lumina
             return;
         }
 
-		RenderCommands::SetViewport(0, 0, width, height);
-
         s_Data.Width = width;
         s_Data.Height = height;
+        
+        s_Data.RendererFB->Bind(); 
+		RenderCommands::SetViewport(0, 0, width, height);
         s_Data.RendererFB->Resize(width, height);
+        RenderCommands::Clear();
+        s_Data.RendererFB->Unbind(); 
     }
 
     uint32_t Renderer::GetImage()
@@ -260,6 +273,9 @@ namespace Lumina
 
     void Renderer::DrawQuad(const QuadAttributes& attributes)
     {
+        LUMINA_ASSERT(s_Data.QuadVertexBufferPtr >= s_Data.QuadVertexBufferBase, "Vertex buffer pointer underflow");
+        LUMINA_ASSERT(s_Data.QuadVertexBufferPtr < s_Data.QuadVertexBufferBase + MaxVertices, "Vertex buffer pointer overflow");
+
         if (s_Data.QuadIndexCount >= MaxIndices)
         {
             EndBatch();
@@ -373,6 +389,7 @@ namespace Lumina
         s_Data.QuadIndexCount += 6;
         s_Data.Stats.QuadCount++;
     }
+
 
     void Renderer::SaveFrameBufferToFile(std::string& filename)
     {

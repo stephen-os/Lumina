@@ -76,8 +76,6 @@ namespace Lumina
         m_Width = width;
         m_Height = height;
 
-        Bind();
-
         // Resize the color attachment (texture)
         GLCALL(glBindTexture(GL_TEXTURE_2D, m_ColorAttachment));
         GLCALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));

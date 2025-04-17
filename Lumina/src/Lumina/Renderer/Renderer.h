@@ -59,6 +59,7 @@ namespace Lumina
             uint32_t QuadCount = 0;
             uint32_t TexturesUsed = 0;
 			uint32_t ShadersUsed = 0;
+            uint32_t DataSize = 0; 
 
             uint32_t GetTotalVertexCount() const { return QuadCount * 4; }
             uint32_t GetTotalIndexCount() const { return QuadCount * 6; }
