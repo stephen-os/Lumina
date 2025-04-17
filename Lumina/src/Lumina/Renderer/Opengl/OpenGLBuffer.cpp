@@ -47,7 +47,14 @@ namespace Lumina
         LUMINA_ASSERT(size > 0, "VertexBuffer::SetData called with zero size!");
 
         GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_BufferID));
-        GLCALL(glBufferSubData(GL_ARRAY_BUFFER, 0, size, data));
+        // GLCALL(glBufferSubData(GL_ARRAY_BUFFER, 0, size, data));
+        // Honestly we should be using glBufferSubData but I havent found the bug
+        // that was causing over draw. So this is a quick fix that just makes it work.
+        // Bug Desc - Sometimes when calling DrawQuad muiltple times then not drawing those
+        // quad, ghost quads are created. They are likely leftovers in the buffer 
+        // and show up because of incorrect size calculation.
+        // TheCherno - If you find my mistake and fix it I will follow on patrion. 
+        GLCALL(glBufferData(GL_ARRAY_BUFFER, size, data, GL_STATIC_DRAW));
     }
 
     // Index Buffer
