@@ -188,8 +188,6 @@ namespace Lumina
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
 		s_Data.TextureSlotIndex = 1; // 0 is reserved for white texture
 		s_Data.ShaderSlotIndex = 0;  // 0 is reserved for default shader 
-        
-        memset(s_Data.QuadVertexBufferBase, 0, MaxVertices * sizeof(QuadVertex));
 	}
 
 	void Renderer::EndBatch()
