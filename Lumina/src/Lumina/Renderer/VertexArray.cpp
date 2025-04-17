@@ -12,7 +12,7 @@ namespace Lumina
 		{
 			case API::OPENGL: return MakeShared<OpenGLVertexArray>();
 			case API::VULKAN: return nullptr;
-			default: nullptr; 
+			default: return nullptr; 
 		}
 	}
 }
