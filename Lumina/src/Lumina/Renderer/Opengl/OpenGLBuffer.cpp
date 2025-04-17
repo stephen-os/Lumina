@@ -60,8 +60,8 @@ namespace Lumina
         GLCALL(glCreateBuffers(1, &m_BufferID));
         LUMINA_ASSERT(m_BufferID != 0, "Failed to create index buffer!");
 
-        GLCALL(glBindBuffer(GL_ARRAY_BUFFER, m_BufferID));
-        GLCALL(glBufferData(GL_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW));
+        GLCALL(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_BufferID));
+        GLCALL(glBufferData(GL_ELEMENT_ARRAY_BUFFER, count * sizeof(uint32_t), indices, GL_STATIC_DRAW));
     }
 
     OpenGLIndexBuffer::~OpenGLIndexBuffer()
