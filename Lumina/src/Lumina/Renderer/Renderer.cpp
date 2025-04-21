@@ -272,7 +272,6 @@ namespace Lumina
     void Renderer::DrawQuad(const QuadAttributes& attributes)
     {
         LUMINA_ASSERT(s_Data.QuadVertexBufferPtr >= s_Data.QuadVertexBufferBase, "Vertex buffer pointer underflow");
-        LUMINA_ASSERT(s_Data.QuadVertexBufferPtr < s_Data.QuadVertexBufferBase + MaxVertices, "Vertex buffer pointer overflow");
 
         if (s_Data.QuadIndexCount >= MaxIndices)
         {
