@@ -27,7 +27,7 @@ namespace Lumina
 		bool HasTexture() const { return m_HasTexture; }
 		void RemoveTexture();
 
-		Shared<Texture>& GetTexture() { return m_Texture; }
+		const Shared<Texture>& GetTexture() const { return m_Texture; }
 		glm::vec4 GetTextureCoords(int index) const;
 		glm::vec2 GetOffset(int index) const;
 		glm::vec2 GetPosition(int index) const; 
