@@ -22,7 +22,8 @@ namespace Lumina
         glfwMakeContextCurrent(m_Window);
         glfwSwapInterval(1);
 
-        LUMINA_ASSERT(gladLoadGLLoader((GLADloadproc)glfwGetProcAddress), "[OpenGL Context] Failed to initialize GLAD.");
+		int status = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
+        LUMINA_ASSERT(status, "[OpenGL Context] Failed to initialize GLAD.");
 
         const char* version = (const char*)glGetString(GL_VERSION);
         LUMINA_ASSERT(version, "[OpenGL Context] Failed to retrieve OpenGL version.");
