@@ -20,7 +20,7 @@ Tiles is built using several key libraries:
 ### 🛠️ Setup Instructions
 1. Clone the repository with all dependencies:
    ```sh
-   git clone --recursive https://github.com/Resetss/Lumina.git
+   git clone --recursive https://github.com/stephen-os/Lumina.git
    ```
 2. Navigate to the `scripts` folder and run the `Setup` script.
 3. Open the `.sln` file in Visual Studio 2017 or later.
