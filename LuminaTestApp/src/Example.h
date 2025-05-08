@@ -26,21 +26,26 @@ public:
         std::string source = "res/texture/factory_atlas.png";
         m_Atlas = Lumina::MakeShared<Lumina::TextureAtlas>(source, 16, 16);
 
-		// Create a shader program
-		std::string vertexShaderSource = "res/shaders/Background.vert";
-		std::string fragmentShaderSource = "res/shaders/Background.frag";
-		Lumina::Shared<Lumina::ShaderProgram> shader = Lumina::ShaderProgram::Create(vertexShaderSource, fragmentShaderSource);
+        int tilesWide = static_cast<int>(1.0f / 0.04f);
+        int tilesHigh = static_cast<int>(1.0f / 0.04f);
 
-		m_BackgroundAttributes.Shader = shader;
-        // Positive direction moves away from the camera
-		m_BackgroundAttributes.Position = { 0.0f, 0.0f, 0.0f };
-		m_BackgroundAttributes.Size = { 5.0f, 5.0f };
+		m_Quads.reserve(tilesWide * tilesHigh);
 
-        Lumina::QuadAttributes initialQuad;
-        initialQuad.Texture = m_Atlas->GetTexture();
-        initialQuad.Position = { 0.02f, 0.02f, 0.0f };
-        initialQuad.Size = { 0.02f, 0.02f };
-        m_Quads.push_back(initialQuad);
+        srand(static_cast<unsigned>(time(nullptr)));
+
+        for (int y = 0; y < tilesHigh; ++y)
+        {
+            for (int x = 0; x < tilesWide; ++x)
+            {
+                Lumina::QuadAttributes quad;
+                quad.Texture = m_Atlas->GetTexture();
+                quad.Size = { 0.02f, 0.02f };
+                quad.Position = { x * quad.Size.x * 2, y * quad.Size.y * 2, 0.0f };
+                int randomTile = rand() % 4;
+                quad.TextureCoords = m_Atlas->GetTextureCoords(randomTile);
+                m_Quads.push_back(quad);
+            }
+        }
 
 		m_Camera.SetPosition({ 0.9f, 0.9f, -1.0f });
     }
@@ -61,7 +66,6 @@ public:
         ImGui::Begin("Example Window");
         ImGui::SetCursorPos({ 0.0f, 0.0f });
 
-        // ImVec2 viewportSize = ImGui::GetContentRegionAvail();
 		glm::vec2 viewportSize = { 1000, 1000 };
         Lumina::Renderer::SetResolution(viewportSize.x, viewportSize.y);
 		m_Camera.SetProjectionMatrix(1.0f * m_CameraZoom, viewportSize.x / viewportSize.y, 0.01f, 100.0f);
@@ -70,12 +74,6 @@ public:
 
         m_Camera.HandleMouseInput(0.01f);
 
-        m_BackgroundAttributes.Shader->Bind();
-        m_BackgroundAttributes.Shader->SetUniformVec2("u_GridSize", { 100, 100 });
-        m_BackgroundAttributes.Shader->Unbind(); 
-
-		// Lumina::Renderer::DrawQuad(m_BackgroundAttributes);
-        
         for (const auto& quad : m_Quads)
         {
             Lumina::Renderer::DrawQuad(quad);
@@ -116,7 +114,7 @@ public:
 
 
         ImGui::Separator();
-        ImGui::Text("Quads:");
+        ImGui::Text("Quad Selection:");
         for (int i = 0; i < m_Quads.size(); ++i) 
         {
             std::string label = "Quad " + std::to_string(i);
@@ -125,6 +123,9 @@ public:
                 m_SelectedQuad = i;
             }
         }
+		ImGui::End();
+
+		ImGui::Begin("Quad Editor");
 
         if (m_SelectedQuad >= 0 && m_SelectedQuad < m_Quads.size())
         {
@@ -165,6 +166,5 @@ private:
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 
-	Lumina::QuadAttributes m_BackgroundAttributes;
     int m_TileIndex = 0;
 };
