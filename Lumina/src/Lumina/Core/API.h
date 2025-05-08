@@ -4,8 +4,7 @@ namespace Lumina
 {
 	enum class API
 	{
-		OPENGL,
-		VULKAN
+		OPENGL
 	};
 	
     class RendererAPI

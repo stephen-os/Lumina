@@ -41,9 +41,6 @@ namespace Lumina
             return;
         }
 
-        if (m_Specifications.Api == API::VULKAN)
-            glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
         m_Window = glfwCreateWindow(m_Specifications.Width, m_Specifications.Height, m_Specifications.Name.c_str(), NULL, NULL);
         if (!m_Window)
         {

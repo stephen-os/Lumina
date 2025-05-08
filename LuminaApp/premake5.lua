@@ -18,9 +18,7 @@ project "LuminaApp"
       "../Dependencies/glad/include",
       "../Dependencies/tinygltf",
       "../Dependencies/imguifd",
-      "../Dependencies/spdlog/include",
-
-      "%{IncludeDir.VulkanSDK}"
+      "../Dependencies/spdlog/include"
    }
 
     links
@@ -32,12 +30,9 @@ project "LuminaApp"
         "Glad",
         "TinyGLTF",
         "ImGuiFD", 
- 
-       "%{Library.Vulkan}",
+
         "opengl32.lib"
     }
-
-    buildoptions { "/utf-8" }
 
    targetdir ("../bin/" .. outputdir .. "/%{prj.name}")
    objdir ("../bin-int/" .. outputdir .. "/%{prj.name}")

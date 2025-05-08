@@ -4,7 +4,6 @@
 #include "Context.h"
 #include "API.h"
 
-#include "../Renderer/Vulkan/VulkanContext.h"
 #include "../Renderer/Opengl/OpenglContext.h"
 
 namespace Lumina
@@ -13,11 +12,11 @@ namespace Lumina
 	{
 	public: 
         static Unique<Context> Create(API api) {
-            if (api == API::VULKAN) {
-                return std::make_unique<VulkanContext>();
+            if (api == API::OPENGL) {
+                return std::make_unique<OpenGLContext>();
             }
             else {
-                return std::make_unique<OpenGLContext>();
+                return nullptr; 
             }
         }
 	};

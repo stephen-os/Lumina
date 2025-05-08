@@ -18,9 +18,7 @@ project "LuminaTestApp"
       "../Dependencies/glad/include",
       "../Dependencies/tinygltf",
       "../Dependencies/imguifd",
-      "../Dependencies/spdlog/include",
-
-      "%{IncludeDir.VulkanSDK}"
+      "../Dependencies/spdlog/include"
    }
 
     links
@@ -32,8 +30,7 @@ project "LuminaTestApp"
         "Glad",
         "TinyGLTF",
         "ImGuiFD",
- 
-       "%{Library.Vulkan}",
+
         "opengl32.lib"
     }
 

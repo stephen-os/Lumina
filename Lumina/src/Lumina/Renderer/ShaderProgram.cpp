@@ -11,7 +11,6 @@ namespace Lumina
 		switch (RendererAPI::GetAPI())
 		{
 			case API::OPENGL: return MakeShared<OpenGLShaderProgram>(vertexShader, fragmentShader);
-			case API::VULKAN: return nullptr;
 			default: return nullptr;
 		}
 	}
