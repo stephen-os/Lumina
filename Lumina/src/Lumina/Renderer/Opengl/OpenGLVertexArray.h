@@ -20,20 +20,17 @@ namespace Lumina
         void Bind() const override;
         void Unbind() const override;
 
-        void AddVertexBuffer(Shared<VertexBuffer> vertexBuffer) override;
+        void SetVertexBuffer(Shared<VertexBuffer> vertexBuffer) override;
         void SetIndexBuffer(Shared<IndexBuffer> indexBuffer) override;
 
-        void DrawIndexed() override;
+        Shared<VertexBuffer> GetVertexBuffer() override { return m_VertexBuffer; }
+        Shared<IndexBuffer> GetIndexBuffer() override { return m_IndexBuffer; }
 
-        std::vector<Shared<VertexBuffer>>::iterator begin() override { return m_Vertices.begin(); }
-        std::vector<Shared<VertexBuffer>>::iterator end() override { return m_Vertices.end(); }
-        std::vector<Shared<VertexBuffer>>::const_iterator begin() const override { return m_Vertices.begin(); }
-        std::vector<Shared<VertexBuffer>>::const_iterator end() const override { return m_Vertices.end(); }
     private:
         uint32_t m_BufferID = 0;
 
         uint32_t m_VertexBufferIndex = 0;
         Shared<IndexBuffer> m_IndexBuffer;
-        std::vector<Shared<VertexBuffer>> m_Vertices;
+        Shared<VertexBuffer> m_VertexBuffer;
     };
 }

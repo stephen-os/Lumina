@@ -16,7 +16,7 @@ namespace Lumina
         GLCALL(glBufferData(GL_ARRAY_BUFFER, size, nullptr, GL_DYNAMIC_DRAW));
     }
 
-    OpenGLVertexBuffer::OpenGLVertexBuffer(float* vertices, uint32_t size)
+    OpenGLVertexBuffer::OpenGLVertexBuffer(const void* vertices, uint32_t size)
     {
         GLCALL(glCreateBuffers(1, &m_BufferID));
         LUMINA_ASSERT(m_BufferID != 0, "Failed to create vertex buffer!");

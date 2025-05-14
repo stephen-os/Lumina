@@ -28,14 +28,24 @@ namespace Lumina
     {
         LUMINA_ASSERT(m_BufferID != 0, "Cannot bind VAO with invalid ID.");
         GLCALL(glBindVertexArray(m_BufferID));
+
+        if (m_VertexBuffer)
+            m_VertexBuffer->Bind();
+        if (m_IndexBuffer)
+            m_IndexBuffer->Bind();
     }
 
     void OpenGLVertexArray::Unbind() const
     {
         GLCALL(glBindVertexArray(0));
+
+        if (m_VertexBuffer)
+            m_VertexBuffer->Unbind();
+        if (m_IndexBuffer)
+            m_IndexBuffer->Unbind();
     }
 
-    void OpenGLVertexArray::AddVertexBuffer(Shared<VertexBuffer> vertexBuffer)
+    void OpenGLVertexArray::SetVertexBuffer(Shared<VertexBuffer> vertexBuffer)
     {
         LUMINA_ASSERT(vertexBuffer != nullptr, "VertexBuffer passed to AddVertexBuffer is null.");
 
@@ -140,7 +150,8 @@ namespace Lumina
             }
         }
 
-        m_Vertices.push_back(vertexBuffer);
+        m_VertexBuffer.reset(); 
+        m_VertexBuffer = vertexBuffer;
     }
 
     void OpenGLVertexArray::SetIndexBuffer(Shared<IndexBuffer> indexBuffer)
@@ -150,20 +161,5 @@ namespace Lumina
         Bind();
         indexBuffer->Bind();
         m_IndexBuffer = indexBuffer;
-    }
-
-    void OpenGLVertexArray::DrawIndexed()
-    {
-        LUMINA_ASSERT(m_IndexBuffer != nullptr, "DrawIndexed called with no IndexBuffer set.");
-        LUMINA_ASSERT(m_IndexBuffer->GetCount() > 0, "IndexBuffer has zero indices.");
-
-        for (auto& vertice : m_Vertices)
-        {
-            LUMINA_ASSERT(vertice != nullptr, "VertexBuffer in DrawIndexed is null.");
-
-            vertice->Bind();
-            glDrawElements(GL_TRIANGLES, m_IndexBuffer->GetCount(), GL_UNSIGNED_INT, nullptr);
-            vertice->Unbind();
-        }
     }
 }

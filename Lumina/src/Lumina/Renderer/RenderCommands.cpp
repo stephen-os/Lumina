@@ -1,28 +1,76 @@
 #include "RenderCommands.h"
 
-#include "Commands.h"
+#include "Opengl/OpenGLRenderCommands.h"
+
+#include "../Core/API.h"
 
 namespace Lumina
 {
-	Shared<Commands> RenderCommands::s_Commands;
+    void RenderCommands::SetViewport(int x, int y, int width, int height) 
+    {
+        switch (RendererAPI::GetAPI())
+        {
+        case API::OPENGL: OpenGLRenderCommands::SetViewport(x, y, width, height); break; 
+        default: break; 
+        }
+        
+    }
 
-	void RenderCommands::Init()
-	{
-		s_Commands = Commands::Create();
-	}
+    void RenderCommands::Clear() 
+    {
+        switch (RendererAPI::GetAPI())
+        {
+        case API::OPENGL: OpenGLRenderCommands::Clear(); break;
+        default: break;
+        }
+    }
 
-	void RenderCommands::SetViewport(int x, int y, int width, int height)
-	{
-		s_Commands->SetViewport(x, y, width, height);
-	}
+    void RenderCommands::EnableDepthTest() 
+    {
+        switch (RendererAPI::GetAPI())
+        {
+        case API::OPENGL: OpenGLRenderCommands::EnableDepthTest(); break;
+        default: break;
+        }
+    }
 
-	void RenderCommands::Clear()
-	{
-		s_Commands->Clear();
-	}
+    void RenderCommands::DrawLines(const Shared<VertexArray>& vao, uint32_t count) 
+    {
+        vao->Bind();
 
-	void RenderCommands::EnableDepthTest()
-	{
-		s_Commands->EnableDepthTest();
-	}
+        switch (RendererAPI::GetAPI())
+        {
+        case API::OPENGL: OpenGLRenderCommands::DrawLines(count); break;
+        default: break;
+        }
+
+        vao->Unbind(); 
+    }
+
+    void RenderCommands::DrawLineStrips(const Shared<VertexArray>& vao, uint32_t count)
+    {
+        vao->Bind();
+
+        switch (RendererAPI::GetAPI())
+        {
+        case API::OPENGL: OpenGLRenderCommands::DrawLineStrips(count); break;
+        default: break;
+        }
+
+        vao->Unbind();
+    }
+
+    void RenderCommands::DrawTriangles(const Shared<VertexArray>& vao)
+    {
+        vao->Bind();
+        auto ib = vao->GetIndexBuffer();
+
+        switch (RendererAPI::GetAPI())
+        {
+        case API::OPENGL: OpenGLRenderCommands::DrawTriangles(ib->GetCount()); break;
+        default: break;
+        }
+
+        vao->Unbind(); 
+    }
 }

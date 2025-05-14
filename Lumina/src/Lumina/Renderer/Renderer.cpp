@@ -83,8 +83,6 @@ namespace Lumina
 
     void Renderer::Init()
     {
-        RenderCommands::Init(); 
-
         // Create framebuffer
         s_Data.RendererFB = FrameBuffer::Create();
 
@@ -100,7 +98,7 @@ namespace Lumina
             { BufferDataType::Float,  "a_TexIndex" }
         });
 
-        s_Data.QuadVA->AddVertexBuffer(s_Data.QuadVB);
+        s_Data.QuadVA->SetVertexBuffer(s_Data.QuadVB);
 
         // Generate index buffer for quads
         std::vector<uint32_t> quadIndices(MaxIndices);
@@ -221,9 +219,7 @@ namespace Lumina
         s_Data.RendererFB->Bind();
 
         // Draw the batch
-        s_Data.QuadVA->Bind();
-        s_Data.QuadVA->DrawIndexed();
-        s_Data.QuadVA->Unbind();
+        RenderCommands::DrawTriangles(s_Data.QuadVA); 
 
         // Unbind FB
         s_Data.RendererFB->Unbind();
