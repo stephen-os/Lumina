@@ -27,10 +27,10 @@ namespace Lumina
 {
     // Constants
     constexpr uint32_t MaxQuads = 10000;  // Increased from 1000
+	constexpr uint32_t MaxCubes = 10000;  // Increased from 1000
     constexpr uint32_t MaxVertices = MaxQuads * 4;
     constexpr uint32_t MaxIndices = MaxQuads * 6;
-    constexpr uint32_t MaxTextureSlots = 16; // Depends on GPU
-	constexpr uint32_t MaxShaderSlots = 16;
+    constexpr uint32_t MaxTextureSlots = 32; // Depends on GPU
 
     // Vertex structure
     struct QuadVertex
@@ -41,24 +41,42 @@ namespace Lumina
         float TexIndex;
     };
 
+	struct CubeVertex
+	{
+		glm::vec3 Position;
+		glm::vec4 Color;
+		glm::vec2 TexCoord;
+		float TexIndex;
+	};
+
     // Renderer data storage
     struct RendererData
     {
         // Core renderer resources
-        Shared<FrameBuffer> RendererFB;
-        Shared<VertexArray> QuadVA;
-        Shared<VertexBuffer> QuadVB;
-        Shared<IndexBuffer> QuadIB;
+        Shared<FrameBuffer> RendererFrameBuffer;
+
+        // Quad
+        Shared<VertexArray> QuadVertexArray;
+        Shared<VertexBuffer> QuadVertexBuffer;
+        Shared<IndexBuffer> QuadIndexBuffer;
+
+        // Cube
+		Shared<VertexArray> CubeVertexArray;
+		Shared<VertexBuffer> CubeVertexBuffer;
+		Shared<IndexBuffer> CubeIndexBuffer;
 
         // Batch rendering data
         uint32_t QuadIndexCount = 0;
         QuadVertex* QuadVertexBufferBase = nullptr;
         QuadVertex* QuadVertexBufferPtr = nullptr;
 
-        // Shader management
-		std::array<Shared<ShaderProgram>, MaxShaderSlots> ShaderSlots;
-		uint32_t ShaderSlotIndex = 0; // 0 is default shader
-        uint32_t ShaderSlotSize = 1;
+        uint32_t CubeIndexCount = 0;
+        CubeVertex* CubeVertexBufferBase = nullptr;
+        CubeVertex* CubeVertexBufferPtr = nullptr;
+
+        // Shaders
+		Shared<ShaderProgram> QuadShader = nullptr;
+		Shared<ShaderProgram> CubeShader = nullptr;
 
         // Texture management
         std::array<Shared<Texture>, MaxTextureSlots> TextureSlots;
@@ -67,6 +85,9 @@ namespace Lumina
         // Quad rendering data
         glm::vec4 QuadVertexPositions[4];
         glm::vec2 TexCoords[4];
+
+        // Cube Renderering
+        glm::vec3 CubeVertexPositions[24]; 
 
         // View-projection matrix for camera support
         glm::mat4 ViewProjectionMatrix = glm::mat4(1.0f);
@@ -84,21 +105,21 @@ namespace Lumina
     void Renderer::Init()
     {
         // Create framebuffer
-        s_Data.RendererFB = FrameBuffer::Create();
+        s_Data.RendererFrameBuffer = FrameBuffer::Create();
 
         // Create vertex arrays and buffers
-        s_Data.QuadVA = VertexArray::Create();
-        s_Data.QuadVB = VertexBuffer::Create(MaxVertices * sizeof(QuadVertex));
+        s_Data.QuadVertexArray = VertexArray::Create();
+        s_Data.QuadVertexBuffer = VertexBuffer::Create(MaxVertices * sizeof(QuadVertex));
 
         // Set up buffer layout
-        s_Data.QuadVB->SetLayout({
+        s_Data.QuadVertexBuffer->SetLayout({
             { BufferDataType::Float3, "a_Position" },
             { BufferDataType::Float4, "a_Color" },
             { BufferDataType::Float2, "a_TexCoord" },
             { BufferDataType::Float,  "a_TexIndex" }
         });
 
-        s_Data.QuadVA->SetVertexBuffer(s_Data.QuadVB);
+        s_Data.QuadVertexArray->SetVertexBuffer(s_Data.QuadVertexBuffer);
 
         // Generate index buffer for quads
         std::vector<uint32_t> quadIndices(MaxIndices);
@@ -116,33 +137,109 @@ namespace Lumina
             offset += 4;
         }
 
-        s_Data.QuadIB = IndexBuffer::Create(quadIndices.data(), MaxIndices);
-        s_Data.QuadVA->SetIndexBuffer(s_Data.QuadIB);
+        s_Data.QuadIndexBuffer = IndexBuffer::Create(quadIndices.data(), MaxIndices);
+        s_Data.QuadVertexArray->SetIndexBuffer(s_Data.QuadIndexBuffer);
 
         // Allocate vertex buffer memory
         s_Data.QuadVertexBufferBase = new QuadVertex[MaxVertices];
 
-        // Create a default shader at slot 0
-        std::string vertexShader = "res/shaders/Quad.vert";
-        std::string fragmentShader = "res/shaders/Quad.frag";
-		s_Data.ShaderSlots[0] = ShaderProgram::Create(vertexShader, fragmentShader);
-
+        // Create a default shader
+        {
+            std::string vertexShader = "res/shaders/Quad.vert";
+            std::string fragmentShader = "res/shaders/Quad.frag";
+            s_Data.QuadShader = ShaderProgram::Create(vertexShader, fragmentShader);
+        }
+        
         // Create a 1x1 white texture for basic colored quads
         uint32_t whiteTextureData = 0xffffffff;
         s_Data.TextureSlots[0] = Texture::Create(1, 1);
         s_Data.TextureSlots[0]->SetData(&whiteTextureData, sizeof(uint32_t));
 
         // Set up default quad vertex positions in object space
-        s_Data.QuadVertexPositions[0] = { -1.0f, -1.0f, 0.0f, 1.0f };  // Bottom left
-        s_Data.QuadVertexPositions[1] = {  1.0f, -1.0f, 0.0f, 1.0f };  // Bottom right
-        s_Data.QuadVertexPositions[2] = {  1.0f,  1.0f, 0.0f, 1.0f };  // Top right
-        s_Data.QuadVertexPositions[3] = { -1.0f,  1.0f, 0.0f, 1.0f };  // Top left
+        s_Data.QuadVertexPositions[1] = {  0.5f, -0.5f, 0.0f, 1.5f };  // Bottom right
+        s_Data.QuadVertexPositions[0] = { -0.5f, -0.5f, 0.0f, 1.5f };  // Bottom left
+        s_Data.QuadVertexPositions[2] = {  0.5f,  0.5f, 0.0f, 1.5f };  // Top right
+        s_Data.QuadVertexPositions[3] = { -0.5f,  0.5f, 0.0f, 1.5f };  // Top left
 
         // Set up default texture coordinates
         s_Data.TexCoords[0] = { 0.0f, 0.0f };  // Bottom left
         s_Data.TexCoords[1] = { 1.0f, 0.0f };  // Bottom right
         s_Data.TexCoords[2] = { 1.0f, 1.0f };  // Top right
         s_Data.TexCoords[3] = { 0.0f, 1.0f };  // Top left
+
+        // Cube
+		s_Data.CubeVertexArray = VertexArray::Create();
+		s_Data.CubeVertexBuffer = VertexBuffer::Create(MaxCubes * sizeof(CubeVertex));
+
+		s_Data.CubeVertexBuffer->SetLayout({
+            { BufferDataType::Float3, "a_Position" },
+			{ BufferDataType::Float4, "a_Color" },
+			{ BufferDataType::Float2, "a_TexCoord" },
+			{ BufferDataType::Float,  "a_TexIndex" }
+	    });
+	    s_Data.CubeVertexArray->SetVertexBuffer(s_Data.CubeVertexBuffer);
+
+        // 36 vertices per cube (6 faces x 2 triangles x 3 vertices)
+        s_Data.CubeVertexBufferBase = new CubeVertex[MaxCubes * 36]; 
+
+        // Cube Shader
+        {
+            std::string vertexShader = "res/shaders/Cube.vert";
+            std::string fragmentShader = "res/shaders/Cube.frag";
+            s_Data.CubeShader = ShaderProgram::Create(vertexShader, fragmentShader);
+        }
+
+        std::vector<uint32_t> cubeIndices;
+        cubeIndices.reserve(MaxCubes * 36);
+
+        for (uint32_t i = 0; i < MaxCubes; ++i)
+        {
+            uint32_t offset = i * 24; // 24 vertices if using non-indexed cube (shared vertices = 8)
+
+            std::array<uint32_t, 36> faceIndices = {
+                0, 1, 2, 2, 3, 0, // Front
+                4, 5, 6, 6, 7, 4, // Back
+                8, 9,10,10,11, 8, // Top
+               12,13,14,14,15,12, // Bottom
+               16,17,18,18,19,16, // Right
+               20,21,22,22,23,20  // Left
+            };
+
+            for (uint32_t index : faceIndices)
+                cubeIndices.push_back(offset + index);
+        }
+        s_Data.CubeIndexBuffer = IndexBuffer::Create(cubeIndices.data(), static_cast<uint32_t>(cubeIndices.size()));
+        s_Data.CubeVertexArray->SetIndexBuffer(s_Data.CubeIndexBuffer);
+
+        s_Data.CubeVertexPositions[0] = { -0.5f, -0.5f,  0.5f };
+        s_Data.CubeVertexPositions[1] = { 0.5f, -0.5f,  0.5f };
+        s_Data.CubeVertexPositions[2] = { 0.5f,  0.5f,  0.5f };
+        s_Data.CubeVertexPositions[3] = { -0.5f,  0.5f,  0.5f };
+
+        s_Data.CubeVertexPositions[4] = { 0.5f, -0.5f, -0.5f };
+        s_Data.CubeVertexPositions[5] = { -0.5f, -0.5f, -0.5f };
+        s_Data.CubeVertexPositions[6] = { -0.5f,  0.5f, -0.5f };
+        s_Data.CubeVertexPositions[7] = { 0.5f,  0.5f, -0.5f };
+
+        s_Data.CubeVertexPositions[8] = { -0.5f,  0.5f,  0.5f };
+        s_Data.CubeVertexPositions[9] = { 0.5f,  0.5f,  0.5f };
+        s_Data.CubeVertexPositions[10] = { 0.5f,  0.5f, -0.5f };
+        s_Data.CubeVertexPositions[11] = { -0.5f,  0.5f, -0.5f };
+
+        s_Data.CubeVertexPositions[12] = { -0.5f, -0.5f, -0.5f };
+        s_Data.CubeVertexPositions[13] = { 0.5f, -0.5f, -0.5f };
+        s_Data.CubeVertexPositions[14] = { 0.5f, -0.5f,  0.5f };
+        s_Data.CubeVertexPositions[15] = { -0.5f, -0.5f,  0.5f };
+
+        s_Data.CubeVertexPositions[16] = { 0.5f, -0.5f,  0.5f };
+        s_Data.CubeVertexPositions[17] = { 0.5f, -0.5f, -0.5f };
+        s_Data.CubeVertexPositions[18] = { 0.5f,  0.5f, -0.5f };
+        s_Data.CubeVertexPositions[19] = { 0.5f,  0.5f,  0.5f };
+
+        s_Data.CubeVertexPositions[20] = { -0.5f, -0.5f, -0.5f };
+        s_Data.CubeVertexPositions[21] = { -0.5f, -0.5f,  0.5f };
+        s_Data.CubeVertexPositions[22] = { -0.5f,  0.5f,  0.5f };
+        s_Data.CubeVertexPositions[23] = { -0.5f,  0.5f, -0.5f };
     }
 
     void Renderer::Shutdown()
@@ -153,25 +250,13 @@ namespace Lumina
 
     void Renderer::Begin(Camera& camera)
     {
-        s_Data.RendererFB->Bind();
-        RenderCommands::Clear();
-        s_Data.RendererFB->Unbind();
-
-        // Store view-projection matrix
         s_Data.ViewProjectionMatrix = camera.GetViewMatrix() * camera.GetProjectionMatrix();
-
         StartBatch(); 
     }
 
     void Renderer::Begin(glm::mat4& viewProjection)
     {
-        // Clear previous data
-        s_Data.RendererFB->Bind();
-        RenderCommands::Clear();
-        s_Data.RendererFB->Unbind();
-
         s_Data.ViewProjectionMatrix = viewProjection;
-
         StartBatch();
     }
 
@@ -184,48 +269,85 @@ namespace Lumina
 	{
 		s_Data.QuadIndexCount = 0;
 		s_Data.QuadVertexBufferPtr = s_Data.QuadVertexBufferBase;
-		s_Data.TextureSlotIndex = 1; // 0 is reserved for white texture
-		s_Data.ShaderSlotIndex = 0;  // 0 is reserved for default shader 
+
+		s_Data.CubeIndexCount = 0;
+		s_Data.CubeVertexBufferPtr = s_Data.CubeVertexBufferBase;
+
+		s_Data.TextureSlotIndex = 1;
 	}
 
 	void Renderer::EndBatch()
 	{
         // Calculate data size and upload to GPU
-        uint32_t dataSize = static_cast<uint32_t>((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+        uint32_t quadDataSize = static_cast<uint32_t>((uint8_t*)s_Data.QuadVertexBufferPtr - (uint8_t*)s_Data.QuadVertexBufferBase);
+		uint32_t cubeDataSize = static_cast<uint32_t>((uint8_t*)s_Data.CubeVertexBufferPtr - (uint8_t*)s_Data.CubeVertexBufferBase);
+        bool issueDraw = false; 
 
-        if (dataSize > 0) 
+        if (quadDataSize > 0)
         {
-            s_Data.Stats.DataSize += dataSize; 
-            s_Data.QuadVB->SetData(s_Data.QuadVertexBufferBase, dataSize);
-            Flush();
+            s_Data.Stats.DataSize += quadDataSize;
+            s_Data.QuadVertexBuffer->SetData(s_Data.QuadVertexBufferBase, quadDataSize);
+			issueDraw = true;
         }
+
+        if (cubeDataSize > 0)
+        {
+            s_Data.Stats.DataSize += cubeDataSize;
+            s_Data.CubeVertexBuffer->SetData(s_Data.CubeVertexBufferBase, cubeDataSize);
+			issueDraw = true;
+        }
+
+		if (issueDraw)
+		{
+            Flush();
+		}
 	}
 
     void Renderer::Flush()
     {
-        // Skip if no data to render
-        if (s_Data.QuadIndexCount == 0)
-            return;
+        // Bind FB
+        s_Data.RendererFrameBuffer->Bind();
+
+        // Clear Buffer
+        RenderCommands::Clear();
+
+        // Set viewport
+        RenderCommands::SetViewport(0, 0, s_Data.Width, s_Data.Height);
+
+        glEnable(GL_DEPTH_TEST);
 
         // Bind all used textures
         for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
             s_Data.TextureSlots[i]->Bind(i);
 
-        // Bind the active shader
-		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->Bind();
-		s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->SetUniformMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+        if (s_Data.QuadIndexCount != 0)
+        {
+		    s_Data.QuadShader->Bind();
+		    s_Data.QuadShader->SetUniformMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
 
-        // Bind FB
-        s_Data.RendererFB->Bind();
+            // Draw the Quads
+		    s_Data.QuadVertexArray->Bind();
+            RenderCommands::DrawTriangles(s_Data.QuadVertexArray); 
+		    s_Data.QuadVertexArray->Unbind();
 
-        // Draw the batch
-        RenderCommands::DrawTriangles(s_Data.QuadVA); 
+            s_Data.QuadShader->Unbind();
+        }
+
+        if (s_Data.CubeIndexCount != 0)
+        {
+            s_Data.CubeShader->Bind();
+            s_Data.CubeShader->SetUniformMat4("u_ViewProjection", s_Data.ViewProjectionMatrix);
+
+            // Draw Cubes
+            s_Data.CubeVertexArray->Bind();
+            RenderCommands::DrawTriangles(s_Data.CubeVertexArray);
+            s_Data.CubeVertexArray->Unbind();
+
+            s_Data.CubeShader->Unbind();
+        }
 
         // Unbind FB
-        s_Data.RendererFB->Unbind();
-
-        // Unbind shader
-        s_Data.ShaderSlots[s_Data.ShaderSlotIndex]->Bind();
+        s_Data.RendererFrameBuffer->Unbind();
 
         // Unbind all textures
         for (uint32_t i = 0; i < s_Data.TextureSlotIndex; i++)
@@ -234,7 +356,6 @@ namespace Lumina
         // Update stats
         s_Data.Stats.DrawCalls++;
         s_Data.Stats.TexturesUsed = s_Data.TextureSlotIndex - 1;
-        s_Data.Stats.ShadersUsed = s_Data.ShaderSlotSize;
     }
 
     void Renderer::SetResolution(uint32_t width, uint32_t height)
@@ -247,18 +368,38 @@ namespace Lumina
 
         s_Data.Width = width;
         s_Data.Height = height;
-        
-        s_Data.RendererFB->Bind(); 
-		RenderCommands::SetViewport(0, 0, width, height);
-        s_Data.RendererFB->Resize(width, height);
-        RenderCommands::Clear();
-        s_Data.RendererFB->Unbind(); 
     }
 
     uint32_t Renderer::GetImage()
     {
-        return s_Data.RendererFB->GetColorAttachment();
+        return s_Data.RendererFrameBuffer->GetColorAttachment();
     }
+
+	float Renderer::ComputeTextureIndex(const Shared<Texture>& texture)
+	{
+		if (texture == nullptr)
+			return 0.0f;
+
+		for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
+		{
+			if (s_Data.TextureSlots[i] == texture)
+				return static_cast<float>(i);
+		}
+
+        if (s_Data.TextureSlotIndex >= MaxTextureSlots)
+        {
+            EndBatch();
+            StartBatch();
+        }
+
+        LUMINA_ASSERT(s_Data.TextureSlotIndex < MaxTextureSlots, "Texture slot index overflow!");
+
+        float texIndex = static_cast<float>(s_Data.TextureSlotIndex);
+        s_Data.TextureSlots[s_Data.TextureSlotIndex] = texture;
+        s_Data.TextureSlotIndex++;
+
+		return texIndex;
+	}
 
     glm::vec2 Renderer::GetResolution()
     {
@@ -275,95 +416,32 @@ namespace Lumina
             StartBatch();
         }
 
-        // We have a shader
-		if (attributes.Shader)
-		{
-            uint32_t shaderIndex = 0;
+        // Compute translation 
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), attributes.Position);
+        
+		// Compute rotation
+        glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), attributes.Rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), attributes.Rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), attributes.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
-			// Check if the shader is already in the slots
-            for (uint32_t i = 1; i < s_Data.ShaderSlotSize; i++)
-            {
-                // We have found the shader we want to use
-                if (s_Data.ShaderSlots[i] == attributes.Shader)
-                {
-					if (s_Data.ShaderSlotIndex != i)
-					{
-                        // Clear old batch
-                        EndBatch();
-                        StartBatch();
+        glm::mat4 rotation = rotationZ * rotationY * rotationX;
+        
+        // Compute scale
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), glm::vec3(attributes.Size, 1.0f));
 
-						// Set the new shader slot index
-						s_Data.ShaderSlotIndex = i;
-						shaderIndex = i;
-                        break;
-					}
-                }
-            }
+		// Compute transform matrix
+        glm::mat4 transform = translation * rotation * scale;
 
-            // Must be a new shader
-            if (shaderIndex == 0)
-            {
-                // Clear old batch
-                EndBatch();
-                StartBatch();
-
-                // Add new shader to the slots
-                s_Data.ShaderSlotIndex = s_Data.ShaderSlotSize;
-                s_Data.ShaderSlots[s_Data.ShaderSlotIndex] = attributes.Shader;
-                s_Data.ShaderSlotSize++;
-            }
-		}
-        // We dont have a new shader so use default
-        else
-        {
-            // If not already on default shader,
-            // clear batch and switch to it
-			if (s_Data.ShaderSlotIndex != 0)
-			{
-				EndBatch();
-				StartBatch();
-                s_Data.ShaderSlotIndex = 0;
-			}
-        }
-
-        // Compute transform
-        glm::mat4 transform = glm::translate(glm::mat4(1.0f), attributes.Position) *
-            glm::rotate(glm::mat4(1.0f), attributes.Rotation, glm::vec3(0.0f, 0.0f, 1.0f)) *
-            glm::scale(glm::mat4(1.0f), glm::vec3(attributes.Size, 1.0f));
-
-        // Handle texture slot
-        float texIndex = 0.0f;
-        if (attributes.Texture)
-        {
-            for (uint32_t i = 1; i < s_Data.TextureSlotIndex; i++)
-            {
-                if (s_Data.TextureSlots[i] == attributes.Texture)
-                {
-                    texIndex = static_cast<float>(i);
-                    break;
-                }
-            }
-
-            if (texIndex == 0.0f)
-            {
-                if (s_Data.TextureSlotIndex >= MaxTextureSlots)
-                {
-                    EndBatch();
-                    StartBatch();
-                }
-
-                texIndex = static_cast<float>(s_Data.TextureSlotIndex);
-                s_Data.TextureSlots[s_Data.TextureSlotIndex] = attributes.Texture;
-                s_Data.TextureSlotIndex++;
-            }
-        }
+		float texIndex = ComputeTextureIndex(attributes.Texture);
 
         // Extract custom UV bounds
         glm::vec2 uvMin = { attributes.TextureCoords.x, attributes.TextureCoords.y };
         glm::vec2 uvMax = { attributes.TextureCoords.z, attributes.TextureCoords.w };
 
         // Map UVs per corner (same order as QuadVertexPositions: bottom-left, bottom-right, top-right, top-left)
-        glm::vec2 uvs[4] = {
+        glm::vec2 uvs[4] = 
+
+        {
             { uvMin.x, uvMin.y },
             { uvMax.x, uvMin.y },
             { uvMax.x, uvMax.y },
@@ -383,24 +461,57 @@ namespace Lumina
         s_Data.Stats.QuadCount++;
     }
 
-
-    void Renderer::SaveFrameBufferToFile(std::string& filename)
+    void Renderer::DrawCube(const CubeAttributes& attributes)
     {
-        glm::vec2 resolution = GetResolution();
-        uint32_t width = static_cast<uint32_t>(resolution.x);
-        uint32_t height = static_cast<uint32_t>(resolution.y);
-
-        std::vector<uint8_t> pixels(width * height * 4);
-
-        s_Data.RendererFB->Bind();
-        s_Data.RendererFB->ReadPixels(0, 0, width, height, pixels.data());
-        
-        if (!stbi_write_png(filename.c_str(), width, height, 4, pixels.data(), width * 4))
+        LUMINA_ASSERT(s_Data.CubeVertexBufferPtr >= s_Data.CubeVertexBufferBase, "Vertex buffer pointer underflow");
+        if (s_Data.CubeIndexCount >= MaxIndices)
         {
-            LUMINA_LOG_ERROR("[Renderer] Failed to write FrameBuffer to file."); 
+            EndBatch();
+            StartBatch();
         }
 
-        s_Data.RendererFB->Unbind();
+        // Compute translation 
+        glm::mat4 translation = glm::translate(glm::mat4(1.0f), attributes.Position);
+
+        // Compute rotation
+        glm::mat4 rotationX = glm::rotate(glm::mat4(1.0f), attributes.Rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+        glm::mat4 rotationY = glm::rotate(glm::mat4(1.0f), attributes.Rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 rotationZ = glm::rotate(glm::mat4(1.0f), attributes.Rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+
+        glm::mat4 rotation = rotationZ * rotationY * rotationX;
+
+        // Compute scale
+        glm::mat4 scale = glm::scale(glm::mat4(1.0f), attributes.Size);
+
+		// Compute transform matrix
+        glm::mat4 transform = translation * rotation * scale;
+
+        float texIndex = ComputeTextureIndex(attributes.Texture);
+
+        // Extract custom UV bounds
+        glm::vec2 uvMin = { attributes.TextureCoords.x, attributes.TextureCoords.y };
+        glm::vec2 uvMax = { attributes.TextureCoords.z, attributes.TextureCoords.w };
+
+        // Map UVs per corner (same order as QuadVertexPositions: bottom-left, bottom-right, top-right, top-left)
+        glm::vec2 uvs[4] =
+        {
+            { uvMin.x, uvMin.y },
+            { uvMax.x, uvMin.y },
+            { uvMax.x, uvMax.y },
+            { uvMin.x, uvMax.y }
+        };
+
+		for (size_t i = 0; i < 24; i++)
+		{
+			s_Data.CubeVertexBufferPtr->Position = transform * glm::vec4(s_Data.CubeVertexPositions[i], 1.0f);
+			s_Data.CubeVertexBufferPtr->Color = attributes.TintColor;
+			s_Data.CubeVertexBufferPtr->TexCoord = uvs[i % 4]; // Use modulo to cycle through UVs
+			s_Data.CubeVertexBufferPtr->TexIndex = texIndex;
+			s_Data.CubeVertexBufferPtr++;
+		}
+
+		s_Data.CubeIndexCount += 36;
+		s_Data.Stats.CubeCount++;
     }
 
 	Renderer::Statistics Renderer::GetStats()

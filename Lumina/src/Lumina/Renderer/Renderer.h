@@ -13,13 +13,22 @@ namespace Lumina
 {
     struct QuadAttributes
     {
-        glm::vec3 Position = { 0, 0, 0 };
-        glm::vec2 Size = { 1, 1 };
-        float Rotation = 0.0f;
+        glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
+        glm::vec2 Size = { 1.0f, 1.0f };
         Shared<Texture> Texture = nullptr;
 		glm::vec4 TextureCoords = { 0, 0, 1, 1 };
         glm::vec4 TintColor = glm::vec4(1.0f);
-		Shared<ShaderProgram> Shader = nullptr;
+    };
+
+    struct CubeAttributes
+    {
+        glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
+        glm::vec3 Size = { 1.0f, 1.0f, 1.0f };
+        Shared<Texture> Texture = nullptr;
+        glm::vec4 TextureCoords = { 0, 0, 1, 1 };
+        glm::vec4 TintColor = glm::vec4(1.0f);
     };
 
     class Renderer
@@ -46,17 +55,20 @@ namespace Lumina
         
         // Get the image stored in the Framebuffer
         static uint32_t GetImage();
-        static void SaveFrameBufferToFile(std::string& filename);
+
+        // Helper Functions
+		static float ComputeTextureIndex(const Shared<Texture>& texture);
 
         // Basic Drawing Functions
         static void DrawQuad(const QuadAttributes& attributes);
-        // static void DrawQuad(const QuadAttributes& attributes, const Shared<ShaderProgram>& shader);
+		static void DrawCube(const CubeAttributes& attributes);
        
         // Statistics Tracking
         struct Statistics
         {
             uint32_t DrawCalls = 0;
             uint32_t QuadCount = 0;
+			uint32_t CubeCount = 0;
             uint32_t TexturesUsed = 0;
 			uint32_t ShadersUsed = 0;
             uint32_t DataSize = 0; 

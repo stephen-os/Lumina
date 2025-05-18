@@ -27,8 +27,9 @@ namespace Lumina
         GLenum internalFormat = GL_RGBA8;  // Could be more specific like GL_RGBA8 if needed
 
         // Set texture parameters using DSA
-        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE));
-        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_S, GL_REPEAT));
+        GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
         GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
 
@@ -58,6 +59,7 @@ namespace Lumina
         // Set texture parameters using DSA
         GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_S, GL_REPEAT));
         GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_WRAP_T, GL_REPEAT));
+
         GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GLCALL(glTextureParameteri(m_BufferID, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
     }
