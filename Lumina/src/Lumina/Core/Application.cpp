@@ -18,6 +18,9 @@
 
 namespace Lumina
 {
+    static Lumina::Application* s_Instance = nullptr;
+
+    Application& Application::GetInstance() { return *s_Instance; }
 
     static void GLFWErrorCallback(int error, const char* description)
     {
@@ -26,6 +29,7 @@ namespace Lumina
 
     Application::Application(const ApplicationSpecification& applicationSpecification)
     {
+		s_Instance = this;
         m_Specifications = applicationSpecification;
 
         RendererAPI::SetAPI(applicationSpecification.Api);
@@ -82,6 +86,8 @@ namespace Lumina
 
     Application::~Application()
     {
+		s_Instance = nullptr;
+
         for (auto& layer : m_LayerStack)
             layer->OnDetach();
 

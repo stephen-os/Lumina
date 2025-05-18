@@ -2,9 +2,7 @@
 
 namespace Lumina
 {
-#pragma once
-
-    enum class Key
+    typedef enum class KeyCode : uint16_t
     {
         Unknown = 0,
 
@@ -81,6 +79,33 @@ namespace Lumina
         RightSuper = 347,
 
         Menu = 348
+    } Key;
+
+    typedef enum class MouseCode : uint16_t
+    {
+        Button0 = 0,
+        Button1 = 1,
+        Button2 = 2,
+        Button3 = 3,
+        Button4 = 4,
+        Button5 = 5,
+        Left = Button0,
+        Right = Button1,
+        Middle = Button2
+    } Button;
+
+    enum class KeyState
+    {
+        None = -1,
+        Pressed,
+        Held,
+        Released
     };
 
+    enum class CursorMode
+    {
+        Normal = 0,
+        Hidden = 1,
+        Disabled = 2
+    };
 }

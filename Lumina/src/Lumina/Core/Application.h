@@ -48,6 +48,8 @@ namespace Lumina
 
 		void ApplyLuminaTheme();
 
+
+		static Application& GetInstance();
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
 		GLFWwindow* m_Window = nullptr;
