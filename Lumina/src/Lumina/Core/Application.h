@@ -48,11 +48,14 @@ namespace Lumina
 
 		void ApplyLuminaTheme();
 
+		void Shutdown() { m_Running = false; };
 
 		static Application& GetInstance();
 		GLFWwindow* GetWindowHandle() const { return m_Window; };
 	private:
 		GLFWwindow* m_Window = nullptr;
+
+		bool m_Running = true;
 
 		Unique<Context> m_Context;
 
