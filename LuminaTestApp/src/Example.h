@@ -51,6 +51,12 @@ public:
         m_FPS = 1.0f / elapsedTime;
         m_FrameTimer.Reset();
 
+<<<<<<< HEAD
+=======
+#if 0
+        Lumina::Input::SetCursorMode(Lumina::CursorMode::Disabled);
+
+>>>>>>> 42986495b374a2678b242977f5758498445dead4
         // Keyboard movement
         float velocity = m_CameraSpeed;
         if (Lumina::Input::IsKeyPressed(Lumina::Key::W))
@@ -101,6 +107,7 @@ public:
         front.y = sin(glm::radians(m_Pitch));
         front.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         m_CameraFront = glm::normalize(front);
+#endif 
 
 #endif
         // Final camera matrix
@@ -108,7 +115,6 @@ public:
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), m_ViewportSize.x / m_ViewportSize.y, 0.1f, 100.0f);
         m_ViewProjectionMatrix = projection * view;
     }
-
 
     virtual void OnUIRender() override
     {
