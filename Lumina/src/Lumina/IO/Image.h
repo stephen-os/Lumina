@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Core/Aliases.h"
-#include "../Renderer/Texture.h"
+#include "../Graphics/Texture.h"
 
 #include <string>
 #include <vector>

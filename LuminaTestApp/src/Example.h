@@ -8,11 +8,11 @@
 #include "Lumina/Core/Aliases.h"
 #include "Lumina/Core/Log.h"
 #include "Lumina/Utils/Timer.h"
-#include "Lumina/Renderer/Renderer.h"
-#include "Lumina/Renderer/TextureAtlas.h"
+#include "Lumina/Graphics/Renderer.h"
+#include "Lumina/Graphics/TextureAtlas.h"
 
-#include "Lumina/Renderer/Cameras/OrthographicCamera.h"
-#include "Lumina/Renderer/Cameras/PerspectiveCamera.h"
+#include "Lumina/Graphics/Cameras/OrthographicCamera.h"
+#include "Lumina/Graphics/Cameras/PerspectiveCamera.h"
 
 #include "Lumina/Utils/FileReader.h"
 #include <algorithm>
@@ -51,12 +51,8 @@ public:
         m_FPS = 1.0f / elapsedTime;
         m_FrameTimer.Reset();
 
-<<<<<<< HEAD
-=======
-#if 0
-        Lumina::Input::SetCursorMode(Lumina::CursorMode::Disabled);
+        Lumina::Input::SetCursorMode(Lumina::CursorMode::Normal);
 
->>>>>>> 42986495b374a2678b242977f5758498445dead4
         // Keyboard movement
         float velocity = m_CameraSpeed;
         if (Lumina::Input::IsKeyPressed(Lumina::Key::W))
@@ -74,7 +70,6 @@ public:
         if (Lumina::Input::IsKeyPressed(Lumina::Key::N))
             Lumina::Input::SetCursorMode(Lumina::CursorMode::Normal); 
 
-#if 0 
         // Mouse movement
         auto [xpos, ypos] = Lumina::Input::GetMousePosition();
 
@@ -107,9 +102,7 @@ public:
         front.y = sin(glm::radians(m_Pitch));
         front.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         m_CameraFront = glm::normalize(front);
-#endif 
 
-#endif
         // Final camera matrix
         glm::mat4 view = glm::lookAt(m_CameraPosition, m_CameraPosition + m_CameraFront, m_CameraUp);
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), m_ViewportSize.x / m_ViewportSize.y, 0.1f, 100.0f);

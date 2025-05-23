@@ -4,7 +4,7 @@
 #include "Context.h"
 #include "API.h"
 
-#include "../Renderer/Opengl/OpenglContext.h"
+#include "../Graphics/Opengl/OpenglContext.h"
 
 namespace Lumina
 {

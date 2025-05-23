@@ -1,7 +1,7 @@
 #include "Lumina/Core/Application.h"
 #include "Lumina/Core/EntryPoint.h"
 
-// #include "Example.h"
+#include "Example.h"
 #include "FileReading.h"
 
 Lumina::Application* Lumina::CreateApplication(int argc, char** argv)

@@ -30,7 +30,7 @@ public:
         if (!loaded)
         {
             if (Lumina::File::Exists("res/files/textfile.txt"))
-                textFileContent = Lumina::File::ReadText("res/files/textfile.txt");
+                textFileContent = Lumina::File::ReadText("res/shaders/Cube.vert");
             else
                 textFileContent = "[textfile.txt not found]";
 
