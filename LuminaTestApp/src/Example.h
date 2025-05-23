@@ -51,8 +51,6 @@ public:
         m_FPS = 1.0f / elapsedTime;
         m_FrameTimer.Reset();
 
-        Lumina::Input::SetCursorMode(Lumina::CursorMode::Disabled);
-
         // Keyboard movement
         float velocity = m_CameraSpeed;
         if (Lumina::Input::IsKeyPressed(Lumina::Key::W))
@@ -65,6 +63,12 @@ public:
             m_CameraPosition += glm::normalize(glm::cross(m_CameraFront, m_CameraUp)) * velocity;
 		if (Lumina::Input::IsKeyPressed(Lumina::Key::Escape))
 			Lumina::Application::GetInstance().Shutdown();
+        if (Lumina::Input::IsKeyPressed(Lumina::Key::M))
+            Lumina::Input::SetCursorMode(Lumina::CursorMode::Disabled);
+        if (Lumina::Input::IsKeyPressed(Lumina::Key::N))
+            Lumina::Input::SetCursorMode(Lumina::CursorMode::Normal); 
+
+#if 0 
         // Mouse movement
         auto [xpos, ypos] = Lumina::Input::GetMousePosition();
 
@@ -98,6 +102,7 @@ public:
         front.z = sin(glm::radians(m_Yaw)) * cos(glm::radians(m_Pitch));
         m_CameraFront = glm::normalize(front);
 
+#endif
         // Final camera matrix
         glm::mat4 view = glm::lookAt(m_CameraPosition, m_CameraPosition + m_CameraFront, m_CameraUp);
         glm::mat4 projection = glm::perspective(glm::radians(45.0f), m_ViewportSize.x / m_ViewportSize.y, 0.1f, 100.0f);
