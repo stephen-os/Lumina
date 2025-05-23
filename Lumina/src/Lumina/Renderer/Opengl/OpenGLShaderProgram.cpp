@@ -13,11 +13,8 @@
 
 namespace Lumina
 {
-    OpenGLShaderProgram::OpenGLShaderProgram(const std::string& vertexShader, const std::string& fragmentShader)
+    OpenGLShaderProgram::OpenGLShaderProgram(const std::string& vertexSource, const std::string& fragmentSource)
     {
-        std::string vertexSource = ReadFile(vertexShader);
-        std::string fragmentSource = ReadFile(fragmentShader); 
-
         m_VertexShaderID = CompileSource(GL_VERTEX_SHADER, vertexSource);
         LUMINA_ASSERT(m_VertexShaderID != 0, "Vertex shader compilation failed!");
 

@@ -16,7 +16,7 @@ namespace Lumina
     class OpenGLShaderProgram : public ShaderProgram
     {
     public: 
-        OpenGLShaderProgram(const std::string& vertexShader, const std::string& fragmentShader);
+        OpenGLShaderProgram(const std::string& vertexSource, const std::string& fragmentSource);
         ~OpenGLShaderProgram();
  
         void Bind() const override;

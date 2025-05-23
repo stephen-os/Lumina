@@ -6,11 +6,11 @@
 
 namespace Lumina
 {
-	Shared<ShaderProgram> ShaderProgram::Create(const std::string& vertexShader, const std::string& fragmentShader)
+	Shared<ShaderProgram> ShaderProgram::Create(const std::string& vertexSource, const std::string& fragmentSource)
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case API::OPENGL: return MakeShared<OpenGLShaderProgram>(vertexShader, fragmentShader);
+			case API::OPENGL: return MakeShared<OpenGLShaderProgram>(vertexSource, fragmentSource);
 			default: return nullptr;
 		}
 	}

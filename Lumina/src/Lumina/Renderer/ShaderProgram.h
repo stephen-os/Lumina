@@ -28,6 +28,6 @@ namespace Lumina
 		virtual void SetUniformMat4(const std::string& name, float a, float b, float c, float d) = 0;
 		virtual void SetUniformMat4(const std::string& name, const glm::mat4& value) = 0;
 
-		static Shared<ShaderProgram> Create(const std::string& vertexShader, const std::string& fragmentShader);
+		static Shared<ShaderProgram> Create(const std::string& vertexSource, const std::string& fragmentSource);
 	};
 }
