@@ -18,6 +18,9 @@
 #include "FrameBuffer.h"
 #include "RenderCommands.h"
 
+#include "Primatives/Quad.h"
+#include "Primatives/Cube.h"
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -145,9 +148,9 @@ namespace Lumina
 
         // Create a default shader
         {
-            std::string vertexShader = "res/shaders/Quad.vert";
-            std::string fragmentShader = "res/shaders/Quad.frag";
-            s_Data.QuadShader = ShaderProgram::Create(vertexShader, fragmentShader);
+            std::string vertexSource = Quad::GetVertexShader();
+            std::string fragmentSource = Quad::GetFragmentShader();
+            s_Data.QuadShader = ShaderProgram::Create(vertexSource, fragmentSource);
         }
         
         // Create a 1x1 white texture for basic colored quads
@@ -184,9 +187,9 @@ namespace Lumina
 
         // Cube Shader
         {
-            std::string vertexShader = "res/shaders/Cube.vert";
-            std::string fragmentShader = "res/shaders/Cube.frag";
-            s_Data.CubeShader = ShaderProgram::Create(vertexShader, fragmentShader);
+            std::string vertexSource = Cube::GetVertexShader();
+            std::string fragmentSource = Cube::GetFragmentShader();
+            s_Data.CubeShader = ShaderProgram::Create(vertexSource, fragmentSource);
         }
 
         std::vector<uint32_t> cubeIndices;
