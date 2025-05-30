@@ -84,7 +84,7 @@ namespace Lumina
     bool OpenGLTexture::SetResolution(int width, int height)
     {
 
-        LUMINA_ASSERT(width <= 0 || height <= 0, "Invalid resolution: {}, {}", width, height); 
+        LUMINA_ASSERT(width > 0 || height > 0, "Invalid resolution: {}, {}", width, height); 
 
         m_Width = width;
         m_Height = height;
