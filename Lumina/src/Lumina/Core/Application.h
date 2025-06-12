@@ -11,7 +11,6 @@
 #include <memory>
 
 #include "Context.h"
-#include "Aliases.h"
 #include "API.h"
 
 namespace Lumina 
@@ -57,7 +56,7 @@ namespace Lumina
 
 		bool m_Running = true;
 
-		Unique<Context> m_Context;
+		std::unique_ptr<Context> m_Context;
 
 		std::vector<std::shared_ptr<Layer>> m_LayerStack;
 		ApplicationSpecification m_Specifications;

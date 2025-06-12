@@ -2,7 +2,7 @@
 
 #include <cstdint>
 
-#include "../Core/Aliases.h"
+#include <memory>
 
 #include "BufferLayout.h"
 
@@ -20,8 +20,8 @@ namespace Lumina
         virtual const BufferLayout& GetLayout() const = 0;
         virtual void SetLayout(const BufferLayout& layout) = 0;
 
-        static Shared<VertexBuffer> Create(uint32_t size);
-        static Shared<VertexBuffer> Create(const void* vertices, uint32_t size);
+        static std::shared_ptr<VertexBuffer> Create(uint32_t size);
+        static std::shared_ptr<VertexBuffer> Create(const void* vertices, uint32_t size);
     };
 
     class IndexBuffer
@@ -34,6 +34,6 @@ namespace Lumina
 
         virtual uint32_t GetCount() const = 0;
 
-        static Shared<IndexBuffer> Create(uint32_t* indices, uint32_t count);
+        static std::shared_ptr<IndexBuffer> Create(uint32_t* indices, uint32_t count);
     };
 }

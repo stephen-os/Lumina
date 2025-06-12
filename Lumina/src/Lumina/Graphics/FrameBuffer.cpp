@@ -6,11 +6,11 @@
 
 namespace Lumina
 {
-	Shared<FrameBuffer> FrameBuffer::Create()
+	std::shared_ptr<FrameBuffer> FrameBuffer::Create()
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case API::OPENGL: return MakeShared<OpenGLFrameBuffer>(); 
+		case API::OPENGL: return std::make_shared<OpenGLFrameBuffer>(); 
 			default: return nullptr; 
 		}
 	}

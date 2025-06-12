@@ -6,21 +6,21 @@
 
 namespace Lumina
 {
-    Shared<Texture> Texture::Create(std::string& source)
+    std::shared_ptr<Texture> Texture::Create(std::string& source)
     {
         switch (RendererAPI::GetAPI())
         {
-            case API::OPENGL: return MakeShared<OpenGLTexture>(source);
-            default: return nullptr;
+        case API::OPENGL: return std::make_shared<OpenGLTexture>(source);
+        default: return nullptr;
         }
     }
 
-    Shared<Texture> Texture::Create(uint32_t width, uint32_t height)
+    std::shared_ptr<Texture> Texture::Create(uint32_t width, uint32_t height)
     {
         switch (RendererAPI::GetAPI())
         {
-            case API::OPENGL: return MakeShared<OpenGLTexture>(width, height);
-            default: return nullptr;
+        case API::OPENGL: return std::make_shared<OpenGLTexture>(width, height);
+        default: return nullptr;
         }
     }
 }

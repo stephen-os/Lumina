@@ -1,11 +1,11 @@
 #include <vector>
 #include <iostream>
 #include <string>
+#include <memory>
 
 #include "imgui.h"
 
 #include "Lumina/Core/Layer.h"
-#include "Lumina/Core/Aliases.h"
 #include "Lumina/Core/Log.h"
 #include "Lumina/Utils/Timer.h"
 #include "Lumina/Graphics/Renderer.h"
@@ -32,7 +32,7 @@ public:
         Lumina::Renderer::Init();
 
         std::string source = "res/texture/factory_atlas.png";
-        m_Atlas = Lumina::MakeShared<Lumina::TextureAtlas>(source, 16, 16);
+        m_Atlas = Lumina::TextureAtlas::Create(source, 16, 16);
 
         m_Quad.Texture = m_Atlas->GetTexture();
         m_Quad.Position = { 0.8f, 0.0f, 0.0f };
@@ -180,7 +180,7 @@ private:
 
 	glm::vec4 m_TintColor = { 1.0f, 1.0f, 1.0f, 1.0f };
 
-    Lumina::Shared<Lumina::TextureAtlas> m_Atlas;
+    std::shared_ptr<Lumina::TextureAtlas> m_Atlas;
     Lumina::Timer m_FrameTimer;
     float m_FPS = 0.0f;
 };

@@ -34,7 +34,7 @@ namespace Lumina
         }
     }
 
-    void RenderCommands::DrawLines(const Shared<VertexArray>& vao, uint32_t count) 
+    void RenderCommands::DrawLines(const std::shared_ptr<VertexArray>& vao, uint32_t count) 
     {
         vao->Bind();
 
@@ -47,7 +47,7 @@ namespace Lumina
         vao->Unbind(); 
     }
 
-    void RenderCommands::DrawLineStrips(const Shared<VertexArray>& vao, uint32_t count)
+    void RenderCommands::DrawLineStrips(const std::shared_ptr<VertexArray>& vao, uint32_t count)
     {
         vao->Bind();
 
@@ -60,7 +60,7 @@ namespace Lumina
         vao->Unbind();
     }
 
-    void RenderCommands::DrawTriangles(const Shared<VertexArray>& vao)
+    void RenderCommands::DrawTriangles(const std::shared_ptr<VertexArray>& vao)
     {
         vao->Bind();
         auto ib = vao->GetIndexBuffer();

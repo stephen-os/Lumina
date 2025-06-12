@@ -8,7 +8,6 @@
 
 #include <stb_image_write.h>
 
-#include "../Core/Aliases.h"
 #include "../Core/Log.h"
 #include "../Core/Assert.h"
 
@@ -56,17 +55,17 @@ namespace Lumina
     struct RendererData
     {
         // Core renderer resources
-        Shared<FrameBuffer> RendererFrameBuffer;
+        std::shared_ptr<FrameBuffer> RendererFrameBuffer;
 
         // Quad
-        Shared<VertexArray> QuadVertexArray;
-        Shared<VertexBuffer> QuadVertexBuffer;
-        Shared<IndexBuffer> QuadIndexBuffer;
+        std::shared_ptr<VertexArray> QuadVertexArray;
+        std::shared_ptr<VertexBuffer> QuadVertexBuffer;
+        std::shared_ptr<IndexBuffer> QuadIndexBuffer;
 
         // Cube
-		Shared<VertexArray> CubeVertexArray;
-		Shared<VertexBuffer> CubeVertexBuffer;
-		Shared<IndexBuffer> CubeIndexBuffer;
+		std::shared_ptr<VertexArray> CubeVertexArray;
+		std::shared_ptr<VertexBuffer> CubeVertexBuffer;
+		std::shared_ptr<IndexBuffer> CubeIndexBuffer;
 
         // Batch rendering data
         uint32_t QuadIndexCount = 0;
@@ -78,11 +77,11 @@ namespace Lumina
         CubeVertex* CubeVertexBufferPtr = nullptr;
 
         // Shaders
-		Shared<ShaderProgram> QuadShader = nullptr;
-		Shared<ShaderProgram> CubeShader = nullptr;
+		std::shared_ptr<ShaderProgram> QuadShader = nullptr;
+		std::shared_ptr<ShaderProgram> CubeShader = nullptr;
 
         // Texture management
-        std::array<Shared<Texture>, MaxTextureSlots> TextureSlots;
+        std::array<std::shared_ptr<Texture>, MaxTextureSlots> TextureSlots;
         uint32_t TextureSlotIndex = 1; // 0 is white texture
 
         // Quad rendering data
@@ -197,7 +196,7 @@ namespace Lumina
 
         for (uint32_t i = 0; i < MaxCubes; ++i)
         {
-            uint32_t offset = i * 24; // 24 vertices if using non-indexed cube (shared vertices = 8)
+            uint32_t offset = i * 24; // 24 vertices if using non-indexed cube (std::shared_ptr vertices = 8)
 
             std::array<uint32_t, 36> faceIndices = {
                 0, 1, 2, 2, 3, 0, // Front
@@ -378,7 +377,7 @@ namespace Lumina
         return s_Data.RendererFrameBuffer->GetColorAttachment();
     }
 
-	float Renderer::ComputeTextureIndex(const Shared<Texture>& texture)
+	float Renderer::ComputeTextureIndex(const std::shared_ptr<Texture>& texture)
 	{
 		if (texture == nullptr)
 			return 0.0f;

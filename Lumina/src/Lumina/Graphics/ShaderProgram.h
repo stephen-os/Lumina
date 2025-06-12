@@ -1,10 +1,10 @@
 #pragma once
 
+#include <memory>
 #include <string>
 #include <unordered_map>
-#include <glm/glm.hpp>
 
-#include "../Core/Aliases.h"
+#include <glm/glm.hpp>
 
 namespace Lumina
 {
@@ -28,6 +28,6 @@ namespace Lumina
 		virtual void SetUniformMat4(const std::string& name, float a, float b, float c, float d) = 0;
 		virtual void SetUniformMat4(const std::string& name, const glm::mat4& value) = 0;
 
-		static Shared<ShaderProgram> Create(const std::string& vertexSource, const std::string& fragmentSource);
+		static std::shared_ptr<ShaderProgram> Create(const std::string& vertexSource, const std::string& fragmentSource);
 	};
 }

@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Aliases.h"
+#include <memory>
+
 #include "Context.h"
 #include "API.h"
 
@@ -11,7 +12,7 @@ namespace Lumina
 	class ContextFactory
 	{
 	public: 
-        static Unique<Context> Create(API api) {
+        static std::unique_ptr<Context> Create(API api) {
             if (api == API::OPENGL) {
                 return std::make_unique<OpenGLContext>();
             }

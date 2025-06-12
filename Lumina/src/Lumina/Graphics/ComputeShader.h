@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Core/Aliases.h"
+#include <memory>
 
 #include <string>
 #include <glm/glm.hpp>
@@ -42,9 +42,6 @@ namespace Lumina
         virtual const std::string& GetName() const = 0;
 
         // Create from GLSL compute shader source string or path
-        static Shared<ComputeShader> Create(const std::string& source);
-        static Shared<ComputeShader> CreateFromFile(const std::string& filepath);
-
+        static std::shared_ptr<ComputeShader> Create(const std::string& source);
     };
-
-} // namespace Lumina
+}

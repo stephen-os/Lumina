@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "VertexArray.h"
 
 namespace Lumina
@@ -11,8 +13,8 @@ namespace Lumina
         static void Clear();
         static void EnableDepthTest();
 
-        static void DrawLines(const Shared<VertexArray>& vao, uint32_t count);
-        static void DrawLineStrips(const Shared<VertexArray>& vao, uint32_t count); 
-        static void DrawTriangles(const Shared<VertexArray>& vao);
+        static void DrawLines(const std::shared_ptr<VertexArray>& vao, uint32_t count);
+        static void DrawLineStrips(const std::shared_ptr<VertexArray>& vao, uint32_t count);
+        static void DrawTriangles(const std::shared_ptr<VertexArray>& vao);
     };
 }

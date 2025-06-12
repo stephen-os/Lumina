@@ -6,11 +6,11 @@
 
 namespace Lumina
 {
-	Shared<VertexArray> VertexArray::Create()
+	std::shared_ptr<VertexArray> VertexArray::Create()
 	{
 		switch (RendererAPI::GetAPI())
 		{
-			case API::OPENGL: return MakeShared<OpenGLVertexArray>();
+			case API::OPENGL: return std::make_shared<OpenGLVertexArray>();
 			default: return nullptr; 
 		}
 	}

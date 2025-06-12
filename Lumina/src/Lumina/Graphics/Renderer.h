@@ -6,6 +6,7 @@
 #include <glm/glm.hpp>
 
 #include <string>
+#include <memory>
 
 #include "Cameras/Camera.h"
 
@@ -16,7 +17,7 @@ namespace Lumina
         glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
         glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
         glm::vec2 Size = { 1.0f, 1.0f };
-        Shared<Texture> Texture = nullptr;
+        std::shared_ptr<Texture> Texture = nullptr;
 		glm::vec4 TextureCoords = { 0, 0, 1, 1 };
         glm::vec4 TintColor = glm::vec4(1.0f);
     };
@@ -26,7 +27,7 @@ namespace Lumina
         glm::vec3 Position = { 0.0f, 0.0f, 0.0f };
         glm::vec3 Rotation = { 0.0f, 0.0f, 0.0f };
         glm::vec3 Size = { 1.0f, 1.0f, 1.0f };
-        Shared<Texture> Texture = nullptr;
+        std::shared_ptr<Texture> Texture = nullptr;
         glm::vec4 TextureCoords = { 0, 0, 1, 1 };
         glm::vec4 TintColor = glm::vec4(1.0f);
     };
@@ -57,7 +58,7 @@ namespace Lumina
         static uint32_t GetImage();
 
         // Helper Functions
-		static float ComputeTextureIndex(const Shared<Texture>& texture);
+		static float ComputeTextureIndex(const std::shared_ptr<Texture>& texture);
 
         // Basic Drawing Functions
         static void DrawQuad(const QuadAttributes& attributes);

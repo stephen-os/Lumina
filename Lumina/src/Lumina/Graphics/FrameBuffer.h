@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../Core/Aliases.h"
+#include <memory>
 
 namespace Lumina
 {
@@ -22,6 +22,6 @@ namespace Lumina
 
 		virtual void ReadPixels(int x, int y, uint32_t width, uint32_t height, void* data) const = 0;
 
-		static Shared<FrameBuffer> Create();
+		static std::shared_ptr<FrameBuffer> Create();
 	};
 }

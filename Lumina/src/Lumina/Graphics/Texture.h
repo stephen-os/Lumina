@@ -1,8 +1,7 @@
 #pragma once
 
 #include <string>
-
-#include "../Core/Aliases.h"
+#include <memory>
 
 namespace Lumina
 {
@@ -23,7 +22,7 @@ namespace Lumina
         virtual uint32_t GetHeight() const = 0;
         virtual std::string GetPath() const = 0; 
 
-        static Shared<Texture> Create(std::string& source);
-        static Shared<Texture> Create(uint32_t width, uint32_t height);
+        static std::shared_ptr<Texture> Create(std::string& source);
+        static std::shared_ptr<Texture> Create(uint32_t width, uint32_t height);
     };
 }

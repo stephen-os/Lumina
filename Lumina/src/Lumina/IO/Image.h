@@ -1,6 +1,5 @@
 #pragma once
 
-#include "../Core/Aliases.h"
 #include "../Graphics/Texture.h"
 
 #include <string>
@@ -25,7 +24,7 @@ namespace Lumina
 		static bool SaveImageToPNG(const std::string& path, const ImageData& data);
 		static bool SaveImageToJPEG(const std::string& path, const ImageData& data);
 
-		static bool SaveTextureToPNG(const std::string& path, const Shared<Texture>& texture);
-		static bool SaveTextureToJPEG(const std::string& path, const Shared<Texture>& texture);
+		static bool SaveTextureToPNG(const std::string& path, const std::shared_ptr<Texture>& texture);
+		static bool SaveTextureToJPEG(const std::string& path, const std::shared_ptr<Texture>& texture);
 	};
 }

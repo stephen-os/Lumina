@@ -1,7 +1,5 @@
 #pragma once
 
-#include "Aliases.h"
-
 #include <memory>
 
 #include <spdlog/spdlog.h>
@@ -14,10 +12,10 @@ namespace Lumina
     public:
         static void Init();
 
-        inline static Shared<spdlog::logger>& GetLogger() { return s_Logger; }
+        inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
 
     private:
-        static Shared<spdlog::logger> s_Logger;
+        static std::shared_ptr<spdlog::logger> s_Logger;
     };
 }
 

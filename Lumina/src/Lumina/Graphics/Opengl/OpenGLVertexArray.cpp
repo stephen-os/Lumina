@@ -3,7 +3,6 @@
 
 #include <glad/glad.h>
 
-#include "../../Core/Aliases.h"
 #include "../../Core/Assert.h"
 #include "../../Core/Log.h"
 
@@ -45,7 +44,7 @@ namespace Lumina
             m_IndexBuffer->Unbind();
     }
 
-    void OpenGLVertexArray::SetVertexBuffer(Shared<VertexBuffer> vertexBuffer)
+    void OpenGLVertexArray::SetVertexBuffer(std::shared_ptr<VertexBuffer> vertexBuffer)
     {
         LUMINA_ASSERT(vertexBuffer != nullptr, "VertexBuffer passed to AddVertexBuffer is null.");
 
@@ -154,7 +153,7 @@ namespace Lumina
         m_VertexBuffer = vertexBuffer;
     }
 
-    void OpenGLVertexArray::SetIndexBuffer(Shared<IndexBuffer> indexBuffer)
+    void OpenGLVertexArray::SetIndexBuffer(std::shared_ptr<IndexBuffer> indexBuffer)
     {
         LUMINA_ASSERT(indexBuffer != nullptr, "IndexBuffer passed to SetIndexBuffer is null.");
 

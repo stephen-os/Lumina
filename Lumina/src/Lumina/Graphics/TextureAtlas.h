@@ -1,11 +1,10 @@
 #pragma once
 
-#include "../Core/Aliases.h"
-
 #include "Texture.h"
 
 #include <string>
 #include <vector>
+#include <memory>
 
 #include <glm/glm.hpp>
 
@@ -14,8 +13,9 @@ namespace Lumina
 	class TextureAtlas
 	{
 	public:
-		TextureAtlas(int width, int height); 
-		TextureAtlas(std::string& source, int width, int height);
+		static std::shared_ptr<TextureAtlas> Create(std::string& source, int width, int height);
+		static std::shared_ptr<TextureAtlas> Create(int width, int height);
+
 		~TextureAtlas() = default;
 
 		void Resize(int width, int height);
@@ -27,12 +27,15 @@ namespace Lumina
 		bool HasTexture() const { return m_HasTexture; }
 		void RemoveTexture();
 
-		const Shared<Texture>& GetTexture() const { return m_Texture; }
+		const std::shared_ptr<Texture>& GetTexture() const { return m_Texture; }
 		glm::vec4 GetTextureCoords(int index) const;
 		glm::vec2 GetOffset(int index) const;
-		glm::vec2 GetPosition(int index) const; 
+		glm::vec2 GetPosition(int index) const;
+	private: 
+		TextureAtlas(int width, int height);
+		TextureAtlas(std::string& source, int width, int height);
 	private:
-		Shared<Texture> m_Texture = nullptr;	// Shared pointer to Texture
+		std::shared_ptr<Texture> m_Texture = nullptr;	// std::shared_ptr pointer to Texture
 		int m_GridWidth = 1;					// Number of textures along the width
 		int m_GridHeight = 1;					// Number of textures along the height
 		float m_TexWidth = 1.0f;				// Width of a single texture in UV space
